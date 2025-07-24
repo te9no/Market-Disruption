@@ -1,0 +1,74 @@
+name: Automated Playtest Request
+
+on:
+  schedule:
+    # 毎週月曜日の午前9時（UTC）に実行
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    # 手動実行も可能
+    inputs:
+      test_type:
+        description: 'テストプレイの種類'
+        required: false
+        default: 'バランステスト'
+        type: choice
+        options:
+        - 'バランステスト'
+        - 'システムブレイカーテスト'
+        - '癖のあるプレイヤーテスト'
+        - '新ルール検証テスト'
+
+jobs:
+  request-playtest:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        pip install anthropic
+        
+    - name: Request Playtest from Claude
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        TEST_TYPE: ${{ github.event.inputs.test_type || 'バランステスト' }}
+      run: python scripts/request_playtest.py
+      
+    - name: Check for new test files
+      id: check_files
+      run: |
+        if git diff --quiet HEAD test/; then
+          echo "has_changes=false" >> $GITHUB_OUTPUT
+        else
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Commit and push results
+      if: steps.check_files.outputs.has_changes == 'true'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action Bot"
+        git add test/
+        git commit -m "🤖 Automated playtest results: ${{ env.TEST_TYPE }}"
+        git push
+        
+    - name: Create Issue on Failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 Automated Playtest Failed',
+            body: `自動プレイテストが失敗しました。\n\n**実行時刻:** ${new Date().toISOString()}\n**テストタイプ:** ${{ env.TEST_TYPE }}\n\nログを確認してください: ${context.payload.repository.html_url}/actions/runs/${context.runId}`
+          });
