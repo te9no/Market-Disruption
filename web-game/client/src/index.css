@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .category-game-console {
+    @apply bg-game-console text-white;
+  }
+  
+  .category-diy-gadget {
+    @apply bg-diy-gadget text-white;
+  }
+  
+  .category-figure {
+    @apply bg-figure text-white;
+  }
+  
+  .category-accessory {
+    @apply bg-accessory text-white;
+  }
+  
+  .category-toy {
+    @apply bg-toy text-white;
+  }
+
+  .market-grid-cell {
+    @apply border border-gray-200 h-12 w-12 flex items-center justify-center text-xs font-bold rounded;
+  }
+  
+  .market-grid-cell-occupied {
+    @apply bg-blue-100 border-blue-300 cursor-pointer hover:bg-blue-200;
+  }
+  
+  .market-grid-cell-empty {
+    @apply bg-gray-50 hover:bg-gray-100 cursor-pointer;
+  }
+  
+  .action-button {
+    @apply bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors;
+  }
+  
+  .action-button:disabled {
+    @apply bg-gray-300 text-gray-500 cursor-not-allowed;
+  }
+  
+  .stat-display {
+    @apply bg-white rounded-lg shadow p-4;
+  }
+
+  /* Enhanced Action Button Styles */
+  .action-card-button {
+    @apply w-full p-4 border-2 rounded-lg transition-all duration-200 text-left;
+    @apply hover:shadow-md transform hover:scale-102;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
+  }
+
+  .action-card-button:disabled {
+    @apply hover:shadow-none;
+  }
+
+  /* Game Status Indicators */
+  .status-indicator {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  .status-indicator.active {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .status-indicator.waiting {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  .status-indicator.inactive {
+    @apply bg-gray-100 text-gray-800;
+  }
+
+  /* Enhanced Cards */
+  .game-card {
+    @apply bg-white rounded-xl shadow-lg border border-gray-100;
+    @apply transition-all duration-200 hover:shadow-xl;
+  }
+
+  /* Progress Bars */
+  .progress-bar {
+    @apply w-full bg-gray-200 rounded-full h-2 overflow-hidden;
+  }
+
+  .progress-fill {
+    @apply h-full transition-all duration-500 ease-out;
+  }
+
+  /* Hover Effects */
+  .hover-lift {
+    @apply transition-transform duration-200;
+  }
+
+  .hover-lift:hover {
+    @apply transform -translate-y-1;
+  }
+
+  /* Glass Morphism Effect */
+  .glass-card {
+    @apply backdrop-blur-sm bg-white bg-opacity-80 border border-white border-opacity-20;
+    @apply shadow-xl rounded-xl;
+  }
+}
+
+@layer utilities {
+  /* Animation Utils */
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-bounce-subtle {
+    animation: bounce-subtle 2s infinite;
+  }
+
+  @keyframes bounce-subtle {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+}

@@ -1,0 +1,153 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Enhanced Action Button Styles */
+.action-card-button {
+  @apply w-full p-4 border-2 rounded-lg transition-all duration-200 text-left;
+  @apply hover:shadow-md transform hover:scale-102;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
+}
+
+.action-card-button:disabled {
+  @apply hover:shadow-none;
+}
+
+/* Enhanced Action Button Base */
+.action-button {
+  @apply bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded;
+  @apply transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
+}
+
+/* Game Status Indicators */
+.status-indicator {
+  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-indicator.active {
+  @apply bg-green-100 text-green-800;
+}
+
+.status-indicator.waiting {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.status-indicator.inactive {
+  @apply bg-gray-100 text-gray-800;
+}
+
+/* Enhanced Cards */
+.game-card {
+  @apply bg-white rounded-xl shadow-lg border border-gray-100;
+  @apply transition-all duration-200 hover:shadow-xl;
+}
+
+/* Progress Bars */
+.progress-bar {
+  @apply w-full bg-gray-200 rounded-full h-2 overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full transition-all duration-500 ease-out;
+}
+
+/* Stat Display */
+.stat-display {
+  @apply bg-gradient-to-br rounded-lg p-3 text-center border;
+  @apply transition-all duration-200 hover:shadow-md;
+}
+
+/* Category Colors */
+.category-game-console {
+  @apply bg-red-500 text-white;
+}
+
+.category-diy-gadget {
+  @apply bg-blue-500 text-white;
+}
+
+.category-figure {
+  @apply bg-purple-500 text-white;
+}
+
+.category-accessory {
+  @apply bg-green-500 text-white;
+}
+
+.category-toy {
+  @apply bg-yellow-500 text-white;
+}
+
+/* Animation Utils */
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s infinite;
+}
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Hover Effects */
+.hover-lift {
+  @apply transition-transform duration-200;
+}
+
+.hover-lift:hover {
+  @apply transform -translate-y-1;
+}
+
+/* Glass Morphism Effect */
+.glass-card {
+  @apply backdrop-blur-sm bg-white bg-opacity-80 border border-white border-opacity-20;
+  @apply shadow-xl rounded-xl;
+}

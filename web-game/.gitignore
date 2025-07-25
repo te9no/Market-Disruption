@@ -1,0 +1,38 @@
+# ===== Web Game Specific .gitignore =====
+
+# ===== Client & Server Dependencies =====
+client/node_modules/
+server/node_modules/
+client/dist/
+client/dist-ssr/
+
+# ===== Environment Files =====
+client/.env.local
+server/.env
+server/.env.local
+client/.env.development.local
+client/.env.production.local
+
+# ===== Build & Cache =====
+client/.cache/
+client/.parcel-cache/
+client/.eslintcache
+client/.stylelintcache
+
+# ===== Logs =====
+client/npm-debug.log*
+server/npm-debug.log*
+client/yarn-debug.log*
+server/yarn-debug.log*
+
+# ===== Development Files =====
+client/nul
+server/nul
+*.tmp
+*.log
+
+# ===== Keep Example Files =====
+!client/.env.example
+!server/.env.example
+!client/.env.production
+!server/.env.production

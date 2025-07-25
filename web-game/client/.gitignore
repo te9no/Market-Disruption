@@ -1,0 +1,55 @@
+# ===== Client .gitignore =====
+
+# ===== Dependencies =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ===== Build Output =====
+dist/
+dist-ssr/
+build/
+coverage/
+
+# ===== Environment Variables =====
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ===== Cache & Temporary =====
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.tmp
+nul
+
+# ===== Logs =====
+logs/
+*.log
+
+# ===== Editor & IDE =====
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ===== Vite specific =====
+.vite/
+
+# ===== Testing =====
+coverage/
+.nyc_output/
+
+# ===== Keep Important Files =====
+!.env.example
+!.env.production

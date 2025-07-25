@@ -4,7 +4,19 @@
       "Bash(mkdir:*)",
       "Bash(git add:*)",
       "Bash(git push:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm start)",
+      "Bash(npm run build:*)",
+      "Bash(taskkill:*)",
+      "Bash(set PORT=3009)",
+      "Bash(npx tsc:*)",
+      "Bash(pkill:*)",
+      "Bash(rm:*)",
+      "Bash(echo:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }
