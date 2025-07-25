@@ -4,12 +4,35 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 
-const app = express();
-const server = createServer(app);
-
 // Environment configuration
 const PORT = process.env.PORT || 3001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Memory optimization
+if (NODE_ENV === 'production') {
+  // Set memory limits for production
+  process.env.NODE_OPTIONS = '--max-old-space-size=512';
+}
+
+const app = express();
+const server = createServer(app);
+
+// Process optimization for Railway
+process.on('SIGTERM', () => {
+  console.log('💤 SIGTERM received, shutting down gracefully...');
+  server.close(() => {
+    console.log('🛑 Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('💤 SIGINT received, shutting down gracefully...');
+  server.close(() => {
+    console.log('🛑 Server closed');
+    process.exit(0);
+  });
+});
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',')
   : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
@@ -36,8 +59,35 @@ const players = new Map();
 import { GameState } from './game/GameState.js';
 import { Player } from './game/Player.js';
 
+// Health check endpoints
 app.get('/', (req, res) => {
-  res.send('Market Disruption Game Server');
+  res.json({
+    status: 'healthy',
+    message: 'Market Disruption Game Server',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: NODE_ENV,
+    memory: process.memoryUsage(),
+    activeGames: games.size,
+    activePlayers: players.size
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+app.get('/stats', (req, res) => {
+  res.json({
+    games: games.size,
+    players: players.size,
+    memory: process.memoryUsage(),
+    uptime: process.uptime()
+  });
 });
 
 // Socket.io connection handling
