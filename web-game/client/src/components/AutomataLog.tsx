@@ -22,7 +22,7 @@ const AutomataLog: React.FC<AutomataLogProps> = ({ automataActions }) => {
   }
 
   const getActionDescription = (action: AutomataAction) => {
-    const { type, action: actionType, dice, total, design, product, price, purchasedProducts } = action;
+    const { type, action: actionType, dice, total, design, price, purchasedProducts } = action;
 
     if (type === 'manufacturer') {
       switch (actionType) {

@@ -57,7 +57,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     } catch (error) {
       console.error('❌ Action execution error:', error);
       setIsProcessingAction(false);
-      alert(`アクション実行エラー: ${error.message || 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`アクション実行エラー: ${errorMessage}`);
     }
   };
 

@@ -12,125 +12,202 @@
 
 @layer components {
   .category-game-console {
-    @apply bg-game-console text-white;
+    background-color: #ef4444;
+    color: white;
   }
   
   .category-diy-gadget {
-    @apply bg-diy-gadget text-white;
+    background-color: #3b82f6;
+    color: white;
   }
   
   .category-figure {
-    @apply bg-figure text-white;
+    background-color: #8b5cf6;
+    color: white;
   }
   
   .category-accessory {
-    @apply bg-accessory text-white;
+    background-color: #22c55e;
+    color: white;
   }
   
   .category-toy {
-    @apply bg-toy text-white;
+    background-color: #eab308;
+    color: white;
   }
 
   .market-grid-cell {
-    @apply border border-gray-200 h-12 w-12 flex items-center justify-center text-xs font-bold rounded;
+    border: 1px solid #e5e7eb;
+    height: 3rem;
+    width: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border-radius: 0.25rem;
   }
   
   .market-grid-cell-occupied {
-    @apply bg-blue-100 border-blue-300 cursor-pointer hover:bg-blue-200;
+    background-color: #dbeafe;
+    border-color: #93c5fd;
+    cursor: pointer;
+  }
+  
+  .market-grid-cell-occupied:hover {
+    background-color: #bfdbfe;
   }
   
   .market-grid-cell-empty {
-    @apply bg-gray-50 hover:bg-gray-100 cursor-pointer;
+    background-color: #f9fafb;
+    cursor: pointer;
+  }
+  
+  .market-grid-cell-empty:hover {
+    background-color: #f3f4f6;
   }
   
   .action-button {
-    @apply bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors;
+    background-color: #3b82f6;
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+  }
+  
+  .action-button:hover {
+    background-color: #2563eb;
   }
   
   .action-button:disabled {
-    @apply bg-gray-300 text-gray-500 cursor-not-allowed;
+    background-color: #d1d5db;
+    color: #6b7280;
+    cursor: not-allowed;
   }
   
   .stat-display {
-    @apply bg-white rounded-lg shadow p-4;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
   }
 
   /* Enhanced Action Button Styles */
   .action-card-button {
-    @apply w-full p-4 border-2 rounded-lg transition-all duration-200 text-left;
-    @apply hover:shadow-md transform hover:scale-102;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
-    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    text-align: left;
+    outline: none;
+  }
+
+  .action-card-button:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: scale(1.02);
   }
 
   .action-card-button:disabled {
-    @apply hover:shadow-none;
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .action-card-button:focus {
+    outline: none;
+    ring: 2px solid #3b82f6;
+    ring-opacity: 0.5;
   }
 
   /* Game Status Indicators */
   .status-indicator {
-    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
   }
 
   .status-indicator.active {
-    @apply bg-green-100 text-green-800;
+    background-color: #dcfce7;
+    color: #166534;
   }
 
   .status-indicator.waiting {
-    @apply bg-yellow-100 text-yellow-800;
+    background-color: #fef3c7;
+    color: #92400e;
   }
 
   .status-indicator.inactive {
-    @apply bg-gray-100 text-gray-800;
+    background-color: #f3f4f6;
+    color: #374151;
   }
 
   /* Enhanced Cards */
   .game-card {
-    @apply bg-white rounded-xl shadow-lg border border-gray-100;
-    @apply transition-all duration-200 hover:shadow-xl;
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f3f4f6;
+    transition: all 0.2s;
+  }
+
+  .game-card:hover {
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
   }
 
   /* Progress Bars */
   .progress-bar {
-    @apply w-full bg-gray-200 rounded-full h-2 overflow-hidden;
+    width: 100%;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    height: 0.5rem;
+    overflow: hidden;
   }
 
   .progress-fill {
-    @apply h-full transition-all duration-500 ease-out;
+    height: 100%;
+    transition: all 0.5s ease-out;
   }
 
   /* Hover Effects */
   .hover-lift {
-    @apply transition-transform duration-200;
+    transition: transform 0.2s;
   }
 
   .hover-lift:hover {
-    @apply transform -translate-y-1;
+    transform: translateY(-0.25rem);
   }
 
   /* Glass Morphism Effect */
   .glass-card {
-    @apply backdrop-blur-sm bg-white bg-opacity-80 border border-white border-opacity-20;
-    @apply shadow-xl rounded-xl;
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+    border-radius: 0.75rem;
   }
 }
 
-@layer utilities {
-  /* Animation Utils */
-  .animate-pulse-slow {
-    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
+}
 
-  .animate-bounce-subtle {
-    animation: bounce-subtle 2s infinite;
-  }
+/* Animation Utils */
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
 
-  @keyframes bounce-subtle {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-4px);
-    }
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s infinite;
+}
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
   }
 }

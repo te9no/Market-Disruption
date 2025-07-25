@@ -139,7 +139,6 @@ const GameStatus: React.FC<GameStatusProps> = ({
           
           <div className="space-y-3">
             {Object.entries(pollution).map(([category, level]) => {
-              const healthPercent = Math.max(0, 100 - (level * 20));
               return (
                 <div key={category} className="space-y-2">
                   <div className="flex items-center justify-between">

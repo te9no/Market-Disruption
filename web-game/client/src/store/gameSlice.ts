@@ -54,6 +54,7 @@ export interface GameState {
   manufacturerAutomata: any;
   resaleAutomata: any;
   activeTrends: any[];
+  automataActions?: any[];
   winner: Player | null;
 }
 
