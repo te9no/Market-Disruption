@@ -607,33 +607,31 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">対象プレイヤー:</label>
-              <select 
+              <ModernSelect
                 value={actionParams.targetPlayerId || ''}
-                onChange={(e) => setActionParams({...actionParams, targetPlayerId: e.target.value})}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">選択してください</option>
-                {gameState.players
+                onChange={(value) => setActionParams({...actionParams, targetPlayerId: value})}
+                placeholder="対象プレイヤーを選択"
+                options={gameState.players
                   .filter(p => p.id !== player.id)
-                  .map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-              </select>
+                  .map((p) => ({
+                    value: p.id,
+                    label: p.name
+                  }))}
+              />
             </div>
             {actionParams.targetPlayerId && (
               <div>
                 <label className="block text-sm font-medium mb-1">商品 (価格-人気度):</label>
-                <select 
+                <ModernSelect
                   value={`${actionParams.price}-${actionParams.popularity}` || ''}
-                  onChange={(e) => {
-                    const [price, popularity] = e.target.value.split('-').map(Number);
+                  onChange={(value) => {
+                    const [price, popularity] = value.split('-').map(Number);
                     setActionParams({...actionParams, price, popularity});
                   }}
-                  className="w-full border rounded px-3 py-2"
-                >
-                  <option value="">選択してください</option>
-                  {/* This would need to be populated with actual products from the target player */}
-                </select>
+                  placeholder="商品を選択"
+                  options={[]}
+                  emptyMessage="対象プレイヤーの商品がありません"
+                />
               </div>
             )}
             <div className="flex space-x-2">
