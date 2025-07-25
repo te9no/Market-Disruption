@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { Player, GameState } from '../store/gameSlice';
 import { useSocket } from '../hooks/useSocket';
 import ModernButton from './ModernButton';
+import ModernSelect from './ModernSelect';
 
 interface ActionPanelProps {
   player: Player;
@@ -236,18 +237,15 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <h4 className="font-bold">製造アクション (1AP)</h4>
             <div>
               <label className="block text-sm font-medium mb-1">設計スロット:</label>
-              <select 
-                value={actionParams.designSlot || ''}
-                onChange={(e) => setActionParams({...actionParams, designSlot: parseInt(e.target.value)})}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">選択してください</option>
-                {Object.entries(player.designs).map(([slot, design]) => (
-                  <option key={slot} value={slot}>
-                    スロット{slot}: {design.category} (コスト{design.cost})
-                  </option>
-                ))}
-              </select>
+              <ModernSelect
+                value={actionParams.designSlot?.toString() || ''}
+                onChange={(value) => setActionParams({...actionParams, designSlot: parseInt(value)})}
+                placeholder="設計スロットを選択"
+                options={Object.entries(player.designs).map(([slot, design]) => ({
+                  value: slot,
+                  label: `スロット${slot}: ${design.category} (コスト${design.cost})`
+                }))}
+              />
             </div>
             <div className="flex space-x-2">
               <button
