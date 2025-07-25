@@ -271,33 +271,30 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <h4 className="font-bold">転売アクション (1AP)</h4>
             <div>
               <label className="block text-sm font-medium mb-1">転売商品:</label>
-              <select 
+              <ModernSelect
                 value={actionParams.productId || ''}
-                onChange={(e) => {
-                  const product = player.inventory.find(p => p.id === e.target.value);
+                onChange={(value) => {
+                  const product = player.inventory.find(p => p.id === value);
                   if (product && product.previousOwner) {
                     const basePrice = (product.purchasePrice || 0) + 5 + player.resaleHistory <= 1 ? 0 : 
                                     player.resaleHistory <= 4 ? 3 : 
                                     player.resaleHistory <= 7 ? 6 : 10;
                     setActionParams({
                       ...actionParams, 
-                      productId: e.target.value,
+                      productId: value,
                       basePrice,
                       maxPrice: basePrice // Will be adjusted by regulation
                     });
                   }
                 }}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">選択してください</option>
-                {player.inventory
+                placeholder="転売商品を選択"
+                options={player.inventory
                   .filter(product => product.previousOwner)
-                  .map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.category} (購入価格{product.purchasePrice || 0})
-                    </option>
-                  ))}
-              </select>
+                  .map((product) => ({
+                    value: product.id,
+                    label: `${product.category} (購入価格${product.purchasePrice || 0})`
+                  }))}
+              />
             </div>
             {actionParams.productId && (
               <div>
@@ -344,33 +341,30 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <h4 className="font-bold">販売アクション (1AP)</h4>
             <div>
               <label className="block text-sm font-medium mb-1">商品:</label>
-              <select 
+              <ModernSelect
                 value={actionParams.productId || ''}
-                onChange={(e) => {
-                  const product = player.inventory?.find(p => p.id === e.target.value);
+                onChange={(value) => {
+                  const product = player.inventory?.find(p => p.id === value);
                   if (product) {
                     setActionParams({
                       ...actionParams, 
-                      productId: e.target.value,
+                      productId: value,
                       maxPrice: Math.floor((product.cost || 0) * 1.5) || 1
                     });
                   } else {
                     setActionParams({
                       ...actionParams, 
-                      productId: e.target.value,
+                      productId: value,
                       maxPrice: 1
                     });
                   }
                 }}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">選択してください</option>
-                {(player.inventory || []).map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.category || '不明'} (値{product.value || 0}, コスト{product.cost || 0})
-                  </option>
-                ))}
-              </select>
+                placeholder="販売する商品を選択"
+                options={(player.inventory || []).map((product) => ({
+                  value: product.id,
+                  label: `${product.category || '不明'} (値${product.value || 0}, コスト${product.cost || 0})`
+                }))}
+              />
             </div>
             {actionParams.productId && (
               <div>
@@ -411,46 +405,44 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <h4 className="font-bold">レビューアクション (1AP)</h4>
             <div>
               <label className="block text-sm font-medium mb-1">対象プレイヤー:</label>
-              <select 
+              <ModernSelect
                 value={actionParams.targetPlayerId || ''}
-                onChange={(e) => setActionParams({...actionParams, targetPlayerId: e.target.value})}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">選択してください</option>
-                {gameState.players
+                onChange={(value) => setActionParams({...actionParams, targetPlayerId: value})}
+                placeholder="対象プレイヤーを選択"
+                options={gameState.players
                   .filter(p => p.id !== player.id)
-                  .map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-              </select>
+                  .map((p) => ({
+                    value: p.id,
+                    label: p.name
+                  }))}
+              />
             </div>
             {actionParams.targetPlayerId && (
               <>
                 <div>
                   <label className="block text-sm font-medium mb-1">商品 (価格-人気度):</label>
-                  <select 
+                  <ModernSelect
                     value={`${actionParams.price}-${actionParams.popularity}` || ''}
-                    onChange={(e) => {
-                      const [price, popularity] = e.target.value.split('-').map(Number);
+                    onChange={(value) => {
+                      const [price, popularity] = value.split('-').map(Number);
                       setActionParams({...actionParams, price, popularity});
                     }}
-                    className="w-full border rounded px-3 py-2"
-                  >
-                    <option value="">選択してください</option>
-                    {/* This would need to be populated with actual products from the target player */}
-                  </select>
+                    placeholder="商品を選択"
+                    options={[]}
+                    emptyMessage="対象プレイヤーの商品がありません"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">レビュータイプ:</label>
-                  <select 
+                  <ModernSelect
                     value={actionParams.reviewType || ''}
-                    onChange={(e) => setActionParams({...actionParams, reviewType: e.target.value})}
-                    className="w-full border rounded px-3 py-2"
-                  >
-                    <option value="">選択してください</option>
-                    <option value="positive">高評価 (+1人気度)</option>
-                    <option value="negative">低評価 (-1人気度)</option>
-                  </select>
+                    onChange={(value) => setActionParams({...actionParams, reviewType: value})}
+                    placeholder="レビュータイプを選択"
+                    options={[
+                      { value: 'positive', label: '高評価 (+1人気度)' },
+                      { value: 'negative', label: '低評価 (-1人気度)' }
+                    ]}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">
@@ -492,10 +484,10 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">商品 (価格-人気度):</label>
-              <select 
+              <ModernSelect
                 value={`${actionParams.price}-${actionParams.popularity}` || ''}
-                onChange={(e) => {
-                  const [price, popularity] = e.target.value.split('-').map(Number);
+                onChange={(value) => {
+                  const [price, popularity] = value.split('-').map(Number);
                   const product = Object.values(player.personalMarket[price] || {})
                     .find(p => p && p.popularity === popularity);
                   setActionParams({
@@ -505,22 +497,19 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     productInfo: product
                   });
                 }}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">選択してください</option>
-                {Object.entries(player.personalMarket).map(([price, popularityMap]) =>
+                placeholder="買い戻しする商品を選択"
+                options={Object.entries(player.personalMarket).map(([price, popularityMap]) =>
                   Object.entries(popularityMap).map(([popularity, product]) => {
                     if (product) {
-                      return (
-                        <option key={`${price}-${popularity}`} value={`${price}-${popularity}`}>
-                          {product.category} (価格{price}、人気度{popularity})
-                        </option>
-                      );
+                      return {
+                        value: `${price}-${popularity}`,
+                        label: `${product.category} (価格${price}、人気度${popularity})`
+                      };
                     }
                     return null;
                   })
                 ).flat().filter(Boolean)}
-              </select>
+              />
             </div>
             {actionParams.productInfo && (
               <div className="bg-gray-100 p-3 rounded">
