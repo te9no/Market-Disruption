@@ -498,7 +498,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   });
                 }}
                 placeholder="買い戻しする商品を選択"
-                options={Object.entries(player.personalMarket).map(([price, popularityMap]) =>
+                options={Object.entries(player.personalMarket).flatMap(([price, popularityMap]) =>
                   Object.entries(popularityMap).map(([popularity, product]) => {
                     if (product) {
                       return {
@@ -507,8 +507,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       };
                     }
                     return null;
-                  })
-                ).flat().filter(Boolean)}
+                  }).filter((item): item is {value: string, label: string} => item !== null)
+                )}
               />
             </div>
             {actionParams.productInfo && (

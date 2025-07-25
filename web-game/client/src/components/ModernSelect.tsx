@@ -15,6 +15,7 @@ interface ModernSelectProps {
   placeholder?: string;
   label?: string;
   className?: string;
+  emptyMessage?: string;
 }
 
 const ModernSelect: React.FC<ModernSelectProps> = ({
@@ -23,7 +24,8 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
   options,
   placeholder = "選択してください",
   label,
-  className = ""
+  className = "",
+  emptyMessage = "選択肢がありません"
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -179,7 +181,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
                 color: '#9ca3af',
                 fontSize: '14px'
               }}>
-                該当する項目がありません
+                {searchTerm ? '該当する項目がありません' : emptyMessage}
               </div>
             ) : (
               filteredOptions.map((option) => (

@@ -25,7 +25,7 @@ export interface Design {
 export interface Player {
   id: string;
   name: string;
-  role: 'host' | 'player';
+  role: 'host' | 'player' | 'ai';
   funds: number;
   prestige: number;
   resaleHistory: number;

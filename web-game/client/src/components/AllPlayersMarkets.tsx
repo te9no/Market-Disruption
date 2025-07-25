@@ -6,7 +6,6 @@ import { useSocket } from '../hooks/useSocket';
 interface AllPlayersMarketsProps {
   players: Player[];
   currentPlayerId: string;
-  currentPlayerIndex: number;
   isMyTurn: boolean;
   manufacturerAutomata: any;
   resaleAutomata: any;
@@ -15,7 +14,6 @@ interface AllPlayersMarketsProps {
 const AllPlayersMarkets: React.FC<AllPlayersMarketsProps> = ({ 
   players, 
   currentPlayerId, 
-  currentPlayerIndex,
   isMyTurn,
   manufacturerAutomata,
   resaleAutomata 
