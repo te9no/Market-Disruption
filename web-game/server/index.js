@@ -337,6 +337,11 @@ io.on('connection', (socket) => {
       });
       
       console.log(`✅ Game ${playerData.gameId} started successfully`);
+      
+      // Start AI processing if current player is AI
+      setTimeout(() => {
+        processAITurnIfNeeded(playerData.gameId);
+      }, 1000);
     } catch (error) {
       console.error('❌ Error starting game:', error);
       socket.emit('error', { message: 'Failed to start game' });
@@ -386,6 +391,11 @@ io.on('connection', (socket) => {
           });
           
           console.log(`📤 Game state updated and broadcast to room ${playerData.gameId}`);
+          
+          // Process AI turn if next player is AI
+          setTimeout(() => {
+            processAITurnIfNeeded(playerData.gameId);
+          }, 2000);
         } catch (stateError) {
           console.error('❌ Error serializing game state:', stateError);
           socket.emit('action-error', { 
@@ -438,6 +448,53 @@ io.on('connection', (socket) => {
     console.log('Player disconnected:', socket.id);
   });
 });
+
+// AI プレイヤーのターン処理
+function processAITurnIfNeeded(gameId) {
+  const game = games.get(gameId);
+  if (!game || game.state !== 'playing') return;
+  
+  const currentPlayer = game.getCurrentPlayer();
+  if (!currentPlayer || currentPlayer.role !== 'ai') return;
+  
+  console.log(`🤖 Processing AI turn for ${currentPlayer.name} in game ${gameId}`);
+  
+  try {
+    const result = game.processAITurn(currentPlayer);
+    
+    if (result.success) {
+      const gameStateJSON = game.toJSON();
+      
+      // Broadcast AI action to all players
+      io.to(gameId).emit('game-update', {
+        gameState: gameStateJSON,
+        lastAction: result.action
+      });
+      
+      io.to(gameId).emit('game-state-updated', {
+        gameState: gameStateJSON
+      });
+      
+      console.log(`🤖 AI turn completed for ${currentPlayer.name}`);
+      
+      // Check if game ended
+      if (result.gameEnded) {
+        io.to(gameId).emit('game-over', {
+          winner: game.getWinner(),
+          finalState: gameStateJSON
+        });
+        return;
+      }
+      
+      // Continue processing if next player is also AI
+      setTimeout(() => {
+        processAITurnIfNeeded(gameId);
+      }, 2000);
+    }
+  } catch (error) {
+    console.error(`❌ Error processing AI turn for ${currentPlayer.name}:`, error);
+  }
+}
 
 server.listen(PORT, () => {
   console.log(`Market Disruption server running on port ${PORT}`);

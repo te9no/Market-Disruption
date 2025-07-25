@@ -175,6 +175,11 @@ const LobbyScreen: React.FC = () => {
                         ホスト
                       </span>
                     )}
+                    {player.role === 'ai' && (
+                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                        🤖 AI
+                      </span>
+                    )}
                     {player.id === currentPlayer.id && (
                       <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
                         あなた

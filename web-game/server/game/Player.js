@@ -2,7 +2,7 @@ export class Player {
   constructor(id, name, role = 'player') {
     this.id = id;
     this.name = name;
-    this.role = role; // 'host' or 'player'
+    this.role = role; // 'host', 'player', or 'ai'
     
     // Game state
     this.funds = 30;

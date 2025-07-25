@@ -227,6 +227,91 @@ export class GameState {
     }
   }
   
+  // AI プレイヤーの自動行動
+  processAITurn(aiPlayer) {
+    console.log(`🤖 Processing AI turn for ${aiPlayer.name}`);
+    
+    while (aiPlayer.actionPoints > 0) {
+      const action = this.selectAIAction(aiPlayer);
+      if (!action) {
+        console.log(`🤖 ${aiPlayer.name}: No valid actions, ending turn`);
+        break;
+      }
+      
+      try {
+        const result = this.executeAction(aiPlayer, action);
+        console.log(`🤖 ${aiPlayer.name} performed ${action.type}:`, result);
+        
+        // Check for victory after action
+        if (this.checkVictory(aiPlayer)) {
+          this.state = 'finished';
+          this.winner = aiPlayer;
+          return { success: true, action: result, gameEnded: true };
+        }
+      } catch (error) {
+        console.log(`🤖 ${aiPlayer.name} action failed:`, error.message);
+        break;
+      }
+    }
+    
+    // AI turn complete, move to next player
+    const nextPhase = this.nextPlayer();
+    return { success: true, action: { type: 'ai_turn_complete' }, nextPhase };
+  }
+  
+  // AIアクション選択ロジック
+  selectAIAction(aiPlayer) {
+    const actions = [];
+    
+    // 製造可能なデザインがあるかチェック
+    for (let slot = 1; slot <= 6; slot++) {
+      const design = aiPlayer.getDesign(slot);
+      if (design && aiPlayer.canAfford(design.cost) && aiPlayer.hasActionPoints(1)) {
+        actions.push({ type: 'manufacture', designSlot: slot, priority: 10 });
+      }
+    }
+    
+    // 在庫から販売可能な商品があるかチェック
+    if (aiPlayer.inventory.length > 0 && aiPlayer.hasActionPoints(1)) {
+      const product = aiPlayer.inventory[0];
+      const priceLimit = aiPlayer.getPriceLimit(product.cost);
+      const price = Math.min(priceLimit, product.cost + 2);
+      
+      // 空いているスロットを探す
+      for (let popularity = 1; popularity <= 6; popularity++) {
+        if (!aiPlayer.personalMarket[price] || !aiPlayer.personalMarket[price][popularity]) {
+          actions.push({ 
+            type: 'sell', 
+            productId: product.id, 
+            price: price, 
+            popularity: popularity,
+            priority: 8 
+          });
+          break;
+        }
+      }
+    }
+    
+    // 資金が少ない場合はアルバイト
+    if (aiPlayer.funds < 10 && aiPlayer.hasActionPoints(1)) {
+      actions.push({ type: 'part_time_job', priority: 6 });
+    }
+    
+    // デザインが少ない場合はデザイン獲得
+    if (aiPlayer.designs.size < 4 && aiPlayer.hasActionPoints(1)) {
+      actions.push({ type: 'design', priority: 7 });
+    }
+    
+    // アクションポイントが余っている場合はターン終了
+    if (actions.length === 0) {
+      actions.push({ type: 'end_turn', priority: 1 });
+    }
+    
+    // 優先度順にソートして最適なアクションを選択
+    actions.sort((a, b) => b.priority - a.priority);
+    return actions[0];
+  }
+  
   executeAction(player, actionData) {
     const { type, ...params } = actionData;
     
