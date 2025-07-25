@@ -4,6 +4,11 @@ import type { Product } from '../store/gameSlice';
 interface PersonalMarketProps {
   personalMarket: { [price: number]: { [popularity: number]: Product | null } };
   playerId: string;
+  canInteract?: boolean;
+  currentPlayerId?: string;
+  isMyTurn?: boolean;
+  onPurchase?: (productId: string, price: number, popularity: number) => void;
+  onReview?: (productId: string) => void;
 }
 
 const getCategoryColor = (category: string) => {
@@ -39,10 +44,18 @@ const getCategoryName = (category: string) => {
   }
 };
 
-const PersonalMarket: React.FC<PersonalMarketProps> = ({ personalMarket }) => {
+const PersonalMarket: React.FC<PersonalMarketProps> = ({ 
+  personalMarket, 
+  playerId, 
+  canInteract = false, 
+  currentPlayerId = '', 
+  isMyTurn = false,
+  onPurchase,
+  onReview 
+}) => {
   const [showSection, setShowSection] = useState<'all' | 'low' | 'high'>('low');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
-  const renderProduct = (product: Product | null) => {
+  const renderProduct = (product: Product | null, price?: number, popularity?: number) => {
     if (!product) {
       return (
         <div className="w-16 h-16 border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 flex items-center justify-center rounded-lg transition-colors">
@@ -52,15 +65,43 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({ personalMarket }) => {
     }
 
     const isResale = product.previousOwner !== undefined;
+    const isOtherPlayer = canInteract && playerId !== currentPlayerId;
+    const canPurchaseOrReview = isOtherPlayer && isMyTurn;
     
     return (
-      <div className={`w-16 h-16 border-2 border-gray-300 flex flex-col items-center justify-center text-white ${getCategoryColor(product.category)} hover:opacity-80 cursor-pointer rounded-lg shadow-sm relative transition-all`}>
+      <div className={`w-16 h-16 border-2 border-gray-300 flex flex-col items-center justify-center text-white ${getCategoryColor(product.category)} hover:opacity-80 cursor-pointer rounded-lg shadow-sm relative transition-all group`}>
         <div className="text-sm font-bold">{getCategoryShort(product.category)}</div>
         <div className="text-xs">値{product.value}</div>
-        <div className="text-xs">¥{product.price || 0}</div>
+        <div className="text-xs">¥{product.price || price || 0}</div>
         {isResale && (
           <div className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold">
             転
+          </div>
+        )}
+        
+        {/* Interaction buttons for other players' products */}
+        {canPurchaseOrReview && price && popularity && (
+          <div className="absolute inset-0 bg-black bg-opacity-70 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center space-y-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onPurchase?.(product.id, price, popularity);
+              }}
+              className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded font-bold"
+              title="購入する (1AP)"
+            >
+              購入
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onReview?.(product.id);
+              }}
+              className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-bold"
+              title="レビューする (1AP)"
+            >
+              👁‍🗨
+            </button>
           </div>
         )}
       </div>
@@ -124,6 +165,9 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({ personalMarket }) => {
               <th className="text-center py-3 px-2 font-bold text-gray-700">⭐人気度</th>
               <th className="text-center py-3 px-2 font-bold text-gray-700">設計#</th>
               <th className="text-center py-3 px-2 font-bold text-gray-700">状態</th>
+              {canInteract && playerId !== currentPlayerId && (
+                <th className="text-center py-3 px-2 font-bold text-gray-700">アクション</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -180,6 +224,32 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({ personalMarket }) => {
                       </span>
                     )}
                   </td>
+                  {canInteract && playerId !== currentPlayerId && (
+                    <td className="text-center py-3 px-2">
+                      {isMyTurn ? (
+                        <div className="flex space-x-1 justify-center">
+                          <button
+                            onClick={() => onPurchase?.(product.id, product.price, product.popularity)}
+                            className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded font-bold"
+                            title="購入する (1AP)"
+                          >
+                            購入
+                          </button>
+                          <button
+                            onClick={() => onReview?.(product.id)}
+                            className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-bold"
+                            title="レビューする (1AP)"
+                          >
+                            👁‍🗨
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs">
+                          {currentPlayerId === playerId ? '自分の商品' : 'あなたのターンではありません'}
+                        </span>
+                      )}
+                    </td>
+                  )}
                 </tr>
               );
             })}
@@ -300,7 +370,7 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({ personalMarket }) => {
               // Market Cells
               ...([1, 2, 3, 4, 5, 6].map(popularity => (
                 <div key={`${price}-${popularity}`} className="relative group border-r-2 border-b border-gray-400 h-16 flex items-center justify-center p-1 hover:bg-white hover:bg-opacity-50 transition-colors">
-                  {renderProduct(personalMarket[price]?.[popularity] || null)}
+                  {renderProduct(personalMarket[price]?.[popularity] || null, price, popularity)}
                   
                   {/* Hover tooltip */}
                   {personalMarket[price]?.[popularity] && (

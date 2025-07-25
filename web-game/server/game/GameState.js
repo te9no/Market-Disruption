@@ -338,6 +338,10 @@ export class GameState {
         return this.actionPromoteRegulation(player, params);
       case 'trend_research':
         return this.actionTrendResearch(player, params);
+      case 'purchase':
+        return this.actionPurchase(player, params);
+      case 'review':
+        return this.actionReview(player, params);
       case 'end_turn':
         return this.actionEndTurn(player, params);
       case 'skip-automata':
@@ -749,6 +753,150 @@ export class GameState {
       dice: [dice1, dice2, dice3], 
       total, 
       trendEffect 
+    };
+  }
+
+  actionPurchase(player, { sellerId, productId, price, popularity }) {
+    if (!player.hasActionPoints(1)) {
+      throw new Error('Not enough action points');
+    }
+
+    // Find seller (player or automata)
+    let seller;
+    let sellerMarket;
+    
+    if (sellerId === 'manufacturer-automata') {
+      seller = this.manufacturerAutomata;
+      sellerMarket = this.manufacturerAutomata.personalMarket;
+    } else if (sellerId === 'resale-automata') {
+      seller = this.resaleAutomata;
+      sellerMarket = this.resaleAutomata.personalMarket;
+    } else {
+      seller = this.players.find(p => p.id === sellerId);
+      if (!seller) {
+        throw new Error('Seller not found');
+      }
+      sellerMarket = seller.personalMarket;
+    }
+
+    // Find product
+    const product = sellerMarket[price]?.[popularity];
+    if (!product || product.id !== productId) {
+      throw new Error('Product not found');
+    }
+
+    // Check if player can afford
+    if (!player.canAfford(price)) {
+      throw new Error('Cannot afford product');
+    }
+
+    player.spendActionPoints(1);
+    player.spendFunds(price);
+
+    // Remove product from seller's market
+    if (sellerId === 'manufacturer-automata' || sellerId === 'resale-automata') {
+      delete sellerMarket[price][popularity];
+      seller.funds += price;
+    } else {
+      seller.removeProductFromMarket(price, popularity);
+      seller.gainFunds(price);
+    }
+
+    // Add to buyer's inventory with resale flag
+    const resaleProduct = {
+      ...product,
+      previousOwner: sellerId,
+      originalPrice: product.price || price
+    };
+    player.inventory.push(resaleProduct);
+
+    // Update buyer's resale history
+    player.incrementResaleHistory();
+
+    // Reduce seller's prestige if selling to reseller
+    if (sellerId !== 'manufacturer-automata' && sellerId !== 'resale-automata') {
+      seller.modifyPrestige(-1);
+    }
+
+    return { 
+      type: 'purchase', 
+      productId, 
+      price, 
+      popularity, 
+      sellerId,
+      buyerFunds: player.funds,
+      sellerFunds: seller.funds
+    };
+  }
+
+  actionReview(player, { sellerId, productId }) {
+    if (!player.hasActionPoints(1)) {
+      throw new Error('Not enough action points');
+    }
+
+    // Find seller and product
+    let seller;
+    let product;
+    
+    if (sellerId === 'manufacturer-automata') {
+      seller = this.manufacturerAutomata;
+      // Find product in manufacturer automata's market
+      for (const priceLevel of Object.values(seller.personalMarket)) {
+        for (const prod of Object.values(priceLevel)) {
+          if (prod && prod.id === productId) {
+            product = prod;
+            break;
+          }
+        }
+        if (product) break;
+      }
+    } else if (sellerId === 'resale-automata') {
+      seller = this.resaleAutomata;
+      // Find product in resale automata's market
+      for (const priceLevel of Object.values(seller.personalMarket)) {
+        for (const prod of Object.values(priceLevel)) {
+          if (prod && prod.id === productId) {
+            product = prod;
+            break;
+          }
+        }
+        if (product) break;
+      }
+    } else {
+      seller = this.players.find(p => p.id === sellerId);
+      if (!seller) {
+        throw new Error('Seller not found');
+      }
+      // Find product in player's market
+      for (const priceLevel of Object.values(seller.personalMarket)) {
+        for (const prod of Object.values(priceLevel)) {
+          if (prod && prod.id === productId) {
+            product = prod;
+            break;
+          }
+        }
+        if (product) break;
+      }
+    }
+
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    player.spendActionPoints(1);
+
+    // Review effect: seller loses 1 prestige, reviewer gains 1 prestige
+    if (sellerId !== 'manufacturer-automata' && sellerId !== 'resale-automata') {
+      seller.modifyPrestige(-1);
+    }
+    player.modifyPrestige(1);
+
+    return { 
+      type: 'review', 
+      productId, 
+      sellerId,
+      reviewerPrestige: player.prestige,
+      sellerPrestige: seller.prestige || 'N/A'
     };
   }
 

@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import PersonalMarket from './PersonalMarket';
 import type { Player } from '../store/gameSlice';
+import { useSocket } from '../hooks/useSocket';
 
 interface AllPlayersMarketsProps {
   players: Player[];
   currentPlayerId: string;
+  currentPlayerIndex: number;
+  isMyTurn: boolean;
   manufacturerAutomata: any;
   resaleAutomata: any;
 }
@@ -12,12 +15,43 @@ interface AllPlayersMarketsProps {
 const AllPlayersMarkets: React.FC<AllPlayersMarketsProps> = ({ 
   players, 
   currentPlayerId, 
+  currentPlayerIndex,
+  isMyTurn,
   manufacturerAutomata,
   resaleAutomata 
 }) => {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(currentPlayerId);
+  const { sendGameAction } = useSocket();
 
   const selectedPlayer = players.find(p => p.id === selectedPlayerId);
+
+  const handlePurchase = (productId: string, price: number, popularity: number) => {
+    if (!isMyTurn) {
+      alert('あなたのターンではありません');
+      return;
+    }
+
+    sendGameAction({
+      type: 'purchase',
+      sellerId: selectedPlayerId,
+      productId,
+      price,
+      popularity
+    });
+  };
+
+  const handleReview = (productId: string) => {
+    if (!isMyTurn) {
+      alert('あなたのターンではありません');
+      return;
+    }
+
+    sendGameAction({
+      type: 'review',
+      sellerId: selectedPlayerId,
+      productId
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -76,6 +110,11 @@ const AllPlayersMarkets: React.FC<AllPlayersMarketsProps> = ({
             <PersonalMarket 
               personalMarket={manufacturerAutomata?.personalMarket || {}} 
               playerId="manufacturer-automata"
+              canInteract={true}
+              currentPlayerId={currentPlayerId}
+              isMyTurn={isMyTurn}
+              onPurchase={handlePurchase}
+              onReview={handleReview}
             />
           </div>
         ) : selectedPlayerId === 'resale-automata' ? (
@@ -87,6 +126,11 @@ const AllPlayersMarkets: React.FC<AllPlayersMarketsProps> = ({
             <PersonalMarket 
               personalMarket={resaleAutomata?.personalMarket || {}} 
               playerId="resale-automata"
+              canInteract={true}
+              currentPlayerId={currentPlayerId}
+              isMyTurn={isMyTurn}
+              onPurchase={handlePurchase}
+              onReview={handleReview}
             />
           </div>
         ) : selectedPlayer ? (
@@ -106,6 +150,11 @@ const AllPlayersMarkets: React.FC<AllPlayersMarketsProps> = ({
             <PersonalMarket 
               personalMarket={selectedPlayer.personalMarket || {}} 
               playerId={selectedPlayer.id}
+              canInteract={true}
+              currentPlayerId={currentPlayerId}
+              isMyTurn={isMyTurn}
+              onPurchase={handlePurchase}
+              onReview={handleReview}
             />
           </div>
         ) : (

@@ -286,6 +286,8 @@ const GameBoard: React.FC = () => {
           <AllPlayersMarkets 
             players={gameState.players}
             currentPlayerId={currentPlayer.id}
+            currentPlayerIndex={gameState.currentPlayerIndex}
+            isMyTurn={isCurrentPlayerTurn}
             manufacturerAutomata={gameState.manufacturerAutomata}
             resaleAutomata={gameState.resaleAutomata}
           />
