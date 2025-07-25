@@ -16,7 +16,8 @@
       "Bash(pkill:*)",
       "Bash(rm:*)",
       "Bash(echo:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
