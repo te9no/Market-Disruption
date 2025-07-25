@@ -1,200 +1,193 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    margin: 0;
-    min-height: 100vh;
-  }
+/* Base styles */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  min-height: 100vh;
 }
 
-@layer components {
-  .category-game-console {
-    background-color: #ef4444;
-    color: white;
-  }
-  
-  .category-diy-gadget {
-    background-color: #3b82f6;
-    color: white;
-  }
-  
-  .category-figure {
-    background-color: #8b5cf6;
-    color: white;
-  }
-  
-  .category-accessory {
-    background-color: #22c55e;
-    color: white;
-  }
-  
-  .category-toy {
-    background-color: #eab308;
-    color: white;
-  }
-
-  .market-grid-cell {
-    border: 1px solid #e5e7eb;
-    height: 3rem;
-    width: 3rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: bold;
-    border-radius: 0.25rem;
-  }
-  
-  .market-grid-cell-occupied {
-    background-color: #dbeafe;
-    border-color: #93c5fd;
-    cursor: pointer;
-  }
-  
-  .market-grid-cell-occupied:hover {
-    background-color: #bfdbfe;
-  }
-  
-  .market-grid-cell-empty {
-    background-color: #f9fafb;
-    cursor: pointer;
-  }
-  
-  .market-grid-cell-empty:hover {
-    background-color: #f3f4f6;
-  }
-  
-  .action-button {
-    background-color: #3b82f6;
-    color: white;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    transition: background-color 0.2s;
-  }
-  
-  .action-button:hover {
-    background-color: #2563eb;
-  }
-  
-  .action-button:disabled {
-    background-color: #d1d5db;
-    color: #6b7280;
-    cursor: not-allowed;
-  }
-  
-  .stat-display {
-    background-color: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    padding: 1rem;
-  }
-
-  /* Enhanced Action Button Styles */
-  .action-card-button {
-    width: 100%;
-    padding: 1rem;
-    border: 2px solid;
-    border-radius: 0.5rem;
-    transition: all 0.2s;
-    text-align: left;
-    outline: none;
-  }
-
-  .action-card-button:hover {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transform: scale(1.02);
-  }
-
-  .action-card-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  .action-card-button:focus {
-    outline: none;
-    ring: 2px solid #3b82f6;
-    ring-opacity: 0.5;
-  }
-
-  /* Game Status Indicators */
-  .status-indicator {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.5rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
-
-  .status-indicator.active {
-    background-color: #dcfce7;
-    color: #166534;
-  }
-
-  .status-indicator.waiting {
-    background-color: #fef3c7;
-    color: #92400e;
-  }
-
-  .status-indicator.inactive {
-    background-color: #f3f4f6;
-    color: #374151;
-  }
-
-  /* Enhanced Cards */
-  .game-card {
-    background-color: white;
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-    border: 1px solid #f3f4f6;
-    transition: all 0.2s;
-  }
-
-  .game-card:hover {
-    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
-  }
-
-  /* Progress Bars */
-  .progress-bar {
-    width: 100%;
-    background-color: #e5e7eb;
-    border-radius: 9999px;
-    height: 0.5rem;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    transition: all 0.5s ease-out;
-  }
-
-  /* Hover Effects */
-  .hover-lift {
-    transition: transform 0.2s;
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-0.25rem);
-  }
-
-  /* Glass Morphism Effect */
-  .glass-card {
-    backdrop-filter: blur(10px);
-    background-color: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
-    border-radius: 0.75rem;
-  }
+/* Category colors */
+.category-game-console {
+  background-color: #ef4444;
+  color: white;
 }
 
+.category-diy-gadget {
+  background-color: #3b82f6;
+  color: white;
 }
 
-/* Animation Utils */
+.category-figure {
+  background-color: #8b5cf6;
+  color: white;
+}
+
+.category-accessory {
+  background-color: #22c55e;
+  color: white;
+}
+
+.category-toy {
+  background-color: #eab308;
+  color: white;
+}
+
+/* Market grid styles */
+.market-grid-cell {
+  border: 1px solid #e5e7eb;
+  height: 3rem;
+  width: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 0.25rem;
+}
+
+.market-grid-cell-occupied {
+  background-color: #dbeafe;
+  border-color: #93c5fd;
+  cursor: pointer;
+}
+
+.market-grid-cell-occupied:hover {
+  background-color: #bfdbfe;
+}
+
+.market-grid-cell-empty {
+  background-color: #f9fafb;
+  cursor: pointer;
+}
+
+.market-grid-cell-empty:hover {
+  background-color: #f3f4f6;
+}
+
+/* Action buttons */
+.action-button {
+  background-color: #3b82f6;
+  color: white;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.action-button:hover {
+  background-color: #2563eb;
+}
+
+.action-button:disabled {
+  background-color: #d1d5db;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* Enhanced action buttons */
+.action-card-button {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  text-align: left;
+  outline: none;
+  background: white;
+  cursor: pointer;
+}
+
+.action-card-button:hover:not(:disabled) {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: scale(1.02);
+}
+
+.action-card-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Status indicators */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-indicator.active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-indicator.waiting {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-indicator.inactive {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+/* Cards */
+.game-card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f3f4f6;
+  transition: all 0.2s;
+}
+
+.game-card:hover {
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Progress bars */
+.progress-bar {
+  width: 100%;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  height: 0.5rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: all 0.5s ease-out;
+}
+
+/* General stat display */
+.stat-display {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+}
+
+/* Hover effects */
+.hover-lift {
+  transition: transform 0.2s;
+}
+
+.hover-lift:hover {
+  transform: translateY(-0.25rem);
+}
+
+/* Glass morphism */
+.glass-card {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+  border-radius: 0.75rem;
+}
+
+/* Animations */
 .animate-pulse-slow {
   animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -203,11 +196,12 @@
   animation: bounce-subtle 2s infinite;
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 @keyframes bounce-subtle {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
