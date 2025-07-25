@@ -28,7 +28,7 @@ const LobbyScreen: React.FC = () => {
 
   const playerCount = gameState?.players?.length || 0;
   const isHost = currentPlayer?.role === 'host';
-  const canStartGame = playerCount >= 2 && isHost;
+  const canStartGame = playerCount >= 1 && isHost;
   
   console.log('LobbyScreen render:', { 
     gameState, 
@@ -198,7 +198,7 @@ const LobbyScreen: React.FC = () => {
                 }`}
                 key={`start-button-${forceRefresh}`}
               >
-                ゲーム開始 {!canStartGame && '(最低2人必要)'}
+                ゲーム開始 {!canStartGame && '(1人以上必要)'}
               </button>
               
               <button

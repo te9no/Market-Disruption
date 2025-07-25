@@ -13,6 +13,23 @@ import {
 
 const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+// Debug information
+console.log('🔗 Environment details:', {
+  VITE_API_URL: import.meta.env.VITE_API_URL,
+  SERVER_URL,
+  NODE_ENV: import.meta.env.NODE_ENV,
+  MODE: import.meta.env.MODE,
+  DEV: import.meta.env.DEV,
+  PROD: import.meta.env.PROD,
+  timestamp: new Date().toISOString()
+});
+
+// Alert if using incorrect URL
+if (SERVER_URL.includes('railway.internal')) {
+  console.error('🚨 CRITICAL: Using internal Railway URL! This will fail in production.');
+  console.error('🔧 Fix: Update VITE_API_URL to use public Railway domain (.up.railway.app)');
+}
+
 export const useSocket = () => {
   const dispatch = useDispatch();
   const socket = useSelector((state: RootState) => state.socket.socket);

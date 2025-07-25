@@ -297,13 +297,27 @@ io.on('connection', (socket) => {
       return;
     }
     
-    if (game.players.length < 2) {
+    if (game.players.length < 1) {
       console.log('❌ Start game: Not enough players');
-      socket.emit('error', { message: 'Need at least 2 players to start' });
+      socket.emit('error', { message: 'Need at least 1 player to start' });
       return;
     }
     
     console.log(`🎮 Starting game ${playerData.gameId} with ${game.players.length} players`);
+    
+    // Add AI players if needed (for single player mode)
+    if (game.players.length < 3) {
+      const aiNames = ['AI商人A', 'AI商人B', 'AI商人C'];
+      const playersToAdd = Math.min(3 - game.players.length, aiNames.length);
+      
+      for (let i = 0; i < playersToAdd; i++) {
+        const aiPlayer = new Player(`ai-${uuidv4().substring(0, 6)}`, aiNames[i], 'ai');
+        game.addPlayer(aiPlayer);
+        console.log(`🤖 Added AI player: ${aiNames[i]}`);
+      }
+      
+      console.log(`🎮 Game now has ${game.players.length} players (including AI)`);
+    }
     
     try {
       game.startGame();
