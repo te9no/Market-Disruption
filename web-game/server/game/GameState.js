@@ -1000,9 +1000,29 @@ export class GameState {
       ...manufacturerResult
     });
     
-    // Add to play log
-    if (manufacturerResult.action && manufacturerResult.design) {
-      this.addToPlayLog('automata', `メーカーオートマ: ${manufacturerResult.design.category}を製造・出品`, 'manufacturer-automata', 'メーカーオートマ');
+    // Add detailed manufacturer log
+    if (manufacturerResult.action) {
+      const diceText = `[${manufacturerResult.dice[0]}, ${manufacturerResult.dice[1]}] = ${manufacturerResult.total}`;
+      let actionText = '';
+      
+      switch (manufacturerResult.action) {
+        case 'high_cost_manufacture':
+          actionText = `高コスト商品製造: ${manufacturerResult.design.category}(コスト${manufacturerResult.design.cost})を¥${manufacturerResult.price}で出品`;
+          break;
+        case 'medium_cost_manufacture':
+          actionText = `中コスト商品製造: ${manufacturerResult.design.category}(コスト${manufacturerResult.design.cost})を¥${manufacturerResult.price}で出品`;
+          break;
+        case 'low_cost_manufacture':
+          actionText = `低コスト商品製造: ${manufacturerResult.design.category}(コスト${manufacturerResult.design.cost})を¥${manufacturerResult.price}で出品`;
+          break;
+        case 'inventory_clearance':
+          actionText = '在庫一掃セール: 全商品価格を2下げる';
+          break;
+        default:
+          actionText = `${manufacturerResult.action}を実行`;
+      }
+      
+      this.addToPlayLog('automata', `メーカーオートマ ${diceText}: ${actionText}`, 'manufacturer-automata', 'メーカーオートマ');
     }
     
     // Process resale automata
@@ -1014,11 +1034,44 @@ export class GameState {
       ...resaleResult
     });
     
-    // Add to play log
-    if (resaleResult.action === 'purchase' && resaleResult.purchasedProducts?.length > 0) {
-      this.addToPlayLog('automata', `転売オートマ: ${resaleResult.purchasedProducts.length}個の商品を購入`, 'resale-automata', '転売オートマ');
-    } else if (resaleResult.action === 'skip') {
-      this.addToPlayLog('automata', '転売オートマ: 購入条件に合う商品がなく行動をスキップ', 'resale-automata', '転売オートマ');
+    // Add detailed resale log
+    if (resaleResult.action) {
+      const diceText = `[${resaleResult.dice[0]}, ${resaleResult.dice[1]}] = ${resaleResult.total}`;
+      let actionText = '';
+      
+      switch (resaleResult.action) {
+        case 'mass_purchase':
+          if (resaleResult.purchasedProducts?.length > 0) {
+            actionText = `大量購入: ${resaleResult.purchasedProducts.length}個の安い商品を購入して転売出品`;
+          } else {
+            actionText = '大量購入を試みたが購入できる商品がなかった';
+          }
+          break;
+        case 'selective_purchase':
+          if (resaleResult.purchasedProducts?.length > 0) {
+            actionText = `選別購入: 人気商品1個を購入して転売出品`;
+          } else {
+            actionText = '選別購入を試みたが条件に合う商品がなかった';
+          }
+          break;
+        case 'wait_and_see':
+          actionText = '様子見: この回は購入せず';
+          break;
+        case 'speculative_purchase':
+          if (resaleResult.purchasedProducts?.length > 0) {
+            actionText = `投機購入: ランダム商品1個を購入して転売出品`;
+          } else {
+            actionText = '投機購入を試みたが購入できる商品がなかった';
+          }
+          break;
+        case 'paused':
+          actionText = '規制により行動を停止中';
+          break;
+        default:
+          actionText = `${resaleResult.action}を実行`;
+      }
+      
+      this.addToPlayLog('automata', `転売オートマ ${diceText}: ${actionText}`, 'resale-automata', '転売オートマ');
     }
     
     console.log('🤖 === AUTOMATA PHASE END ===');
@@ -1197,10 +1250,16 @@ export class GameState {
         // Move product in market
         if (owner.personalMarket && owner.personalMarket[product.price]) {
           delete owner.personalMarket[product.price][product.popularity];
+          const oldPopularity = product.popularity;
           product.popularity = newPopularity;
           if (!owner.personalMarket[product.price][newPopularity]) {
             owner.personalMarket[product.price][newPopularity] = product;
           }
+          
+          // Log the review action
+          const reviewType = type === 'positive' ? '高評価' : '低評価';
+          const targetDesc = target === 'highest_price' ? '最高価格商品' : target === 'own_cheapest' ? '自社最安商品' : '商品';
+          this.addToPlayLog('automata', `メーカーオートマ: ${targetDesc}「${product.category}」に${reviewType}レビュー (人気度${oldPopularity}→${newPopularity})`, 'manufacturer-automata', 'メーカーオートマ');
         }
       }
     }
@@ -1247,6 +1306,10 @@ export class GameState {
           
           remainingFunds -= product.price;
           purchased.push(product);
+          
+          // Log individual purchase
+          const ownerName = owner.name || (product.ownerId === 'manufacturer-automata' ? 'メーカーオートマ' : product.ownerId);
+          console.log(`💰 Resale automata purchased: ${product.category} from ${ownerName} for ¥${product.price}`);
         }
       }
     }
@@ -1286,26 +1349,39 @@ export class GameState {
   reduceAutomataProductPrices(reduction) {
     // Reduce manufacturer automata product prices
     const newMarket = {};
+    let reducedCount = 0;
     
     for (const [price, popularityMap] of Object.entries(this.manufacturerAutomata.personalMarket)) {
       for (const [popularity, product] of Object.entries(popularityMap)) {
         if (product) {
-          const newPrice = Math.max(1, parseInt(price) - reduction);
+          const oldPrice = parseInt(price);
+          const newPrice = Math.max(1, oldPrice - reduction);
           product.price = newPrice;
           
           if (!newMarket[newPrice]) {
             newMarket[newPrice] = {};
           }
           newMarket[newPrice][popularity] = product;
+          
+          if (newPrice < oldPrice) {
+            reducedCount++;
+          }
         }
       }
     }
     
     this.manufacturerAutomata.personalMarket = newMarket;
+    
+    // Log the price reduction action
+    if (reducedCount > 0) {
+      this.addToPlayLog('automata', `メーカーオートマ: ${reducedCount}個の商品価格を${reduction}下げる在庫一掃セール実施`, 'manufacturer-automata', 'メーカーオートマ');
+    }
   }
   
   processMarketPhase() {
     console.log('🏪 === MARKET PHASE START ===');
+    
+    this.addToPlayLog('phase', '市場フェーズ開始');
     
     // Roll demand dice
     const dice1 = Math.floor(Math.random() * 6) + 1;
@@ -1313,6 +1389,7 @@ export class GameState {
     const demandValue = dice1 + dice2;
     
     console.log(`🎲 Market demand dice: ${dice1} + ${dice2} = ${demandValue}`);
+    this.addToPlayLog('phase', `市場需要判定 [${dice1}, ${dice2}] = ${demandValue}: 需要値${demandValue}の商品が購入対象`);
     
     // Find all products with matching demand value
     const matchingProducts = this.findProductsByDemandValue(demandValue);
@@ -1353,6 +1430,19 @@ export class GameState {
     });
     
     console.log(`🏪 === MARKET PHASE END === (demand: ${demandValue}, purchased: ${purchasedProducts.length})`);
+    
+    // Log market results
+    if (purchasedProducts.length > 0) {
+      const purchaseDetails = purchasedProducts.map(p => {
+        const ownerName = this.players.find(player => player.id === p.ownerId)?.name || 
+                         (p.ownerId === 'manufacturer-automata' ? 'メーカーオートマ' : 
+                          p.ownerId === 'resale-automata' ? '転売オートマ' : p.ownerId);
+        return `${p.category}(¥${p.price}, ${ownerName})`;
+      }).join(', ');
+      this.addToPlayLog('phase', `市場で${purchasedProducts.length}個の商品が購入: ${purchaseDetails}`);
+    } else {
+      this.addToPlayLog('phase', `市場で購入された商品なし (対象商品${matchingProducts.length}個)`);
+    }
     
     return {
       demandValue,
