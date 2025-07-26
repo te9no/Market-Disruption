@@ -313,19 +313,21 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </div>
             )}
             <div className="flex space-x-2">
-              <button
+              <ModernButton
                 onClick={() => handleAction('manufacture', actionParams)}
                 disabled={!actionParams.designSlot}
-                className="action-button"
+                variant="primary"
+                size="medium"
               >
                 製造実行
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                variant="secondary"
+                size="medium"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
@@ -383,19 +385,21 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </div>
             )}
             <div className="flex space-x-2">
-              <button
+              <ModernButton
                 onClick={() => handleAction('resale', actionParams)}
                 disabled={!actionParams.productId}
-                className="action-button"
+                variant="primary"
+                size="medium"
               >
                 転売実行
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                variant="secondary"
+                size="medium"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
@@ -474,15 +478,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </div>
             )}
             <div className="flex space-x-2">
-              <button
+              <ModernButton
                 onClick={() => handleAction('sell', actionParams)}
                 disabled={!actionParams.productId || !actionParams.price}
-                className="action-button"
+                variant="primary"
+                size="medium"
               >
                 販売実行
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
+                variant="secondary"
+                size="medium"
                 className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
               >
                 キャンセル
@@ -589,12 +596,15 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   handleAction('review', actionParams);
                 }}
                 disabled={!actionParams.targetPlayerId || !actionParams.reviewType || !actionParams.price || !actionParams.popularity}
-                className="action-button"
+                variant="primary"
+                size="medium"
               >
                 レビュー実行
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
+                variant="secondary"
+                size="medium"
                 className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
               >
                 キャンセル
