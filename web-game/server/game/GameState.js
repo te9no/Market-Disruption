@@ -48,6 +48,9 @@ export class GameState {
     
     // Automata action log for current round
     this.automataActions = [];
+    
+    // Play log for tracking all game events
+    this.playLog = [];
   }
   
   addPlayer(player) {
@@ -80,6 +83,26 @@ export class GameState {
     console.log(`✅ Player ${player.name} initialized for ongoing game`);
   }
   
+  addToPlayLog(type, message, playerId = null, playerName = null) {
+    const logEntry = {
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: Date.now(),
+      type,
+      message,
+      playerId,
+      playerName
+    };
+    
+    this.playLog.push(logEntry);
+    
+    // Keep only last 100 entries to prevent memory issues
+    if (this.playLog.length > 100) {
+      this.playLog = this.playLog.slice(-100);
+    }
+    
+    console.log(`📜 PlayLog: ${message}`);
+  }
+  
   removePlayer(playerId) {
     this.players = this.players.filter(p => p.id !== playerId);
   }
@@ -92,11 +115,15 @@ export class GameState {
     this.state = 'playing';
     this.currentRound = 1;
     
+    this.addToPlayLog('game', 'ゲーム開始！');
+    
     // Give initial designs to all players
     this.giveInitialDesigns();
     
     // Reset all players' action points
     this.players.forEach(player => player.resetActionPoints());
+    
+    this.addToPlayLog('round', `ラウンド ${this.currentRound} 開始`);
   }
   
   giveInitialDesigns() {
@@ -334,6 +361,8 @@ export class GameState {
     console.log(`🏭 Player inventory after:`, player.inventory.length);
     console.log(`📦 Full inventory:`, player.inventory);
     
+    this.addToPlayLog('action', `${design.category}を製造しました`, player.id, player.name);
+    
     return { type: 'manufacture', product, designSlot };
   }
   
@@ -373,6 +402,8 @@ export class GameState {
     // Add to personal market
     product.price = adjustedPrice;
     player.addProductToMarket(product, adjustedPrice);
+    
+    this.addToPlayLog('action', `${product.category}を¥${adjustedPrice}で出品しました`, player.id, player.name);
     
     return { type: 'sell', product, originalPrice: price, adjustedPrice };
   }
@@ -944,6 +975,8 @@ export class GameState {
   processAutomataPhase() {
     console.log('🤖 === AUTOMATA PHASE START ===');
     
+    this.addToPlayLog('phase', 'オートマフェーズ開始');
+    
     // Clear previous automata actions
     this.automataActions = [];
     
@@ -956,6 +989,11 @@ export class GameState {
       ...manufacturerResult
     });
     
+    // Add to play log
+    if (manufacturerResult.action && manufacturerResult.design) {
+      this.addToPlayLog('automata', `メーカーオートマ: ${manufacturerResult.design.category}を製造・出品`, 'manufacturer-automata', 'メーカーオートマ');
+    }
+    
     // Process resale automata
     console.log('💰 Processing resale automata...');
     const resaleResult = this.processResaleAutomata();
@@ -964,6 +1002,13 @@ export class GameState {
       type: 'resale',
       ...resaleResult
     });
+    
+    // Add to play log
+    if (resaleResult.action === 'purchase' && resaleResult.purchasedProducts?.length > 0) {
+      this.addToPlayLog('automata', `転売オートマ: ${resaleResult.purchasedProducts.length}個の商品を購入`, 'resale-automata', '転売オートマ');
+    } else if (resaleResult.action === 'skip') {
+      this.addToPlayLog('automata', '転売オートマ: 購入条件に合う商品がなく行動をスキップ', 'resale-automata', '転売オートマ');
+    }
     
     console.log('🤖 === AUTOMATA PHASE END ===');
     
@@ -1409,7 +1454,8 @@ export class GameState {
       resaleAutomata: this.resaleAutomata,
       activeTrends: this.activeTrends,
       automataActions: this.automataActions,
-      winner: this.winner ? this.winner.toJSON() : null
+      winner: this.winner ? this.winner.toJSON() : null,
+      playLog: this.playLog
     };
   }
 }

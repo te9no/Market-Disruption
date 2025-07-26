@@ -3,6 +3,7 @@ import type { Player, GameState } from '../store/gameSlice';
 import { useSocket } from '../hooks/useSocket';
 import ModernButton from './ModernButton';
 import SimpleSelect from './SimpleSelect';
+import ModernButtonGroup from './ModernButtonGroup';
 
 interface ActionPanelProps {
   player: Player;
@@ -248,27 +249,39 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             'toy': 'おもちゃ'
           }[design?.category] || design?.category || 'unknown';
           
+          const categoryIcon = {
+            'game-console': '🎮',
+            'diy-gadget': '🔧',
+            'figure': '🎭',
+            'accessory': '💍', 
+            'toy': '🧸'
+          }[design?.category] || '📦';
+          
           return {
             value: slot,
-            label: `スロット${slot}: ${categoryName} (価値${design?.value || 0}, コスト${design?.cost || 0})`
+            label: `${categoryIcon} スロット${slot}: ${categoryName}`,
+            description: `価値${design?.value || 0} / コスト${design?.cost || 0} / 人気度1`
           };
         });
-        console.log('🔍 Final design options for SimpleSelect:', designOptions);
+        console.log('🔍 Final design options for ModernButtonGroup:', designOptions);
         console.log('🔍 Design options length:', designOptions.length);
         
         return (
-          <div className="space-y-3">
-            <h4 className="font-bold">製造アクション (1AP)</h4>
-            <div>
-              <SimpleSelect
-                label="設計スロット"
-                value={actionParams.designSlot?.toString() || ''}
-                onChange={(value) => setActionParams({...actionParams, designSlot: parseInt(value)})}
-                placeholder="設計スロットを選択"
-                options={designOptions}
-                emptyMessage="利用可能な設計がありません"
-              />
+          <div className="space-y-4">
+            <h4 className="font-bold text-lg text-gray-800">🏭 製造アクション (1AP)</h4>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="text-sm text-blue-800">
+                設計から商品を製造して在庫に追加します
+              </div>
             </div>
+            <ModernButtonGroup
+              label="使用する設計スロット"
+              value={actionParams.designSlot?.toString() || ''}
+              onChange={(value) => setActionParams({...actionParams, designSlot: parseInt(value)})}
+              options={designOptions}
+              emptyMessage="利用可能な設計がありません"
+              columns={2}
+            />
             {/* Debug info */}
             {import.meta.env.DEV && (
               <div className="text-xs bg-gray-100 p-2 rounded">
@@ -376,36 +389,63 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         );
 
       case 'sell':
+        const inventoryOptions = (player.inventory || []).map((product) => {
+          const categoryName = {
+            'game-console': 'ゲーム機',
+            'diy-gadget': '自作ガジェット', 
+            'figure': 'フィギュア',
+            'accessory': 'アクセサリー',
+            'toy': 'おもちゃ'
+          }[product.category] || product.category || '不明';
+          
+          const categoryIcon = {
+            'game-console': '🎮',
+            'diy-gadget': '🔧',
+            'figure': '🎭',
+            'accessory': '💍', 
+            'toy': '🧸'
+          }[product.category] || '📦';
+          
+          const isResale = product.previousOwner !== undefined;
+          
+          return {
+            value: product.id,
+            label: `${categoryIcon} ${categoryName} ${isResale ? '(転売品)' : ''}`,
+            description: `価値${product.value || 0} / コスト${product.cost || 0} / 人気度${product.popularity || 1}`
+          };
+        });
+        
         return (
-          <div className="space-y-3">
-            <h4 className="font-bold">販売アクション (1AP)</h4>
-            <div>
-              <label className="block text-sm font-medium mb-1">商品:</label>
-              <SimpleSelect
-                value={actionParams.productId || ''}
-                onChange={(value) => {
-                  const product = player.inventory?.find(p => p.id === value);
-                  if (product) {
-                    setActionParams({
-                      ...actionParams, 
-                      productId: value,
-                      maxPrice: Math.floor((product.cost || 0) * 1.5) || 1
-                    });
-                  } else {
-                    setActionParams({
-                      ...actionParams, 
-                      productId: value,
-                      maxPrice: 1
-                    });
-                  }
-                }}
-                placeholder="販売する商品を選択"
-                options={(player.inventory || []).map((product) => ({
-                  value: product.id,
-                  label: `${product.category || '不明'} (値${product.value || 0}, コスト${product.cost || 0})`
-                }))}
-              />
+          <div className="space-y-4">
+            <h4 className="font-bold text-lg text-gray-800">🏪 販売アクション (1AP)</h4>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="text-sm text-green-800">
+                在庫から商品を選んでマーケットに出品します
+              </div>
             </div>
+            <ModernButtonGroup
+              label="販売する商品"
+              value={actionParams.productId || ''}
+              onChange={(value) => {
+                const product = player.inventory?.find(p => p.id === value);
+                if (product) {
+                  setActionParams({
+                    ...actionParams, 
+                    productId: value,
+                    maxPrice: Math.floor((product.cost || 0) * 1.5) || 1
+                  });
+                } else {
+                  setActionParams({
+                    ...actionParams, 
+                    productId: value,
+                    maxPrice: 1
+                  });
+                }
+              }}
+              options={inventoryOptions}
+              emptyMessage="在庫に商品がありません"
+              columns={2}
+            />
             {actionParams.productId && (
               <div>
                 <label className="block text-sm font-medium mb-1">

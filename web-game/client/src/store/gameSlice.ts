@@ -55,6 +55,14 @@ export interface GameState {
   resaleAutomata: any;
   activeTrends: any[];
   automataActions?: any[];
+  playLog?: Array<{
+    id: string;
+    timestamp: number;
+    type: 'action' | 'phase' | 'round' | 'game' | 'automata';
+    message: string;
+    playerId?: string;
+    playerName?: string;
+  }>;
   winner: Player | null;
 }
 

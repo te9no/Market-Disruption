@@ -100,23 +100,8 @@ const GameBoard: React.FC = () => {
     { key: 'details', icon: '🤖', label: '詳細情報' }
   ];
 
-  // Mock play logs for now - in real implementation, these would come from gameState
-  const playLogs = [
-    {
-      id: '1',
-      timestamp: Date.now() - 60000,
-      type: 'round' as const,
-      message: `ラウンド ${gameState.currentRound} 開始`
-    },
-    {
-      id: '2', 
-      timestamp: Date.now() - 30000,
-      type: 'action' as const,
-      playerId: currentPlayer.id,
-      playerName: currentPlayer.name,
-      message: '製造アクションを実行'
-    }
-  ];
+  // Use actual play logs from game state
+  const playLogs = gameState.playLog || [];
 
   const renderMainContent = () => {
     if (activeView === 'game') {
