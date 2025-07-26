@@ -313,7 +313,7 @@ io.on('connection', (socket) => {
       for (let i = 0; i < playersToAdd; i++) {
         const aiPlayer = new Player(`ai-${uuidv4().substring(0, 6)}`, aiNames[i], 'ai');
         game.addPlayer(aiPlayer);
-        console.log(`🤖 Added AI player: ${aiNames[i]}`);
+        console.log(`🤖 Added AI player: ${aiNames[i]} with ${aiPlayer.designs.size} initial designs`);
       }
       
       console.log(`🎮 Game now has ${game.players.length} players (including AI)`);
@@ -325,6 +325,12 @@ io.on('connection', (socket) => {
       const gameStateJSON = game.toJSON();
       console.log(`📤 Sending game-started event to room ${playerData.gameId}`);
       console.log(`🔍 Game state: ${gameStateJSON.state}, Players: ${gameStateJSON.players.length}`);
+      
+      // Debug: Check if players have designs after game start
+      gameStateJSON.players.forEach(player => {
+        console.log(`🎨 Player ${player.name} designs after game start:`, Object.keys(player.designs || {}));
+        console.log(`🎨 Player ${player.name} design details:`, player.designs);
+      });
       
       // Send to all players in the room
       io.to(playerData.gameId).emit('game-started', {

@@ -94,10 +94,13 @@ export class Player {
   
   // Add design to design board
   addDesign(slot, design) {
+    console.log(`🎨 Adding design to player ${this.name}, slot ${slot}:`, design);
     if (this.designs.has(slot)) {
+      console.log(`❌ Slot ${slot} already occupied for player ${this.name}`);
       throw new Error('Design slot already occupied');
     }
     this.designs.set(slot, design);
+    console.log(`✅ Design added successfully. Player ${this.name} now has ${this.designs.size} designs`);
   }
   
   // Get design from slot

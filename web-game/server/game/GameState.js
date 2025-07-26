@@ -122,12 +122,15 @@ export class GameState {
     const costMap = { 6: 1, 5: 2, 4: 3, 3: 4, 2: 5, 1: 6 };
     const cost = costMap[value] || value;
     
-    return {
+    const design = {
       category,
       value,
       cost,
       id: `${category}-${value}-${Date.now()}`
     };
+    
+    console.log(`🎲 Rolled design:`, design);
+    return design;
   }
   
   getCurrentPlayer() {
