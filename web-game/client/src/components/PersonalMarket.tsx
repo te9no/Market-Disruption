@@ -22,14 +22,14 @@ const getCategoryColor = (category: string) => {
   }
 };
 
-const getCategoryShort = (category: string) => {
+const getCategoryEmoji = (category: string) => {
   switch (category) {
-    case 'game-console': return 'ゲ';
-    case 'diy-gadget': return 'ガ';
-    case 'figure': return 'フ';
-    case 'accessory': return 'ア';
-    case 'toy': return 'お';
-    default: return '?';
+    case 'game-console': return '🎮';
+    case 'diy-gadget': return '🔧';
+    case 'figure': return '🎭';
+    case 'accessory': return '💍';
+    case 'toy': return '🧸';
+    default: return '📦';
   }
 };
 
@@ -70,12 +70,12 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({
     
     return (
       <div className={`w-16 h-16 border-2 border-gray-300 flex flex-col items-center justify-center text-white ${getCategoryColor(product.category)} hover:opacity-80 cursor-pointer rounded-lg shadow-sm relative transition-all group`}>
-        <div className="text-sm font-bold">{getCategoryShort(product.category)}</div>
-        <div className="text-xs">値{product.value}</div>
-        <div className="text-xs">¥{product.price || price || 0}</div>
+        <div className="text-lg">{getCategoryEmoji(product.category)}</div>
+        <div className="text-xs font-bold">💎{product.value}</div>
+        <div className="text-xs font-bold">💰{product.price || price || 0}</div>
         {isResale && (
-          <div className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold">
-            転
+          <div className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+            🔄
           </div>
         )}
         
@@ -87,20 +87,20 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({
                 e.stopPropagation();
                 onPurchase?.(product.id, price, popularity);
               }}
-              className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded font-bold"
+              className="px-1 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded font-bold"
               title="購入する (1AP)"
             >
-              購入
+              🛒
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onReview?.(product.id);
               }}
-              className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-bold"
+              className="px-1 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-bold"
               title="レビューする (1AP)"
             >
-              👁‍🗨
+              ⭐
             </button>
           </div>
         )}
@@ -179,29 +179,29 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({
                   className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                 >
                   <td className="py-3 px-4">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs ${getCategoryColor(product.category)}`}>
-                        {getCategoryShort(product.category)}
+                    <div className="flex items-center space-x-2">
+                      <div className="text-2xl">
+                        {getCategoryEmoji(product.category)}
                       </div>
                       <div>
-                        <div className="font-medium">{getCategoryName(product.category)}</div>
-                        <div className="text-xs text-gray-500">ID: {product.id.slice(-8)}</div>
+                        <div className="font-medium text-sm">{getCategoryName(product.category)}</div>
+                        <div className="text-xs text-gray-500">#{product.id.slice(-4)}</div>
                       </div>
                     </div>
                   </td>
                   <td className="text-center py-3 px-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium text-white ${getCategoryColor(product.category)}`}>
-                      {product.category}
-                    </span>
+                    <div className="text-lg">
+                      {getCategoryEmoji(product.category)}
+                    </div>
                   </td>
                   <td className="text-center py-3 px-2 font-medium">
-                    💎 {product.value}
+                    💎{product.value}
                   </td>
                   <td className="text-center py-3 px-2 font-medium">
-                    💰 {product.cost}
+                    ⚒️{product.cost}
                   </td>
                   <td className="text-center py-3 px-2 font-bold text-green-600">
-                    ¥{product.price}
+                    💰{product.price}
                   </td>
                   <td className="text-center py-3 px-2 font-medium">
                     {'⭐'.repeat(product.popularity)}
@@ -233,14 +233,14 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({
                             className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded font-bold"
                             title="購入する (1AP)"
                           >
-                            購入
+                            🛒
                           </button>
                           <button
                             onClick={() => onReview?.(product.id)}
                             className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-bold"
                             title="レビューする (1AP)"
                           >
-                            👁‍🗨
+                            ⭐
                           </button>
                         </div>
                       ) : (

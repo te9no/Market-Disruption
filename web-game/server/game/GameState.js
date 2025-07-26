@@ -779,6 +779,10 @@ export class GameState {
     const total = dice1 + dice2 + dice3;
 
     const trendEffect = this.getTrendEffect(total);
+    
+    // Log the trend research result
+    this.addToPlayLog('action', `📈 トレンド調査: [${dice1}][${dice2}][${dice3}] = ${total} → ${trendEffect.name}`, player.id, player.name);
+    this.addToPlayLog('trend', `🎯 ${trendEffect.name}: ${trendEffect.effect} (コスト: ${trendEffect.cost})`);
 
     return { 
       type: 'trend_research', 
