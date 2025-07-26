@@ -146,7 +146,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   <div><span className="font-medium">価値:</span> {dice.value}</div>
                   <div><span className="font-medium">コスト:</span> {dice.cost}</div>
                 </div>
-                <ModernButton className="mt-3 w-full" variant="primary" size="medium">
+                <ModernButton className="mt-3 w-full" variant="primary" size="md">
                   選択
                 </ModernButton>
               </div>
@@ -200,7 +200,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 <div className="text-2xl mb-2">📋</div>
                 <div className="font-bold">スロット {slotNumber}</div>
                 <div className="text-sm text-gray-600">空き</div>
-                <ModernButton className="mt-3 w-full" variant="primary" size="medium">
+                <ModernButton className="mt-3 w-full" variant="primary" size="md">
                   選択
                 </ModernButton>
               </div>
