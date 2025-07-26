@@ -28,6 +28,11 @@ const getCategoryName = (category: string) => {
 };
 
 const Inventory: React.FC<InventoryProps> = ({ inventory }) => {
+  console.log('📦 Inventory component rendering with:', {
+    inventoryLength: inventory.length,
+    inventory: inventory
+  });
+  
   if (inventory.length === 0) {
     return (
       <div className="bg-gradient-to-br from-white to-purple-50 rounded-xl shadow-xl p-6 border border-purple-100">

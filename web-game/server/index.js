@@ -366,6 +366,15 @@ io.on('connection', (socket) => {
           const gameStateJSON = game.toJSON();
           console.log(`🔄 Game state serialized successfully`);
           
+          // Debug: Log inventory data for all players
+          if (result.action.type === 'manufacture') {
+            console.log('🏭 Manufacturing action - checking inventory data:');
+            gameStateJSON.players.forEach(player => {
+              console.log(`  Player ${player.name}: ${player.inventory.length} items in inventory`);
+              console.log(`  Inventory details:`, player.inventory);
+            });
+          }
+          
           // Broadcast game state update to all players
           io.to(playerData.gameId).emit('game-update', {
             gameState: gameStateJSON,

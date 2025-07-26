@@ -58,6 +58,15 @@ const GameBoard: React.FC = () => {
     currentPlayer = gameState.players[0];
   }
   
+  // Debug: Log inventory data
+  if (currentPlayer) {
+    console.log('🎮 Current player inventory debug:', {
+      playerName: currentPlayer.name,
+      inventoryLength: currentPlayer.inventory?.length || 0,
+      inventory: currentPlayer.inventory
+    });
+  }
+  
   if (!currentPlayer) {
     return (
       <div className="flex items-center justify-center h-64">

@@ -293,14 +293,21 @@ export class GameState {
   // AI プレイヤーの自動行動
   
   actionManufacture(player, { designSlot }) {
+    console.log(`🏭 Manufacturing action for player ${player.name}:`, { designSlot });
+    console.log(`🏭 Player inventory before:`, player.inventory.length);
+    
     if (!player.hasActionPoints(1)) {
       throw new Error('Not enough action points');
     }
     
     const design = player.getDesign(designSlot);
     if (!design) {
+      console.log(`❌ No design in slot ${designSlot} for player ${player.name}`);
+      console.log(`🔍 Player designs:`, Object.fromEntries(player.designs));
       throw new Error('No design in specified slot');
     }
+    
+    console.log(`🎨 Using design:`, design);
     
     if (!player.canAfford(design.cost)) {
       throw new Error('Cannot afford manufacturing cost');
@@ -311,7 +318,7 @@ export class GameState {
     
     // Create product
     const product = {
-      id: `product-${Date.now()}`,
+      id: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       category: design.category,
       value: design.value,
       cost: design.cost,
@@ -320,7 +327,12 @@ export class GameState {
       designSlot
     };
     
+    console.log(`📦 Created product:`, product);
+    
     player.inventory.push(product);
+    
+    console.log(`🏭 Player inventory after:`, player.inventory.length);
+    console.log(`📦 Full inventory:`, player.inventory);
     
     return { type: 'manufacture', product, designSlot };
   }
