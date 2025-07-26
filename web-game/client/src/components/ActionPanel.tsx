@@ -36,7 +36,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const [selectedDice, setSelectedDice] = useState<any>(null);
   const [showSlotSelection, setShowSlotSelection] = useState(false);
 
-  const canPerformActions = isMyTurn && gamePhase === 'action' && player.actionPoints > 0 && !isProcessingAction;
+  const canPerformActions = isMyTurn && gamePhase === 'action' && player.actionPoints > 0 && !isProcessingAction && gameState.state !== 'finished';
 
   const handleAction = (actionType: string, params: any = {}) => {
     try {
@@ -941,7 +941,15 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h3 className="text-lg font-bold mb-4">アクション</h3>
         <div className="text-center text-gray-500 py-8">
-          {!isMyTurn ? (
+          {gameState.state === 'finished' ? (
+            <div>
+              <div className="text-4xl mb-4">🏁</div>
+              <p className="text-lg font-bold text-gray-700">ゲーム終了</p>
+              <p className="text-sm mt-2">
+                勝者: {gameState.winner?.name || '未確定'}
+              </p>
+            </div>
+          ) : !isMyTurn ? (
             <div>
               <p>あなたのターンではありません</p>
               <p className="text-sm mt-2">

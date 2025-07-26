@@ -20,7 +20,8 @@
       "Bash(git commit:*)",
       "Bash(node:*)",
       "WebFetch(domain:market-disruption-production.up.railway.app)",
-      "WebFetch(domain:localhost)"
+      "WebFetch(domain:localhost)",
+      "Bash(npm run lint)"
     ],
     "deny": []
   }

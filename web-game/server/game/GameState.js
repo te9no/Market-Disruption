@@ -236,9 +236,17 @@ export class GameState {
   }
   
   processAction(playerId, actionData) {
+    console.log(`🎯 Processing action: ${actionData.type} from player ${playerId}, game state: ${this.state}`);
+    
     const player = this.players.find(p => p.id === playerId);
     if (!player) {
       return { success: false, error: 'Player not found' };
+    }
+    
+    // Check if game is already finished
+    if (this.state === 'finished') {
+      console.log(`❌ Action ${actionData.type} rejected: Game has already ended`);
+      return { success: false, error: 'Game has already ended' };
     }
     
     // Allow end_game action by any player at any time
