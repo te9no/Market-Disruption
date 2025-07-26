@@ -5,16 +5,17 @@ import PlayerBoard from './PlayerBoard';
 import GameStatus from './GameStatus';
 import ActionPanel from './ActionPanel';
 import AutomataLog from './AutomataLog';
-import AllPlayersMarkets from './AllPlayersMarkets';
+import PlayerMarketView from './PlayerMarketView';
+import PlayLog from './PlayLog';
 import { useSocket } from '../hooks/useSocket';
 
 const GameBoard: React.FC = () => {
   const { gameState, gameId } = useSelector((state: RootState) => state.game);
   const { socket, socketId } = useSocket();
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'game' | 'markets' | 'automata'>('game');
+  const [activeView, setActiveView] = useState<string>('game');
   
-  console.log('🔥 NEW GameBoard rendering with tabs!', { activeTab });
+  console.log('🔥 NEW GameBoard rendering with sidebar!', { activeView });
 
   const handleRefreshGameState = async () => {
     setRefreshing(true);
@@ -87,6 +88,95 @@ const GameBoard: React.FC = () => {
 
   const isCurrentPlayerTurn = gameState.players[gameState.currentPlayerIndex]?.id === currentPlayer.id;
   const currentPhase = gameState.currentPhase;
+
+  // Create menu items
+  const menuItems = [
+    { key: 'game', icon: '🎮', label: 'ゲーム画面' },
+    ...gameState.players.map((player) => ({
+      key: `player-${player.id}`,
+      icon: '🏪',
+      label: `${player.name}のマーケット`
+    })),
+    { key: 'details', icon: '🤖', label: '詳細情報' }
+  ];
+
+  // Mock play logs for now - in real implementation, these would come from gameState
+  const playLogs = [
+    {
+      id: '1',
+      timestamp: Date.now() - 60000,
+      type: 'round' as const,
+      message: `ラウンド ${gameState.currentRound} 開始`
+    },
+    {
+      id: '2', 
+      timestamp: Date.now() - 30000,
+      type: 'action' as const,
+      playerId: currentPlayer.id,
+      playerName: currentPlayer.name,
+      message: '製造アクションを実行'
+    }
+  ];
+
+  const renderMainContent = () => {
+    if (activeView === 'game') {
+      return (
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-full">
+          {/* Main Game Area */}
+          <div className="xl:col-span-3">
+            <PlayerBoard player={currentPlayer} />
+          </div>
+          {/* Action Panel */}
+          <div className="xl:col-span-1">
+            <ActionPanel 
+              player={currentPlayer}
+              isMyTurn={isCurrentPlayerTurn}
+              gamePhase={currentPhase}
+              gameState={gameState}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    if (activeView === 'details') {
+      return (
+        <div className="space-y-6">
+          <GameStatus 
+            round={gameState.currentRound}
+            phase={currentPhase}
+            currentPlayerIndex={gameState.currentPlayerIndex}
+            players={gameState.players}
+            pollution={gameState.pollution}
+            regulationLevel={gameState.regulationLevel}
+          />
+          <AutomataLog 
+            automataActions={gameState.automataActions || []} 
+            currentRound={gameState.currentRound}
+            gamePhase={gameState.currentPhase}
+          />
+        </div>
+      );
+    }
+
+    // Player market view
+    const playerMatch = activeView.match(/^player-(.+)$/);
+    if (playerMatch) {
+      const playerId = playerMatch[1];
+      const targetPlayer = gameState.players.find(p => p.id === playerId);
+      if (targetPlayer) {
+        return (
+          <PlayerMarketView
+            player={targetPlayer}
+            currentPlayerId={currentPlayer.id}
+            isMyTurn={isCurrentPlayerTurn}
+          />
+        );
+      }
+    }
+
+    return <div>未知のビューです</div>;
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>
@@ -167,157 +257,94 @@ const GameBoard: React.FC = () => {
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div style={{
-        background: 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(10px)',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-        borderBottom: '1px solid rgba(0,0,0,0.1)'
-      }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ display: 'flex', gap: '0' }}>
-            {[
-              { key: 'game', icon: '🎮', label: 'ゲーム画面' },
-              { key: 'markets', icon: '🏪', label: '全マーケット' },
-              { key: 'automata', icon: '🤖', label: '詳細情報' }
-            ].map((tab) => {
-              const isActive = activeTab === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as 'game' | 'markets' | 'automata')}
-                  style={{
-                    padding: '16px 24px',
-                    fontWeight: '600',
-                    borderBottom: `3px solid ${isActive ? '#667eea' : 'transparent'}`,
-                    color: isActive ? '#667eea' : '#6b7280',
-                    background: isActive ? 'rgba(102, 126, 234, 0.1)' : 'transparent',
-                    transition: 'all 0.3s ease',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    borderRadius: '12px 12px 0 0',
-                    marginBottom: '-1px'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = '#374151';
-                      e.currentTarget.style.background = 'rgba(0,0,0,0.05)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.color = '#6b7280';
-                      e.currentTarget.style.background = 'transparent';
-                    }
-                  }}
-                >
-                  {tab.icon} {tab.label}
-                </button>
-              );
-            })}
+      {/* Main Layout with Sidebar and Content */}
+      <div style={{ display: 'flex', minHeight: 'calc(100vh - 200px)' }}>
+        {/* Left Sidebar Menu */}
+        <div style={{
+          width: '280px',
+          background: 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(10px)',
+          borderRight: '1px solid rgba(0,0,0,0.1)',
+          boxShadow: '2px 0 10px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ padding: '24px 16px' }}>
+            <h3 style={{ 
+              fontSize: '18px', 
+              fontWeight: 'bold', 
+              marginBottom: '16px',
+              color: '#374151'
+            }}>
+              📋 メニュー
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {menuItems.map((item) => {
+                const isActive = activeView === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => setActiveView(item.key)}
+                    style={{
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      textAlign: 'left',
+                      border: 'none',
+                      borderRadius: '8px',
+                      background: isActive ? '#667eea' : 'transparent',
+                      color: isActive ? 'white' : '#6b7280',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = 'rgba(0,0,0,0.05)';
+                        e.currentTarget.style.color = '#374151';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = '#6b7280';
+                      }
+                    }}
+                  >
+                    <span style={{ fontSize: '16px' }}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Tab Content */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
-        {activeTab === 'game' && (
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-            {/* Main Game Area */}
-            <div className="xl:col-span-9">
-              <PlayerBoard player={currentPlayer} />
-            </div>
+        {/* Main Content Area */}
+        <div style={{ 
+          flex: '1', 
+          padding: '24px',
+          overflow: 'auto'
+        }}>
+          {renderMainContent()}
+        </div>
 
-            {/* Sidebar */}
-            <div className="xl:col-span-3 space-y-4">
-              {/* Action Panel */}
-              <ActionPanel 
-                player={currentPlayer}
-                isMyTurn={isCurrentPlayerTurn}
-                gamePhase={currentPhase}
-                gameState={gameState}
-              />
-
-              {/* Other Players - Compact View */}
-              <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-                <h3 className="font-bold text-lg mb-3 flex items-center space-x-2">
-                  <span>👥</span>
-                  <span>プレイヤー</span>
-                </h3>
-                <div className="space-y-2">
-                  {gameState.players.map((player) => (
-                    <div key={player.id} className={`rounded-lg p-3 transition-all ${
-                      player.id === currentPlayer.id 
-                        ? 'bg-blue-50 border border-blue-200' 
-                        : 'bg-gray-50 hover:bg-gray-100'
-                    }`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium text-sm">{player.name}</span>
-                          {player.id === currentPlayer.id && (
-                            <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">YOU</span>
-                          )}
-                          {gameState.players[gameState.currentPlayerIndex]?.id === player.id && (
-                            <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
-                              ▶️
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-1 text-xs">
-                        <div className="flex items-center space-x-1">
-                          <span>💰</span>
-                          <span className="font-medium">¥{player.funds}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <span>👑</span>
-                          <span className="font-medium">{player.prestige}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <span>🔄</span>
-                          <span className="font-medium">{player.resaleHistory}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <span>⚡</span>
-                          <span className="font-medium">{player.actionPoints}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'markets' && (
-          <AllPlayersMarkets 
-            players={gameState.players}
-            currentPlayerId={currentPlayer.id}
-            isMyTurn={isCurrentPlayerTurn}
-            manufacturerAutomata={gameState.manufacturerAutomata}
-            resaleAutomata={gameState.resaleAutomata}
-          />
-        )}
-
-        {activeTab === 'automata' && (
-          <div className="space-y-6">
-            <GameStatus 
-              round={gameState.currentRound}
-              phase={currentPhase}
-              currentPlayerIndex={gameState.currentPlayerIndex}
-              players={gameState.players}
-              pollution={gameState.pollution}
-              regulationLevel={gameState.regulationLevel}
-            />
-            <AutomataLog 
-              automataActions={gameState.automataActions || []} 
+        {/* Right Sidebar - Play Log */}
+        <div style={{
+          width: '320px',
+          background: 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(10px)',
+          borderLeft: '1px solid rgba(0,0,0,0.1)',
+          boxShadow: '-2px 0 10px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ padding: '24px 16px', height: '100%' }}>
+            <PlayLog 
+              logs={playLogs}
               currentRound={gameState.currentRound}
-              gamePhase={gameState.currentPhase}
+              currentPhase={currentPhase}
             />
           </div>
-        )}
+        </div>
       </div>
 
       {/* Game Over Modal */}
