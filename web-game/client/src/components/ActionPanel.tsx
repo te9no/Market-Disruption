@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { Player, GameState } from '../store/gameSlice';
 import { useSocket } from '../hooks/useSocket';
 import ModernButton from './ModernButton';
-import ModernSelect from './ModernSelect';
+import SimpleSelect from './SimpleSelect';
 
 interface ActionPanelProps {
   player: Player;
@@ -251,8 +251,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           <div className="space-y-3">
             <h4 className="font-bold">製造アクション (1AP)</h4>
             <div>
-              <label className="block text-sm font-medium mb-1">設計スロット:</label>
-              <ModernSelect
+              <SimpleSelect
+                label="設計スロット"
                 value={actionParams.designSlot?.toString() || ''}
                 onChange={(value) => setActionParams({...actionParams, designSlot: parseInt(value)})}
                 placeholder="設計スロットを選択"
@@ -261,7 +261,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               />
             </div>
             {/* Debug info */}
-            {process.env.NODE_ENV === 'development' && (
+            {import.meta.env.DEV && (
               <div className="text-xs bg-gray-100 p-2 rounded">
                 <div>設計数: {Object.keys(player.designs).length}</div>
                 <div>設計: {JSON.stringify(player.designs)}</div>
@@ -302,7 +302,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <h4 className="font-bold">転売アクション (1AP)</h4>
             <div>
               <label className="block text-sm font-medium mb-1">転売商品:</label>
-              <ModernSelect
+              <SimpleSelect
                 value={actionParams.productId || ''}
                 onChange={(value) => {
                   const product = player.inventory.find(p => p.id === value);
@@ -372,7 +372,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <h4 className="font-bold">販売アクション (1AP)</h4>
             <div>
               <label className="block text-sm font-medium mb-1">商品:</label>
-              <ModernSelect
+              <SimpleSelect
                 value={actionParams.productId || ''}
                 onChange={(value) => {
                   const product = player.inventory?.find(p => p.id === value);
@@ -436,7 +436,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <h4 className="font-bold">レビューアクション (1AP)</h4>
             <div>
               <label className="block text-sm font-medium mb-1">対象プレイヤー:</label>
-              <ModernSelect
+              <SimpleSelect
                 value={actionParams.targetPlayerId || ''}
                 onChange={(value) => setActionParams({...actionParams, targetPlayerId: value})}
                 placeholder="対象プレイヤーを選択"
@@ -452,7 +452,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <>
                 <div>
                   <label className="block text-sm font-medium mb-1">商品 (価格-人気度):</label>
-                  <ModernSelect
+                  <SimpleSelect
                     value={`${actionParams.price}-${actionParams.popularity}` || ''}
                     onChange={(value) => {
                       const [price, popularity] = value.split('-').map(Number);
@@ -465,7 +465,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">レビュータイプ:</label>
-                  <ModernSelect
+                  <SimpleSelect
                     value={actionParams.reviewType || ''}
                     onChange={(value) => setActionParams({...actionParams, reviewType: value})}
                     placeholder="レビュータイプを選択"
@@ -515,7 +515,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">商品 (価格-人気度):</label>
-              <ModernSelect
+              <SimpleSelect
                 value={`${actionParams.price}-${actionParams.popularity}` || ''}
                 onChange={(value) => {
                   const [price, popularity] = value.split('-').map(Number);
@@ -638,7 +638,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">対象プレイヤー:</label>
-              <ModernSelect
+              <SimpleSelect
                 value={actionParams.targetPlayerId || ''}
                 onChange={(value) => setActionParams({...actionParams, targetPlayerId: value})}
                 placeholder="対象プレイヤーを選択"
@@ -653,7 +653,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             {actionParams.targetPlayerId && (
               <div>
                 <label className="block text-sm font-medium mb-1">商品 (価格-人気度):</label>
-                <ModernSelect
+                <SimpleSelect
                   value={`${actionParams.price}-${actionParams.popularity}` || ''}
                   onChange={(value) => {
                     const [price, popularity] = value.split('-').map(Number);

@@ -183,7 +183,7 @@ export const useSocket = () => {
 
     newSocket.on('game-started', ({ gameState }) => {
       console.log('🎮 Game started event received');
-      console.log('🎨 Players and their designs:', gameState.players.map(p => ({
+      console.log('🎨 Players and their designs:', gameState.players.map((p: any) => ({
         name: p.name,
         designCount: Object.keys(p.designs || {}).length,
         designs: p.designs
