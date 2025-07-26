@@ -268,14 +268,18 @@ const GameBoard: React.FC = () => {
       </div>
 
       {/* Main Layout with Sidebar and Content */}
-      <div style={{ display: 'flex', minHeight: 'calc(100vh - 200px)' }}>
+      <div style={{ display: 'flex', height: 'calc(100vh - 200px)' }}>
         {/* Left Sidebar Menu */}
         <div style={{
           width: '280px',
           background: 'rgba(255,255,255,0.95)',
           backdropFilter: 'blur(10px)',
           borderRight: '1px solid rgba(0,0,0,0.1)',
-          boxShadow: '2px 0 10px rgba(0,0,0,0.1)'
+          boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
+          overflowY: 'auto',
+          position: 'sticky',
+          top: 0,
+          height: '100%'
         }}>
           <div style={{ padding: '24px 16px' }}>
             <h3 style={{ 
@@ -334,7 +338,8 @@ const GameBoard: React.FC = () => {
         <div style={{ 
           flex: '1', 
           padding: '24px',
-          overflow: 'auto'
+          overflowY: 'auto',
+          height: '100%'
         }}>
           {renderMainContent()}
         </div>
@@ -345,7 +350,11 @@ const GameBoard: React.FC = () => {
           background: 'rgba(255,255,255,0.95)',
           backdropFilter: 'blur(10px)',
           borderLeft: '1px solid rgba(0,0,0,0.1)',
-          boxShadow: '-2px 0 10px rgba(0,0,0,0.1)'
+          boxShadow: '-2px 0 10px rgba(0,0,0,0.1)',
+          overflowY: 'auto',
+          position: 'sticky',
+          top: 0,
+          height: '100%'
         }}>
           <div style={{ padding: '24px 16px', height: '100%' }}>
             <PlayLog 
