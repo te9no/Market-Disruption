@@ -203,11 +203,13 @@ export class GameState {
       return { success: false, error: 'Player not found' };
     }
     
-    if (this.getCurrentPlayer().id !== playerId) {
+    // Allow end_game action by any player at any time
+    if (actionData.type !== 'end_game' && this.getCurrentPlayer().id !== playerId) {
       return { success: false, error: 'Not your turn' };
     }
     
-    if (this.currentPhase !== 'action') {
+    // Allow end_game action in any phase
+    if (this.currentPhase !== 'action' && actionData.type !== 'end_game') {
       return { success: false, error: 'Not action phase' };
     }
     
@@ -838,7 +840,9 @@ export class GameState {
 
   actionEndGame(player, params) {
     console.log(`🏁 Player ${player.name} requested game end`);
+    console.log(`🏁 Current game state: ${this.state}, phase: ${this.currentPhase}`);
     
+    // No action points required for ending game
     // Immediately end the game
     this.state = 'finished';
     
