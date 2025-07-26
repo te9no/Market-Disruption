@@ -32,11 +32,18 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
   const selectRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Debug: Check options received
+  console.log('🎛️ ModernSelect received options:', options);
+  console.log('🎛️ ModernSelect options count:', options.length);
+  console.log('🎛️ ModernSelect current value:', value);
+
   const selectedOption = options.find(opt => opt.value === value);
   const filteredOptions = options.filter(opt => 
     opt.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (opt.description && opt.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+  
+  console.log('🎛️ ModernSelect filtered options:', filteredOptions);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

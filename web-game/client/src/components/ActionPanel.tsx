@@ -233,12 +233,19 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     switch (selectedAction) {
       case 'manufacture':
         // Debug: Check player designs
-        console.log('🔍 Player designs:', player.designs);
-        const designOptions = Object.entries(player.designs).map(([slot, design]) => ({
-          value: slot,
-          label: `スロット${slot}: ${design.category} (コスト${design.cost})`
-        }));
-        console.log('🔍 Design options:', designOptions);
+        console.log('🔍 Player designs raw:', player.designs);
+        console.log('🔍 Player designs type:', typeof player.designs);
+        console.log('🔍 Player designs keys:', Object.keys(player.designs));
+        console.log('🔍 Player designs entries:', Object.entries(player.designs));
+        
+        const designOptions = Object.entries(player.designs || {}).map(([slot, design]) => {
+          console.log(`🔍 Processing slot ${slot}:`, design);
+          return {
+            value: slot,
+            label: `スロット${slot}: ${design?.category || 'unknown'} (コスト${design?.cost || 0})`
+          };
+        });
+        console.log('🔍 Final design options for ModernSelect:', designOptions);
         
         return (
           <div className="space-y-3">
