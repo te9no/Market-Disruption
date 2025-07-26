@@ -45,6 +45,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
       if (actionType === 'design') {
         // For design action, first show dice roll
         handleDesignAction(params);
+      } else if (actionType === 'trend_research') {
+        // For trend research, handle result display
+        setIsProcessingAction(true);
+        sendGameAction({ type: actionType, ...params });
+        
+        // Note: We'll receive the trend result through game update events
+        // The trend dialog will be shown via useSocket event handling
+        setTimeout(() => {
+          setSelectedAction(null);
+          setActionParams({});
+          setIsProcessingAction(false);
+        }, 1000);
       } else {
         setIsProcessingAction(true);
         sendGameAction({ type: actionType, ...params });

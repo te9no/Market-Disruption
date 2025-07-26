@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import PlayerBoard from './PlayerBoard';
@@ -8,6 +8,7 @@ import AutomataLog from './AutomataLog';
 import PlayerMarketView from './PlayerMarketView';
 import AutomataMarketView from './AutomataMarketView';
 import PlayLog from './PlayLog';
+import TrendResultDialog from './TrendResultDialog';
 import { useSocket } from '../hooks/useSocket';
 
 const GameBoard: React.FC = () => {
@@ -15,8 +16,32 @@ const GameBoard: React.FC = () => {
   const { socket, socketId } = useSocket();
   const [refreshing, setRefreshing] = useState(false);
   const [activeView, setActiveView] = useState<string>('game');
+  const [trendResult, setTrendResult] = useState<any>(null);
+  const [showTrendDialog, setShowTrendDialog] = useState(false);
   
   console.log('🔥 NEW GameBoard rendering with sidebar!', { activeView });
+
+  // Listen for game update events to catch trend research results
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleGameUpdate = ({ lastAction }: any) => {
+      console.log('🎯 GameBoard received game update:', lastAction);
+      
+      // Check if the last action was a trend research
+      if (lastAction && lastAction.type === 'trend_research') {
+        console.log('📈 Trend research result received:', lastAction);
+        setTrendResult(lastAction);
+        setShowTrendDialog(true);
+      }
+    };
+
+    socket.on('game-update', handleGameUpdate);
+
+    return () => {
+      socket.off('game-update', handleGameUpdate);
+    };
+  }, [socket]);
 
   const handleRefreshGameState = async () => {
     setRefreshing(true);
@@ -395,6 +420,20 @@ const GameBoard: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Trend Result Dialog */}
+      {trendResult && (
+        <TrendResultDialog
+          isOpen={showTrendDialog}
+          onClose={() => {
+            setShowTrendDialog(false);
+            setTrendResult(null);
+          }}
+          dice={trendResult.dice || []}
+          total={trendResult.total || 0}
+          trendEffect={trendResult.trendEffect || { name: '', effect: '', cost: 0 }}
+        />
       )}
     </div>
   );

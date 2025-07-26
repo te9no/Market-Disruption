@@ -38,8 +38,8 @@ const TrendResultDialog: React.FC<TrendResultDialogProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 animate-pulse-scale">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 animate-slideInUp">
         {/* Header */}
         <div className={`bg-gradient-to-r ${getTrendTypeColor(total)} text-white p-6 rounded-t-2xl`}>
           <div className="flex items-center justify-between">

@@ -3,7 +3,7 @@ import React from 'react';
 interface LogEntry {
   id: string;
   timestamp: number;
-  type: 'action' | 'phase' | 'round' | 'game' | 'automata';
+  type: 'action' | 'phase' | 'round' | 'game' | 'automata' | 'trend';
   playerId?: string;
   playerName?: string;
   message: string;
@@ -23,6 +23,7 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
       case 'round': return '🎯';
       case 'game': return '🎮';
       case 'automata': return '🤖';
+      case 'trend': return '📈';
       default: return '📝';
     }
   };
@@ -34,6 +35,7 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
       case 'round': return 'text-green-600';
       case 'game': return 'text-red-600';
       case 'automata': return 'text-orange-600';
+      case 'trend': return 'text-pink-600';
       default: return 'text-gray-600';
     }
   };
