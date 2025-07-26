@@ -146,25 +146,26 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   <div><span className="font-medium">価値:</span> {dice.value}</div>
                   <div><span className="font-medium">コスト:</span> {dice.cost}</div>
                 </div>
-                <button className="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+                <ModernButton className="mt-3 w-full" variant="primary" size="medium">
                   選択
-                </button>
+                </ModernButton>
               </div>
             </div>
           ))}
         </div>
         <div className="flex justify-center">
-          <button
+          <ModernButton
             onClick={() => {
               setShowDiceSelection(false);
               setDiceOptions([]);
               setSelectedAction(null);
               setActionParams({});
             }}
-            className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded"
+            variant="secondary"
+            size="medium"
           >
             キャンセル
-          </button>
+          </ModernButton>
         </div>
       </div>
     );
@@ -199,9 +200,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 <div className="text-2xl mb-2">📋</div>
                 <div className="font-bold">スロット {slotNumber}</div>
                 <div className="text-sm text-gray-600">空き</div>
-                <button className="mt-3 w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">
+                <ModernButton className="mt-3 w-full" variant="primary" size="medium">
                   選択
-                </button>
+                </ModernButton>
               </div>
             ))}
           </div>
@@ -213,17 +214,19 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         )}
         
         <div className="flex justify-center">
-          <button
+          <ModernButton
             onClick={() => {
               setShowSlotSelection(false);
               setSelectedDice(null);
               setShowDiceSelection(true);
             }}
-            className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded mr-3"
+            variant="secondary"
+            size="medium"
+            className="mr-3"
           >
             ダイス選択に戻る
-          </button>
-          <button
+          </ModernButton>
+          <ModernButton
             onClick={() => {
               setShowSlotSelection(false);
               setSelectedDice(null);
@@ -231,10 +234,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               setSelectedAction(null);
               setActionParams({});
             }}
-            className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded"
+            variant="danger"
+            size="medium"
           >
             キャンセル
-          </button>
+          </ModernButton>
         </div>
       </div>
     );
@@ -302,12 +306,13 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 <div>選択値: {actionParams.designSlot}</div>
                 {Object.keys(player.designs).length === 0 && (
                   <div className="mt-2">
-                    <button
+                    <ModernButton
                       onClick={() => sendGameAction({ type: 'design' })}
-                      className="bg-blue-500 text-white px-2 py-1 rounded text-xs"
+                      variant="primary"
+                      size="small"
                     >
                       テスト用設計獲得
-                    </button>
+                    </ModernButton>
                   </div>
                 )}
               </div>
@@ -658,15 +663,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </div>
             )}
             <div className="flex space-x-2">
-              <button
+              <ModernButton
                 onClick={() => handleAction('buyback', actionParams)}
                 disabled={!actionParams.price || !actionParams.popularity}
-                className="action-button"
+                variant="primary"
+                size="medium"
               >
                 買い戻し実行
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
+                variant="secondary"
+                size="medium"
               >
                 キャンセル
               </ModernButton>
@@ -693,14 +701,17 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </label>
             </div>
             <div className="flex space-x-2">
-              <button
+              <ModernButton
                 onClick={() => handleAction('design', actionParams)}
-                className="action-button"
+                variant="primary"
+                size="medium"
               >
                 設計実行
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
+                variant="secondary"
+                size="medium"
               >
                 キャンセル
               </ModernButton>
@@ -716,14 +727,17 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               5資金を即座に獲得します。
             </div>
             <div className="flex space-x-2">
-              <button
+              <ModernButton
                 onClick={() => handleAction('part_time_job')}
-                className="action-button"
+                variant="primary"
+                size="medium"
               >
                 実行
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
+                variant="secondary"
+                size="medium"
               >
                 キャンセル
               </ModernButton>
@@ -768,15 +782,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </div>
             )}
             <div className="flex space-x-2">
-              <button
+              <ModernButton
                 onClick={() => handleAction('purchase', actionParams)}
                 disabled={!actionParams.targetPlayerId || !actionParams.price}
-                className="action-button"
+                variant="primary"
+                size="medium"
               >
                 購入実行
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
+                variant="secondary"
+                size="medium"
               >
                 キャンセル
               </ModernButton>
@@ -800,14 +817,17 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </div>
             </div>
             <div className="flex space-x-2">
-              <button
+              <ModernButton
                 onClick={() => handleAction('promote_regulation', actionParams)}
-                className="action-button"
+                variant="primary"
+                size="medium"
               >
                 規制推進実行
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
+                variant="secondary"
+                size="medium"
               >
                 キャンセル
               </ModernButton>
@@ -823,14 +843,17 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               市場トレンドを調査し、特殊効果を発動します。3d6の合計で効果が決まります。
             </div>
             <div className="flex space-x-2">
-              <button
+              <ModernButton
                 onClick={() => handleAction('trend_research', actionParams)}
-                className="action-button"
+                variant="primary"
+                size="medium"
               >
                 トレンド調査実行
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
+                variant="secondary"
+                size="medium"
               >
                 キャンセル
               </ModernButton>
@@ -846,15 +869,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               18資金を獲得します。(資金100以下の場合のみ)
             </div>
             <div className="flex space-x-2">
-              <button
+              <ModernButton
                 onClick={() => handleAction('day_labor')}
                 disabled={player.funds > 100}
-                className="action-button"
+                variant="primary"
+                size="medium"
               >
                 実行
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
+                variant="secondary"
+                size="medium"
               >
                 キャンセル
               </ModernButton>
@@ -878,18 +904,21 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </div>
             </div>
             <div className="flex space-x-2">
-              <button
+              <ModernButton
                 onClick={() => {
                   console.log('🔍 Buy dignity action - player funds:', player.funds);
                   handleAction('buy_dignity');
                 }}
                 disabled={player.funds < 10}
-                className="action-button"
+                variant="primary"
+                size="medium"
               >
                 威厳を購入
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
+                variant="secondary"
+                size="medium"
               >
                 キャンセル
               </ModernButton>
@@ -923,7 +952,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </div>
             
             <div className="flex space-x-3">
-              <button
+              <ModernButton
                 onClick={() => {
                   if (window.confirm('本当にゲームを終了しますか？この操作は取り消せません。')) {
                     handleAction('end_game');
@@ -932,13 +961,13 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg font-bold"
               >
                 🏁 ゲーム終了
-              </button>
-              <button
+              </ModernButton>
+              <ModernButton
                 onClick={() => setSelectedAction(null)}
                 className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-bold"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
@@ -974,23 +1003,23 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               {gamePhase === 'automata' && (
                 <div className="mt-4">
                   <p className="text-sm mb-3">オートマフェーズ中...</p>
-                  <button
+                  <ModernButton
                     onClick={() => sendGameAction({ type: 'skip-automata' })}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
                   >
                     オートマフェーズをスキップ
-                  </button>
+                  </ModernButton>
                 </div>
               )}
               {gamePhase === 'market' && (
                 <div className="mt-4">
                   <p className="text-sm mb-3">マーケットフェーズ中...</p>
-                  <button
+                  <ModernButton
                     onClick={() => sendGameAction({ type: 'skip-market' })}
                     className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
                   >
                     マーケットフェーズをスキップ
-                  </button>
+                  </ModernButton>
                 </div>
               )}
             </div>
@@ -1042,7 +1071,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </div>
             
             <div className="grid grid-cols-1 gap-2">
-              <button
+              <ModernButton
                 onClick={() => setSelectedAction('manufacture')}
                 disabled={!player.designs || Object.keys(player.designs).length === 0 || player.actionPoints < 1}
                 className="action-card-button bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-blue-200"
@@ -1057,9 +1086,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     }
                   </div>
                 </div>
-              </button>
+              </ModernButton>
               
-              <button
+              <ModernButton
                 onClick={() => setSelectedAction('sell')}
                 disabled={!player.inventory || player.inventory.length === 0 || player.actionPoints < 1}
                 className="action-card-button bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border-green-200"
@@ -1074,7 +1103,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     }
                   </div>
                 </div>
-              </button>
+              </ModernButton>
               
               <ModernButton
                 onClick={() => setSelectedAction('purchase')}
@@ -1091,7 +1120,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 </div>
               </ModernButton>
               
-              <button
+              <ModernButton
                 onClick={() => setSelectedAction('resale')}
                 disabled={player.inventory.filter(p => p.previousOwner).length === 0 || player.actionPoints < 1}
                 className="action-card-button bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 border-orange-200"
@@ -1106,9 +1135,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     }
                   </div>
                 </div>
-              </button>
+              </ModernButton>
               
-              <button
+              <ModernButton
                 onClick={() => setSelectedAction('review')}
                 disabled={player.actionPoints < 1}
                 className="action-card-button bg-gradient-to-r from-indigo-50 to-indigo-100 hover:from-indigo-100 hover:to-indigo-200 border-indigo-200"
@@ -1120,9 +1149,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     <div className="text-xs text-indigo-600">商品の人気度を操作</div>
                   </div>
                 </div>
-              </button>
+              </ModernButton>
               
-              <button
+              <ModernButton
                 onClick={() => setSelectedAction('buyback')}
                 disabled={Object.values(player.personalMarket).every(priceRow => 
                   Object.values(priceRow).every(product => product === null)
@@ -1136,9 +1165,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     <div className="text-xs text-gray-600">出品商品を在庫に戻す</div>
                   </div>
                 </div>
-              </button>
+              </ModernButton>
               
-              <button
+              <ModernButton
                 onClick={() => setSelectedAction('buy_dignity')}
                 disabled={player.actionPoints < 1 || player.funds < 10}
                 className="action-card-button bg-gradient-to-r from-violet-50 to-violet-100 hover:from-violet-100 hover:to-violet-200 border-violet-200"
@@ -1153,7 +1182,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     }
                   </div>
                 </div>
-              </button>
+              </ModernButton>
             </div>
           </div>
 
@@ -1165,7 +1194,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </div>
             
             <div className="grid grid-cols-1 gap-2">
-              <button
+              <ModernButton
                 onClick={() => setSelectedAction('design')}
                 disabled={player.actionPoints < 2}
                 className="action-card-button bg-gradient-to-r from-cyan-50 to-cyan-100 hover:from-cyan-100 hover:to-cyan-200 border-cyan-200"
@@ -1177,9 +1206,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     <div className="text-xs text-cyan-600">新しい設計を取得</div>
                   </div>
                 </div>
-              </button>
+              </ModernButton>
               
-              <button
+              <ModernButton
                 onClick={() => setSelectedAction('part_time_job')}
                 disabled={player.actionPoints < 2}
                 className="action-card-button bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 border-emerald-200"
@@ -1191,9 +1220,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     <div className="text-xs text-emerald-600">5資金を獲得</div>
                   </div>
                 </div>
-              </button>
+              </ModernButton>
               
-              <button
+              <ModernButton
                 onClick={() => setSelectedAction('promote_regulation')}
                 disabled={player.actionPoints < 2}
                 className="action-card-button bg-gradient-to-r from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border-red-200"
@@ -1205,9 +1234,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     <div className="text-xs text-red-600">転売規制を推進</div>
                   </div>
                 </div>
-              </button>
+              </ModernButton>
               
-              <button
+              <ModernButton
                 onClick={() => setSelectedAction('trend_research')}
                 disabled={player.actionPoints < 2}
                 className="action-card-button bg-gradient-to-r from-pink-50 to-pink-100 hover:from-pink-100 hover:to-pink-200 border-pink-200"
@@ -1219,7 +1248,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     <div className="text-xs text-pink-600">市場トレンドを調査</div>
                   </div>
                 </div>
-              </button>
+              </ModernButton>
             </div>
           </div>
 
@@ -1230,7 +1259,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <h4 className="font-semibold text-gray-700">重大アクション</h4>
             </div>
             
-            <button
+            <ModernButton
               onClick={() => setSelectedAction('day_labor')}
               disabled={player.actionPoints < 3 || player.funds > 100}
               className="action-card-button bg-gradient-to-r from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 border-amber-200 w-full"
@@ -1245,12 +1274,12 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   }
                 </div>
               </div>
-            </button>
+            </ModernButton>
           </div>
 
           {/* Turn End and Game Actions */}
           <div className="pt-4 border-t border-gray-200 space-y-3">
-            <button
+            <ModernButton
               onClick={() => handleAction('end_turn')}
               className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
             >
@@ -1258,9 +1287,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 <span className="text-xl">✅</span>
                 <span>ターン終了</span>
               </div>
-            </button>
+            </ModernButton>
             
-            <button
+            <ModernButton
               onClick={() => setSelectedAction('end_game')}
               className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-200 border-2 border-red-300"
             >
@@ -1268,7 +1297,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 <span className="text-xl">🏁</span>
                 <span>ゲーム終了</span>
               </div>
-            </button>
+            </ModernButton>
           </div>
         </div>
       )}
