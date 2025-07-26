@@ -235,17 +235,26 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         // Debug: Check player designs
         console.log('🔍 Player designs raw:', player.designs);
         console.log('🔍 Player designs type:', typeof player.designs);
-        console.log('🔍 Player designs keys:', Object.keys(player.designs));
-        console.log('🔍 Player designs entries:', Object.entries(player.designs));
+        console.log('🔍 Player designs keys:', Object.keys(player.designs || {}));
+        console.log('🔍 Player designs entries:', Object.entries(player.designs || {}));
         
         const designOptions = Object.entries(player.designs || {}).map(([slot, design]) => {
           console.log(`🔍 Processing slot ${slot}:`, design);
+          const categoryName = {
+            'game-console': 'ゲーム機',
+            'diy-gadget': '自作ガジェット', 
+            'figure': 'フィギュア',
+            'accessory': 'アクセサリー',
+            'toy': 'おもちゃ'
+          }[design?.category] || design?.category || 'unknown';
+          
           return {
             value: slot,
-            label: `スロット${slot}: ${design?.category || 'unknown'} (コスト${design?.cost || 0})`
+            label: `スロット${slot}: ${categoryName} (価値${design?.value || 0}, コスト${design?.cost || 0})`
           };
         });
-        console.log('🔍 Final design options for ModernSelect:', designOptions);
+        console.log('🔍 Final design options for SimpleSelect:', designOptions);
+        console.log('🔍 Design options length:', designOptions.length);
         
         return (
           <div className="space-y-3">
@@ -431,6 +440,35 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         );
 
       case 'review':
+        // Get products from target player (including self)
+        const getPlayerProducts = (targetPlayerId: string) => {
+          const targetPlayer = gameState.players.find(p => p.id === targetPlayerId);
+          if (!targetPlayer) return [];
+          
+          const products: Array<{value: string, label: string}> = [];
+          
+          Object.entries(targetPlayer.personalMarket || {}).forEach(([price, popularityMap]) => {
+            Object.entries(popularityMap).forEach(([popularity, product]) => {
+              if (product) {
+                const categoryName = {
+                  'game-console': 'ゲーム機',
+                  'diy-gadget': '自作ガジェット', 
+                  'figure': 'フィギュア',
+                  'accessory': 'アクセサリー',
+                  'toy': 'おもちゃ'
+                }[product.category] || product.category;
+                
+                products.push({
+                  value: `${price}-${popularity}`,
+                  label: `${categoryName} (価格${price}、人気度${popularity})`
+                });
+              }
+            });
+          });
+          
+          return products;
+        };
+
         return (
           <div className="space-y-3">
             <h4 className="font-bold">レビューアクション (1AP)</h4>
@@ -438,14 +476,12 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <label className="block text-sm font-medium mb-1">対象プレイヤー:</label>
               <SimpleSelect
                 value={actionParams.targetPlayerId || ''}
-                onChange={(value) => setActionParams({...actionParams, targetPlayerId: value})}
+                onChange={(value) => setActionParams({...actionParams, targetPlayerId: value, price: undefined, popularity: undefined})}
                 placeholder="対象プレイヤーを選択"
-                options={gameState.players
-                  .filter(p => p.id !== player.id)
-                  .map((p) => ({
-                    value: p.id,
-                    label: p.name
-                  }))}
+                options={gameState.players.map((p) => ({
+                  value: p.id,
+                  label: p.name + (p.id === player.id ? ' (自分)' : '')
+                }))}
               />
             </div>
             {actionParams.targetPlayerId && (
@@ -459,7 +495,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       setActionParams({...actionParams, price, popularity});
                     }}
                     placeholder="商品を選択"
-                    options={[]}
+                    options={getPlayerProducts(actionParams.targetPlayerId)}
                     emptyMessage="対象プレイヤーの商品がありません"
                   />
                 </div>
@@ -764,6 +800,85 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           </div>
         );
 
+      case 'buy_dignity':
+        return (
+          <div className="space-y-3">
+            <h4 className="font-bold">威厳購入アクション (1AP)</h4>
+            <div className="text-sm text-gray-600 mb-3">
+              10資金を支払って威厳を1ポイント購入します。
+            </div>
+            <div className="bg-violet-50 p-3 rounded-lg">
+              <div className="text-sm">
+                <div>💰 必要資金: 10</div>
+                <div>💰 現在資金: {player.funds}</div>
+                <div>👑 現在威厳: {player.prestige}</div>
+                <div>👑 購入後威厳: {player.prestige + 1}</div>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => handleAction('buy_dignity')}
+                disabled={player.funds < 10}
+                className="action-button"
+              >
+                威厳を購入
+              </button>
+              <button
+                onClick={() => setSelectedAction(null)}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        );
+
+      case 'end_game':
+        return (
+          <div className="space-y-4">
+            <h4 className="font-bold text-red-800">ゲーム終了確認</h4>
+            <div className="bg-red-50 border-2 border-red-200 p-4 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <span className="text-2xl">⚠️</span>
+                <div>
+                  <div className="font-bold text-red-800 mb-2">本当にゲームを終了しますか？</div>
+                  <div className="text-sm text-red-700 space-y-1">
+                    <div>• ゲームは即座に終了し、現在の状態で順位が決定されます</div>
+                    <div>• 他のプレイヤーにも影響します</div>
+                    <div>• この操作は取り消すことができません</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+              <div className="text-sm text-yellow-800">
+                <div className="font-bold mb-1">現在の状況:</div>
+                <div>ラウンド {gameState.currentRound} | あなたの威厳: {player.prestige} | 資金: {player.funds}</div>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  if (window.confirm('本当にゲームを終了しますか？この操作は取り消せません。')) {
+                    handleAction('end_game');
+                  }
+                }}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg font-bold"
+              >
+                🏁 ゲーム終了
+              </button>
+              <button
+                onClick={() => setSelectedAction(null)}
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-bold"
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -950,6 +1065,23 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   </div>
                 </div>
               </button>
+              
+              <button
+                onClick={() => setSelectedAction('buy_dignity')}
+                disabled={player.actionPoints < 1 || player.funds < 10}
+                className="action-card-button bg-gradient-to-r from-violet-50 to-violet-100 hover:from-violet-100 hover:to-violet-200 border-violet-200"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">👑</span>
+                  <div className="text-left">
+                    <div className="font-medium text-violet-900">威厳購入</div>
+                    <div className="text-xs text-violet-600">10資金で威厳+1</div>
+                    {player.funds < 10 && 
+                      <div className="text-xs text-red-500">⚠️ 資金不足</div>
+                    }
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
 
@@ -1044,8 +1176,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </button>
           </div>
 
-          {/* Turn End */}
-          <div className="pt-4 border-t border-gray-200">
+          {/* Turn End and Game Actions */}
+          <div className="pt-4 border-t border-gray-200 space-y-3">
             <button
               onClick={() => handleAction('end_turn')}
               className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
@@ -1053,6 +1185,16 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <div className="flex items-center justify-center space-x-2">
                 <span className="text-xl">✅</span>
                 <span>ターン終了</span>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => setSelectedAction('end_game')}
+              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-200 border-2 border-red-300"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <span className="text-xl">🏁</span>
+                <span>ゲーム終了</span>
               </div>
             </button>
           </div>

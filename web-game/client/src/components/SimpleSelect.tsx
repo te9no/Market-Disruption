@@ -31,13 +31,15 @@ const SimpleSelect: React.FC<SimpleSelectProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const selectRef = useRef<HTMLDivElement>(null);
 
-  // デバッグログ
-  console.log('🎛️ SimpleSelect props:', { value, options: options.length, placeholder });
-
   const selectedOption = options.find(opt => opt.value === value);
   const filteredOptions = options.filter(opt => 
     opt.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // デバッグログ
+  console.log('🎛️ SimpleSelect props:', { value, options: options.length, placeholder, label });
+  console.log('🎛️ SimpleSelect options detail:', options);
+  console.log('🎛️ SimpleSelect filteredOptions:', filteredOptions.length);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

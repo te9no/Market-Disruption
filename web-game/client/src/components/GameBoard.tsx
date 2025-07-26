@@ -302,7 +302,11 @@ const GameBoard: React.FC = () => {
               pollution={gameState.pollution}
               regulationLevel={gameState.regulationLevel}
             />
-            <AutomataLog automataActions={gameState.automataActions || []} />
+            <AutomataLog 
+              automataActions={gameState.automataActions || []} 
+              currentRound={gameState.currentRound}
+              gamePhase={gameState.currentPhase}
+            />
           </div>
         )}
       </div>

@@ -410,11 +410,25 @@ io.on('connection', (socket) => {
           return;
         }
         
-        // Check for game end
+        // Check for manual game end
+        if (result.action.gameEnded) {
+          console.log(`🏁 Game manually ended by ${result.action.initiatedBy}`);
+          io.to(playerData.gameId).emit('game-over', {
+            winner: result.action.winner,
+            finalState: gameStateJSON,
+            endReason: 'manual',
+            initiatedBy: result.action.initiatedBy,
+            finalScores: result.action.finalScores
+          });
+          return;
+        }
+        
+        // Check for natural game end
         if (game.isGameOver()) {
           io.to(playerData.gameId).emit('game-over', {
             winner: game.getWinner(),
-            finalState: gameStateJSON
+            finalState: gameStateJSON,
+            endReason: 'victory'
           });
         }
       } else {

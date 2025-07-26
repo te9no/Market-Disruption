@@ -351,6 +351,8 @@ export class GameState {
         return this.actionReview(player, params);
       case 'end_turn':
         return this.actionEndTurn(player, params);
+      case 'end_game':
+        return this.actionEndGame(player, params);
       case 'skip-automata':
         return this.actionSkipAutomata(player, params);
       case 'skip-market':
@@ -952,6 +954,50 @@ export class GameState {
       newRound: this.currentRound,
       nextRound: nextRoundResult
     };
+  }
+
+  actionEndGame(player, params) {
+    console.log(`🏁 Player ${player.name} requested game end`);
+    
+    // Immediately end the game
+    this.state = 'finished';
+    
+    // Determine winner based on current scores
+    this.winner = this.determineWinnerByScore();
+    
+    console.log(`🏆 Game ended manually. Winner: ${this.winner?.name || 'None'}`);
+    
+    return { 
+      type: 'end_game', 
+      initiatedBy: player.name,
+      winner: this.winner,
+      gameEnded: true,
+      finalScores: this.players.map(p => ({
+        name: p.name,
+        prestige: p.prestige,
+        funds: p.funds,
+        score: this.calculateFinalScore(p)
+      }))
+    };
+  }
+
+  determineWinnerByScore() {
+    if (this.players.length === 0) return null;
+    
+    // Sort players by final score (prestige priority, then funds)
+    const sortedPlayers = [...this.players].sort((a, b) => {
+      if (a.prestige !== b.prestige) {
+        return b.prestige - a.prestige; // Higher prestige wins
+      }
+      return b.funds - a.funds; // Higher funds wins as tiebreaker
+    });
+    
+    return sortedPlayers[0];
+  }
+
+  calculateFinalScore(player) {
+    // Final score calculation: prestige is primary, funds as secondary
+    return player.prestige * 1000 + player.funds;
   }
 
   getTrendEffect(total) {

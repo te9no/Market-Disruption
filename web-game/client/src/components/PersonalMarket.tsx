@@ -349,14 +349,52 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({
       
       {/* Main Content Area */}
       {viewMode === 'grid' ? (
-        <div className="overflow-auto max-h-96 border-2 border-gray-300 rounded-lg bg-gradient-to-br from-blue-50 to-purple-50">
-          <div className="grid grid-cols-7 gap-0" style={{ minWidth: '584px' }}>
+        <div style={{
+          maxHeight: '384px',
+          overflowY: 'auto',
+          overflowX: 'auto',
+          border: '2px solid #d1d5db',
+          borderRadius: '8px',
+          background: 'linear-gradient(135deg, #eff6ff 0%, #f3e8ff 100%)'
+        }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            gap: '0',
+            minWidth: '584px'
+          }}>
             {/* Header Row */}
-            <div className="sticky top-0 bg-gray-100 border-r-2 border-b-2 border-gray-400 h-12 flex items-center justify-center text-sm font-bold z-10">
+            <div style={{
+              position: 'sticky',
+              top: '0',
+              backgroundColor: '#f3f4f6',
+              borderRight: '2px solid #9ca3af',
+              borderBottom: '2px solid #9ca3af',
+              height: '48px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.875rem',
+              fontWeight: 'bold',
+              zIndex: 10
+            }}>
               価格＼人気
             </div>
             {[1, 2, 3, 4, 5, 6].map(popularity => (
-              <div key={`header-${popularity}`} className="sticky top-0 bg-blue-200 border-r-2 border-b-2 border-gray-400 h-12 flex items-center justify-center text-sm font-bold z-10">
+              <div key={`header-${popularity}`} style={{
+                position: 'sticky',
+                top: '0',
+                backgroundColor: '#bfdbfe',
+                borderRight: '2px solid #9ca3af',
+                borderBottom: '2px solid #9ca3af',
+                height: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.875rem',
+                fontWeight: 'bold',
+                zIndex: 10
+              }}>
                 ⭐{popularity}
               </div>
             ))}
@@ -364,12 +402,35 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({
             {/* Market Grid Rows */}
             {getPriceRange().map(price => [
               // Price Label
-              <div key={`price-${price}`} className="bg-gradient-to-r from-green-100 to-blue-100 border-r-2 border-b border-gray-400 h-16 flex items-center justify-center text-sm font-bold sticky left-0 z-5">
+              <div key={`price-${price}`} style={{
+                background: 'linear-gradient(to right, #dcfce7, #dbeafe)',
+                borderRight: '2px solid #9ca3af',
+                borderBottom: '1px solid #9ca3af',
+                height: '64px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.875rem',
+                fontWeight: 'bold',
+                position: 'sticky',
+                left: '0',
+                zIndex: 5
+              }}>
                 💰{price}
               </div>,
               // Market Cells
               ...([1, 2, 3, 4, 5, 6].map(popularity => (
-                <div key={`${price}-${popularity}`} className="relative group border-r-2 border-b border-gray-400 h-16 flex items-center justify-center p-1 hover:bg-white hover:bg-opacity-50 transition-colors">
+                <div key={`${price}-${popularity}`} style={{
+                  position: 'relative',
+                  borderRight: '2px solid #9ca3af',
+                  borderBottom: '1px solid #9ca3af',
+                  height: '64px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px',
+                  transition: 'background-color 0.2s'
+                }} className="group hover:bg-white hover:bg-opacity-50">
                   {renderProduct(personalMarket[price]?.[popularity] || null, price, popularity)}
                   
                   {/* Hover tooltip */}
