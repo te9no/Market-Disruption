@@ -58,25 +58,19 @@ export const useSocket = () => {
       console.log('✅ Successfully connected to server:', SERVER_URL);
       dispatch(setConnected(true));
       
-      // Try to reconnect to saved game
+      // Check for saved game but don't auto-reconnect
       const savedGame = localStorage.getItem('market-disruption-game');
       if (savedGame) {
         try {
           const gameInfo = JSON.parse(savedGame);
           const timeDiff = Date.now() - gameInfo.timestamp;
           
-          // Auto-rejoin if saved within last 30 minutes
-          if (timeDiff < 30 * 60 * 1000) {
-            console.log('🔄 Auto-reconnecting to saved game:', gameInfo.gameId);
-            setTimeout(() => {
-              newSocket.emit('join-game', { 
-                gameId: gameInfo.gameId, 
-                playerName: gameInfo.playerName 
-              });
-            }, 1000);
-          } else {
+          // Clean up old saved games (older than 30 minutes)
+          if (timeDiff >= 30 * 60 * 1000) {
             console.log('⏰ Saved game too old, clearing...');
             localStorage.removeItem('market-disruption-game');
+          } else {
+            console.log('💾 Found saved game, but auto-reconnect disabled. Player can choose to rejoin:', gameInfo.gameId);
           }
         } catch (e) {
           console.error('❌ Error parsing saved game:', e);
@@ -94,18 +88,14 @@ export const useSocket = () => {
       console.log('🔄 Reconnected to server after', attemptNumber, 'attempts');
       dispatch(setConnected(true));
       
-      // Try to rejoin saved game after reconnection
+      // Check for saved game after reconnection but don't auto-rejoin
       const savedGame = localStorage.getItem('market-disruption-game');
       if (savedGame) {
         try {
           const gameInfo = JSON.parse(savedGame);
-          console.log('🔄 Auto-rejoining after reconnection:', gameInfo.gameId);
-          newSocket.emit('join-game', { 
-            gameId: gameInfo.gameId, 
-            playerName: gameInfo.playerName 
-          });
+          console.log('💾 Reconnected with saved game available, but auto-rejoin disabled:', gameInfo.gameId);
         } catch (e) {
-          console.error('❌ Error rejoining after reconnection:', e);
+          console.error('❌ Error checking saved game after reconnection:', e);
         }
       }
     });
@@ -204,6 +194,10 @@ export const useSocket = () => {
     newSocket.on('game-over', ({ winner, finalState }) => {
       console.log('Game over, winner:', winner);
       dispatch(setGameState(finalState));
+      
+      // Clear saved game data when game ends
+      console.log('🧹 Clearing saved game data after game end');
+      localStorage.removeItem('market-disruption-game');
     });
 
     newSocket.on('error', ({ message }) => {

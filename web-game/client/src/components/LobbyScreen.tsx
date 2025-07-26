@@ -295,12 +295,25 @@ const LobbyScreen: React.FC = () => {
                 ゲームID: {getSavedGameInfo()?.gameId}<br/>
                 プレイヤー名: {getSavedGameInfo()?.playerName}
               </div>
-              <button
-                onClick={handleReconnectToSavedGame}
-                className="w-full py-2 px-3 text-sm bg-yellow-500 hover:bg-yellow-600 text-white rounded-md transition-colors"
-              >
-                🔄 前回のゲームに再接続
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={handleReconnectToSavedGame}
+                  className="w-full py-2 px-3 text-sm bg-yellow-500 hover:bg-yellow-600 text-white rounded-md transition-colors"
+                >
+                  🔄 前回のゲームに再接続
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm('保存されたゲーム情報を削除しますか？')) {
+                      localStorage.removeItem('market-disruption-game');
+                      setForceRefresh(prev => prev + 1);
+                    }
+                  }}
+                  className="w-full py-1 px-3 text-xs bg-gray-400 hover:bg-gray-500 text-white rounded-md transition-colors"
+                >
+                  🗑️ 保存データを削除
+                </button>
+              </div>
             </div>
           )}
 
