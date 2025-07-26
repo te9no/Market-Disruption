@@ -232,6 +232,14 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
 
     switch (selectedAction) {
       case 'manufacture':
+        // Debug: Check player designs
+        console.log('🔍 Player designs:', player.designs);
+        const designOptions = Object.entries(player.designs).map(([slot, design]) => ({
+          value: slot,
+          label: `スロット${slot}: ${design.category} (コスト${design.cost})`
+        }));
+        console.log('🔍 Design options:', designOptions);
+        
         return (
           <div className="space-y-3">
             <h4 className="font-bold">製造アクション (1AP)</h4>
@@ -241,12 +249,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 value={actionParams.designSlot?.toString() || ''}
                 onChange={(value) => setActionParams({...actionParams, designSlot: parseInt(value)})}
                 placeholder="設計スロットを選択"
-                options={Object.entries(player.designs).map(([slot, design]) => ({
-                  value: slot,
-                  label: `スロット${slot}: ${design.category} (コスト${design.cost})`
-                }))}
+                options={designOptions}
+                emptyMessage="利用可能な設計がありません"
               />
             </div>
+            {/* Debug info */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs bg-gray-100 p-2 rounded">
+                <div>設計数: {Object.keys(player.designs).length}</div>
+                <div>設計: {JSON.stringify(player.designs)}</div>
+                <div>選択値: {actionParams.designSlot}</div>
+              </div>
+            )}
             <div className="flex space-x-2">
               <button
                 onClick={() => handleAction('manufacture', actionParams)}

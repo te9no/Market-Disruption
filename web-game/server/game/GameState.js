@@ -85,8 +85,8 @@ export class GameState {
   }
   
   startGame() {
-    if (this.players.length < 2) {
-      throw new Error('Need at least 2 players');
+    if (this.players.length < 1) {
+      throw new Error('Need at least 1 player');
     }
     
     this.state = 'playing';
@@ -100,12 +100,16 @@ export class GameState {
   }
   
   giveInitialDesigns() {
+    console.log(`🎨 Giving initial designs to ${this.players.length} players`);
     this.players.forEach(player => {
+      console.log(`🎨 Giving designs to player: ${player.name}`);
       // Each player gets 2 random designs
       for (let i = 1; i <= 2; i++) {
         const design = this.rollRandomDesign();
+        console.log(`🎨 Generated design for slot ${i}:`, design);
         player.addDesign(i, design);
       }
+      console.log(`🎨 Player ${player.name} now has designs:`, Object.keys(player.designs));
     });
   }
   
