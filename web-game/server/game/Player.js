@@ -138,13 +138,6 @@ export class Player {
     return this.prestige >= -2;
   }
 
-  // Get price limit method for server-side access
-  getPriceLimit(manufacturingCost) {
-    if (this.prestige <= 2) return manufacturingCost * 2;
-    if (this.prestige <= 8) return manufacturingCost * 3;
-    return manufacturingCost * 4;
-  }
-  
   // Get all products in personal market
   getAllMarketProducts() {
     const products = [];
