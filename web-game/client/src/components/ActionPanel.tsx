@@ -490,10 +490,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 onClick={() => setSelectedAction(null)}
                 variant="secondary"
                 size="medium"
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
@@ -584,7 +583,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </>
             )}
             <div className="flex space-x-2">
-              <button
+              <ModernButton
                 onClick={() => {
                   console.log('🔍 Review action params:', actionParams);
                   console.log('🔍 Required params check:', {
@@ -605,10 +604,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 onClick={() => setSelectedAction(null)}
                 variant="secondary"
                 size="medium"
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
@@ -669,10 +667,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </button>
               <button
                 onClick={() => setSelectedAction(null)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
@@ -704,10 +701,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </button>
               <button
                 onClick={() => setSelectedAction(null)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
@@ -728,10 +724,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </button>
               <button
                 onClick={() => setSelectedAction(null)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
@@ -782,10 +777,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </button>
               <button
                 onClick={() => setSelectedAction(null)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
@@ -814,10 +808,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </button>
               <button
                 onClick={() => setSelectedAction(null)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
@@ -838,10 +831,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </button>
               <button
                 onClick={() => setSelectedAction(null)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
@@ -863,10 +855,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </button>
               <button
                 onClick={() => setSelectedAction(null)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
@@ -899,10 +890,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               </button>
               <button
                 onClick={() => setSelectedAction(null)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
               >
                 キャンセル
-              </button>
+              </ModernButton>
             </div>
           </div>
         );
