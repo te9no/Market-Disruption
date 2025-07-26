@@ -526,8 +526,17 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             )}
             <div className="flex space-x-2">
               <button
-                onClick={() => handleAction('review', actionParams)}
-                disabled={!actionParams.targetPlayerId || !actionParams.reviewType}
+                onClick={() => {
+                  console.log('🔍 Review action params:', actionParams);
+                  console.log('🔍 Required params check:', {
+                    targetPlayerId: actionParams.targetPlayerId,
+                    price: actionParams.price,
+                    popularity: actionParams.popularity,
+                    reviewType: actionParams.reviewType
+                  });
+                  handleAction('review', actionParams);
+                }}
+                disabled={!actionParams.targetPlayerId || !actionParams.reviewType || !actionParams.price || !actionParams.popularity}
                 className="action-button"
               >
                 レビュー実行
@@ -817,7 +826,10 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </div>
             <div className="flex space-x-2">
               <button
-                onClick={() => handleAction('buy_dignity')}
+                onClick={() => {
+                  console.log('🔍 Buy dignity action - player funds:', player.funds);
+                  handleAction('buy_dignity');
+                }}
                 disabled={player.funds < 10}
                 className="action-button"
               >

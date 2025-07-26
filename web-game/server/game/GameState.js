@@ -339,6 +339,8 @@ export class GameState {
         return this.actionDayLabor(player, params);
       case 'buyback':
         return this.actionBuyback(player, params);
+      case 'buy_dignity':
+        return this.actionBuyDignity(player, params);
       case 'end_sale':
         return this.actionEndSale(player, params);
       case 'promote_regulation':
@@ -657,6 +659,28 @@ export class GameState {
     return { type: 'buyback', product, price, popularity };
   }
 
+  actionBuyDignity(player, params) {
+    if (!player.hasActionPoints(1)) {
+      throw new Error('Not enough action points');
+    }
+
+    if (player.funds < 10) {
+      throw new Error('Not enough funds to buy dignity');
+    }
+
+    player.spendActionPoints(1);
+    player.spendFunds(10);
+    player.modifyPrestige(1);
+
+    return { 
+      type: 'buy_dignity', 
+      cost: 10,
+      prestigeGained: 1,
+      newPrestige: player.prestige,
+      newFunds: player.funds
+    };
+  }
+
   actionEndSale(player, { designSlot }) {
     if (!player.hasActionPoints(1)) {
       throw new Error('Not enough action points');
@@ -838,76 +862,6 @@ export class GameState {
     };
   }
 
-  actionReview(player, { sellerId, productId }) {
-    if (!player.hasActionPoints(1)) {
-      throw new Error('Not enough action points');
-    }
-
-    // Find seller and product
-    let seller;
-    let product;
-    
-    if (sellerId === 'manufacturer-automata') {
-      seller = this.manufacturerAutomata;
-      // Find product in manufacturer automata's market
-      for (const priceLevel of Object.values(seller.personalMarket)) {
-        for (const prod of Object.values(priceLevel)) {
-          if (prod && prod.id === productId) {
-            product = prod;
-            break;
-          }
-        }
-        if (product) break;
-      }
-    } else if (sellerId === 'resale-automata') {
-      seller = this.resaleAutomata;
-      // Find product in resale automata's market
-      for (const priceLevel of Object.values(seller.personalMarket)) {
-        for (const prod of Object.values(priceLevel)) {
-          if (prod && prod.id === productId) {
-            product = prod;
-            break;
-          }
-        }
-        if (product) break;
-      }
-    } else {
-      seller = this.players.find(p => p.id === sellerId);
-      if (!seller) {
-        throw new Error('Seller not found');
-      }
-      // Find product in player's market
-      for (const priceLevel of Object.values(seller.personalMarket)) {
-        for (const prod of Object.values(priceLevel)) {
-          if (prod && prod.id === productId) {
-            product = prod;
-            break;
-          }
-        }
-        if (product) break;
-      }
-    }
-
-    if (!product) {
-      throw new Error('Product not found');
-    }
-
-    player.spendActionPoints(1);
-
-    // Review effect: seller loses 1 prestige, reviewer gains 1 prestige
-    if (sellerId !== 'manufacturer-automata' && sellerId !== 'resale-automata') {
-      seller.modifyPrestige(-1);
-    }
-    player.modifyPrestige(1);
-
-    return { 
-      type: 'review', 
-      productId, 
-      sellerId,
-      reviewerPrestige: player.prestige,
-      sellerPrestige: seller.prestige || 'N/A'
-    };
-  }
 
   actionEndTurn(player) {
     // End current player's turn
