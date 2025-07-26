@@ -6,6 +6,7 @@ import GameStatus from './GameStatus';
 import ActionPanel from './ActionPanel';
 import AutomataLog from './AutomataLog';
 import PlayerMarketView from './PlayerMarketView';
+import AutomataMarketView from './AutomataMarketView';
 import PlayLog from './PlayLog';
 import { useSocket } from '../hooks/useSocket';
 
@@ -97,6 +98,8 @@ const GameBoard: React.FC = () => {
       icon: '🏪',
       label: `${player.name}のマーケット`
     })),
+    { key: 'manufacturer-automata', icon: '🏭', label: 'メーカーオートマ' },
+    { key: 'resale-automata', icon: '💰', label: '転売オートマ' },
     { key: 'details', icon: '🤖', label: '詳細情報' }
   ];
 
@@ -121,6 +124,28 @@ const GameBoard: React.FC = () => {
             />
           </div>
         </div>
+      );
+    }
+
+    if (activeView === 'manufacturer-automata') {
+      return (
+        <AutomataMarketView
+          automata={gameState.manufacturerAutomata}
+          type="manufacturer"
+          currentPlayerId={currentPlayer.id}
+          isMyTurn={isCurrentPlayerTurn}
+        />
+      );
+    }
+
+    if (activeView === 'resale-automata') {
+      return (
+        <AutomataMarketView
+          automata={gameState.resaleAutomata}
+          type="resale"
+          currentPlayerId={currentPlayer.id}
+          isMyTurn={isCurrentPlayerTurn}
+        />
       );
     }
 

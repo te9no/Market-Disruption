@@ -22,13 +22,13 @@ export class GameState {
     // Automata state
     this.manufacturerAutomata = {
       inventory: [],
-      personalMarket: {}
+      personalMarket: this.initializeAutomataMarket()
     };
     
     this.resaleAutomata = {
       funds: 20,
       inventory: [],
-      personalMarket: {}
+      personalMarket: this.initializeAutomataMarket()
     };
     
     // Dice pools
@@ -101,6 +101,17 @@ export class GameState {
     }
     
     console.log(`📜 PlayLog: ${message}`);
+  }
+  
+  initializeAutomataMarket() {
+    const market = {};
+    for (let price = 1; price <= 20; price++) {
+      market[price] = {};
+      for (let popularity = 1; popularity <= 6; popularity++) {
+        market[price][popularity] = null; // null = empty slot
+      }
+    }
+    return market;
   }
   
   removePlayer(playerId) {
@@ -1118,6 +1129,7 @@ export class GameState {
       product.price = resalePrice;
       
       // Add to resale automata market
+      console.log(`💰 Resale automata putting product on market: ${product.category} at price ${resalePrice}`);
       if (!this.resaleAutomata.personalMarket[resalePrice]) {
         this.resaleAutomata.personalMarket[resalePrice] = {};
       }
@@ -1128,6 +1140,7 @@ export class GameState {
     });
     
     console.log(`Resale automata: ${action}, purchased ${purchasedProducts.length} products`);
+    console.log(`💰 Resale automata market after action:`, Object.keys(this.resaleAutomata.personalMarket).length, 'price points');
     
     return { 
       action, 
