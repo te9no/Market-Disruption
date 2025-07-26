@@ -259,6 +259,16 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 <div>設計数: {Object.keys(player.designs).length}</div>
                 <div>設計: {JSON.stringify(player.designs)}</div>
                 <div>選択値: {actionParams.designSlot}</div>
+                {Object.keys(player.designs).length === 0 && (
+                  <div className="mt-2">
+                    <button
+                      onClick={() => sendGameAction({ type: 'design' })}
+                      className="bg-blue-500 text-white px-2 py-1 rounded text-xs"
+                    >
+                      テスト用設計獲得
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             <div className="flex space-x-2">
