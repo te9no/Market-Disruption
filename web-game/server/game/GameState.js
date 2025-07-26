@@ -415,16 +415,25 @@ export class GameState {
       throw new Error('Category too polluted for regular sales');
     }
     
+    // Prepare product for market (before removing from inventory)
+    const marketProduct = { ...product };
+    marketProduct.price = adjustedPrice;
+    
+    // Verify market slot is available before proceeding
+    if (player.personalMarket[adjustedPrice] && player.personalMarket[adjustedPrice][marketProduct.popularity]) {
+      throw new Error('Market slot already occupied');
+    }
+    
+    // Only spend action points and remove from inventory after all checks pass
     player.spendActionPoints(1);
     player.inventory.splice(productIndex, 1);
     
-    // Add to personal market
-    product.price = adjustedPrice;
-    player.addProductToMarket(product, adjustedPrice);
+    // Add to personal market (should not fail now)
+    player.addProductToMarket(marketProduct, adjustedPrice);
     
-    this.addToPlayLog('action', `${product.category}を¥${adjustedPrice}で出品しました`, player.id, player.name);
+    this.addToPlayLog('action', `${marketProduct.category}を¥${adjustedPrice}で出品しました`, player.id, player.name);
     
-    return { type: 'sell', product, originalPrice: price, adjustedPrice };
+    return { type: 'sell', product: marketProduct, originalPrice: price, adjustedPrice };
   }
   
   actionPurchase(player, { targetPlayerId, price, popularity }) {
@@ -1519,23 +1528,34 @@ export class GameState {
 
     const finalPrice = Math.min(targetPrice || basePrice, maxResalePrice);
 
+    // Prepare product for market (before removing from inventory)
+    const marketProduct = { ...product };
+    marketProduct.price = finalPrice;
+    
+    // Verify market slot is available before proceeding
+    if (player.personalMarket[finalPrice] && player.personalMarket[finalPrice][marketProduct.popularity]) {
+      throw new Error('Market slot already occupied');
+    }
+
+    // Only spend action points and remove from inventory after all checks pass
     player.spendActionPoints(1);
     player.inventory.splice(productIndex, 1);
 
-    // Add to personal market
-    product.price = finalPrice;
-    player.addProductToMarket(product, finalPrice);
+    // Add to personal market (should not fail now)
+    player.addProductToMarket(marketProduct, finalPrice);
 
     // Update resale history and prestige
     player.incrementResaleHistory();
     player.modifyPrestige(-1);
 
     // Add pollution marker
-    this.pollution[product.category]++;
+    this.pollution[marketProduct.category]++;
+
+    this.addToPlayLog('action', `${marketProduct.category}を¥${finalPrice}で転売しました`, player.id, player.name);
 
     return { 
       type: 'resale', 
-      product, 
+      product: marketProduct, 
       finalPrice, 
       basePrice, 
       maxResalePrice,
