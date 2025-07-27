@@ -241,13 +241,19 @@ const GameBoard: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
               <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>🎮 Market Disruption</h1>
               <div style={{
-                background: 'rgba(255,255,255,0.2)',
+                background: 'rgba(255,255,255,0.25)',
                 backdropFilter: 'blur(10px)',
                 borderRadius: '12px',
                 padding: '12px 18px',
-                border: '1px solid rgba(255,255,255,0.3)'
+                border: '1px solid rgba(255,255,255,0.4)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
-                <div style={{ fontSize: '14px', fontWeight: '600' }}>
+                <div style={{ 
+                  fontSize: '14px', 
+                  fontWeight: '600',
+                  color: 'white',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+                }}>
                   ラウンド {gameState.currentRound} | {currentPhase === 'action' ? '🎯 アクション' : currentPhase === 'automata' ? '🤖 オートマ' : '🏪 市場'}フェーズ
                 </div>
               </div>
@@ -299,28 +305,38 @@ const GameBoard: React.FC = () => {
           {/* Compact Stats Bar */}
           <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
             {[
-              { icon: '👥', value: `${gameState.players.length}人`, label: 'プレイヤー', color: '#4ade80', priority: 3 },
-              { icon: '💰', value: `¥${currentPlayer.funds.toLocaleString()}`, label: '資金', color: '#fbbf24', priority: 1 },
-              { icon: '👑', value: currentPlayer.prestige, label: '威厳', color: '#a855f7', priority: 2 },
-              { icon: '⚡', value: `${currentPlayer.actionPoints}/3`, label: 'AP', color: '#3b82f6', priority: 1 },
-              { icon: '🔄', value: currentPlayer.resaleHistory, label: '転売回数', color: '#ef4444', priority: 3 }
+              { icon: '👥', value: `${gameState.players.length}人`, label: 'プレイヤー', priority: 3 },
+              { icon: '💰', value: `¥${currentPlayer.funds.toLocaleString()}`, label: '資金', priority: 1 },
+              { icon: '👑', value: currentPlayer.prestige, label: '威厳', priority: 2 },
+              { icon: '⚡', value: `${currentPlayer.actionPoints}/3`, label: 'AP', priority: 1 },
+              { icon: '🔄', value: currentPlayer.resaleHistory, label: '転売回数', priority: 3 }
             ].filter(stat => !isMobile || stat.priority <= 2).map((stat, index) => (
               <div key={index} style={{
-                background: 'rgba(255,255,255,0.15)',
+                background: 'rgba(255,255,255,0.25)',
                 backdropFilter: 'blur(10px)',
                 borderRadius: '16px',
                 padding: isMobile ? '8px 12px' : '12px 16px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: isMobile ? '6px' : '10px',
-                border: '1px solid rgba(255,255,255,0.2)',
+                border: '1px solid rgba(255,255,255,0.3)',
                 minWidth: isMobile ? '80px' : '120px',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
                 <span style={{ fontSize: isMobile ? '16px' : '20px' }}>{stat.icon}</span>
                 <div>
-                  <div style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: 'bold', color: stat.color }}>{stat.value}</div>
-                  <div style={{ fontSize: isMobile ? '9px' : '11px', opacity: 0.8 }}>{stat.label}</div>
+                  <div style={{ 
+                    fontSize: isMobile ? '12px' : '14px', 
+                    fontWeight: 'bold', 
+                    color: 'white',
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+                  }}>{stat.value}</div>
+                  <div style={{ 
+                    fontSize: isMobile ? '9px' : '11px', 
+                    color: 'rgba(255,255,255,0.9)',
+                    fontWeight: '500'
+                  }}>{stat.label}</div>
                 </div>
               </div>
             ))}
