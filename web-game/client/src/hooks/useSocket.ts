@@ -194,6 +194,23 @@ export const useSocket = () => {
             player: lastAction.playerName || lastAction.playerId,
             details: lastAction
           });
+          
+          // Log phase transitions
+          if (lastAction.type === 'phase_change') {
+            console.log('🔄 Phase change detected:', {
+              from: lastAction.fromPhase,
+              to: lastAction.toPhase,
+              round: lastAction.round
+            });
+          }
+          
+          // Log round progression
+          if (lastAction.type === 'round_change') {
+            console.log('📅 Round change detected:', {
+              newRound: lastAction.newRound,
+              phase: lastAction.phase
+            });
+          }
         }
       } catch (error) {
         console.error('❌ Error updating state after action:', error);
@@ -328,7 +345,8 @@ export const useSocket = () => {
       case 'day_labor':
         return '日雇い労働を実行しました（+¥12, -3AP）';
       case 'regulate':
-        return '規制推進を実行しました';
+      case 'promote_regulation':
+        return '規制推進を実行しました（2AP, 2d6で10+成功）';
       case 'skip-automata':
         return 'オートマフェーズをスキップしました';
       case 'skip-market':
@@ -337,6 +355,10 @@ export const useSocket = () => {
         return `商品を買い戻しました（価格: ¥${params.price}）`;
       case 'resale':
         return `商品を転売しました（価格: ¥${params.price}）`;
+      case 'buy_dignity':
+        return '威厳を購入しました（-¥10, +威厳1）';
+      case 'end_game':
+        return 'ゲーム終了を宣言しました';
       default:
         return `${type}アクションを実行しました`;
     }

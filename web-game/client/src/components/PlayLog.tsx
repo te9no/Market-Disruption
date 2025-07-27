@@ -3,7 +3,7 @@ import React from 'react';
 interface LogEntry {
   id: string;
   timestamp: number;
-  type: 'action' | 'phase' | 'round' | 'game' | 'automata' | 'trend' | 'purchase' | 'sell' | 'manufacture' | 'design' | 'review' | 'labor' | 'regulate' | 'skip';
+  type: 'action' | 'phase' | 'round' | 'game' | 'automata' | 'trend' | 'purchase' | 'sell' | 'manufacture' | 'design' | 'review' | 'labor' | 'regulate' | 'skip' | 'buy_dignity' | 'buyback' | 'resale' | 'promote_regulation' | 'end_game';
   playerId?: string;
   playerName?: string;
   message: string;
@@ -33,6 +33,11 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
       case 'labor': return '💼';
       case 'regulate': return '⚖️';
       case 'skip': return '⏭️';
+      case 'buy_dignity': return '👑';
+      case 'buyback': return '🔄';
+      case 'resale': return '🔃';
+      case 'promote_regulation': return '📢';
+      case 'end_game': return '🏁';
       default: return '📝';
     }
   };
@@ -53,6 +58,11 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
       case 'labor': return 'text-slate-600';
       case 'regulate': return 'text-rose-600';
       case 'skip': return 'text-gray-500';
+      case 'buy_dignity': return 'text-purple-600';
+      case 'buyback': return 'text-cyan-600';
+      case 'resale': return 'text-orange-600';
+      case 'promote_regulation': return 'text-red-600';
+      case 'end_game': return 'text-gray-800';
       default: return 'text-gray-600';
     }
   };
@@ -83,6 +93,16 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
         return `ダイス: [${details.dice?.join(', ') || '不明'}] | 効果: ${details.effect || '不明'}`;
       case 'regulate':
         return `ダイス: [${details.dice?.join(', ') || '不明'}] | 成功: ${details.success ? 'はい' : 'いいえ'}`;
+      case 'buy_dignity':
+        return `支払い: ¥10 | 威厳: +1 | 残り資金: ¥${details.remainingFunds || '不明'}`;
+      case 'buyback':
+        return `価格: ¥${details.price} | 元の商品: ${details.productName || '不明'}`;
+      case 'resale':
+        return `価格: ¥${details.price} | 利益: ¥${details.profit || '不明'}`;
+      case 'promote_regulation':
+        return `ダイス: [${details.dice?.join(', ') || '不明'}] | 成功: ${details.success ? 'はい' : 'いいえ'} | 規制レベル: ${details.newRegulationLevel || '不明'}`;
+      case 'end_game':
+        return `理由: ${details.reason || '勝利条件達成'} | 最終スコア: ${details.finalScore || '不明'}`;
       default:
         return Object.entries(details)
           .map(([key, value]) => `${key}: ${value}`)
