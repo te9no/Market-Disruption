@@ -22,7 +22,9 @@
       "WebFetch(domain:market-disruption-production.up.railway.app)",
       "WebFetch(domain:localhost)",
       "Bash(npm run lint)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(cmd //c:*)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

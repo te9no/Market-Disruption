@@ -771,14 +771,52 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     setActionParams({...actionParams, price, popularity});
                   }}
                   placeholder="商品を選択"
-                  options={[]}
+                  options={(() => {
+                    const targetPlayer = gameState.players.find(p => p.id === actionParams.targetPlayerId);
+                    if (!targetPlayer?.personalMarket) return [];
+                    
+                    const availableProducts: Array<{value: string; label: string}> = [];
+                    Object.entries(targetPlayer.personalMarket).forEach(([price, priceRow]) => {
+                      Object.entries(priceRow || {}).forEach(([popularity, product]) => {
+                        if (product) {
+                          const categoryIcon = {
+                            'game-console': '🎮',
+                            'diy-gadget': '🔧',
+                            'figure': '🎭',
+                            'accessory': '💍',
+                            'toy': '🧸'
+                          }[product.category] || '📦';
+                          
+                          const categoryName = {
+                            'game-console': 'ゲーム機',
+                            'diy-gadget': '自作ガジェット',
+                            'figure': 'フィギュア',
+                            'accessory': 'アクセサリー',
+                            'toy': 'おもちゃ'
+                          }[product.category] || product.category;
+                          
+                          const isResale = product.previousOwner !== undefined;
+                          
+                          availableProducts.push({
+                            value: `${price}-${popularity}`,
+                            label: `${categoryIcon} ${categoryName} ${isResale ? '(転売品)' : ''} - ¥${price} (人気度${popularity})`
+                          });
+                        }
+                      });
+                    });
+                    return availableProducts;
+                  })()}
                   emptyMessage="対象プレイヤーの商品がありません"
                 />
               </div>
             )}
             <div className="flex space-x-2">
               <ModernButton
-                onClick={() => handleAction('purchase', actionParams)}
+                onClick={() => handleAction('purchase', {
+                  sellerId: actionParams.targetPlayerId,
+                  price: actionParams.price,
+                  popularity: actionParams.popularity
+                })}
                 disabled={!actionParams.targetPlayerId || !actionParams.price}
                 variant="primary"
                 size="md"
