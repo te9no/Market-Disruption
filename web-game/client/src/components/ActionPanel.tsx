@@ -377,16 +377,56 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   )}
                 </div>
                 <label className="block text-sm font-medium mb-1">
-                  転売価格 (上限: {actionParams.maxPrice}):
+                  転売価格を選択 (範囲: ¥{actionParams.basePrice} - ¥{actionParams.maxPrice}):
                 </label>
-                <input
-                  type="number"
-                  min={actionParams.basePrice}
-                  max={actionParams.maxPrice}
-                  value={actionParams.price || actionParams.basePrice || ''}
-                  onChange={(e) => setActionParams({...actionParams, targetPrice: parseInt(e.target.value)})}
-                  className="w-full border rounded px-3 py-2"
-                />
+                {(actionParams.maxPrice - actionParams.basePrice + 1) <= 10 ? (
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {Array.from({length: actionParams.maxPrice - actionParams.basePrice + 1}, (_, i) => actionParams.basePrice + i).map(price => (
+                      <ModernButton
+                        key={price}
+                        onClick={() => setActionParams({...actionParams, targetPrice: price})}
+                        variant={actionParams.targetPrice === price ? "primary" : "ghost"}
+                        size="sm"
+                        className={`text-center ${actionParams.targetPrice === price ? 'ring-2 ring-blue-300' : ''}`}
+                      >
+                        ¥{price}
+                      </ModernButton>
+                    ))}
+                  </div>
+                ) : (
+                  <div>
+                    <div className="grid grid-cols-3 gap-2 mt-2 mb-3">
+                      {[actionParams.basePrice, Math.ceil((actionParams.basePrice + actionParams.maxPrice) / 2), actionParams.maxPrice].map(price => (
+                        <ModernButton
+                          key={price}
+                          onClick={() => setActionParams({...actionParams, targetPrice: price})}
+                          variant={actionParams.targetPrice === price ? "primary" : "secondary"}
+                          size="sm"
+                          className={`text-center ${actionParams.targetPrice === price ? 'ring-2 ring-green-300' : ''}`}
+                        >
+                          ¥{price}
+                        </ModernButton>
+                      ))}
+                    </div>
+                    <div className="mt-2">
+                      <label className="block text-xs text-gray-600 mb-1">カスタム転売価格:</label>
+                      <input
+                        type="number"
+                        min={actionParams.basePrice}
+                        max={actionParams.maxPrice}
+                        value={actionParams.targetPrice || ''}
+                        onChange={(e) => setActionParams({...actionParams, targetPrice: parseInt(e.target.value)})}
+                        className="w-full border rounded px-3 py-2 text-sm"
+                        placeholder={`${actionParams.basePrice}〜${actionParams.maxPrice}`}
+                      />
+                    </div>
+                  </div>
+                )}
+                {actionParams.targetPrice && (
+                  <div className="mt-2 p-2 bg-green-50 rounded">
+                    <span className="text-sm text-green-800">選択済み: ¥{actionParams.targetPrice}</span>
+                  </div>
+                )}
               </div>
             )}
             <div className="flex space-x-2">
@@ -470,16 +510,56 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             {actionParams.productId && (
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  価格 (上限: {actionParams.maxPrice}):
+                  価格を選択 (上限: {actionParams.maxPrice}):
                 </label>
-                <input
-                  type="number"
-                  min="1"
-                  max={actionParams.maxPrice}
-                  value={actionParams.price || ''}
-                  onChange={(e) => setActionParams({...actionParams, price: parseInt(e.target.value)})}
-                  className="w-full border rounded px-3 py-2"
-                />
+                {actionParams.maxPrice <= 12 ? (
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {Array.from({length: actionParams.maxPrice}, (_, i) => i + 1).map(price => (
+                      <ModernButton
+                        key={price}
+                        onClick={() => setActionParams({...actionParams, price})}
+                        variant={actionParams.price === price ? "primary" : "ghost"}
+                        size="sm"
+                        className={`text-center ${actionParams.price === price ? 'ring-2 ring-blue-300' : ''}`}
+                      >
+                        ¥{price}
+                      </ModernButton>
+                    ))}
+                  </div>
+                ) : (
+                  <div>
+                    <div className="grid grid-cols-3 gap-2 mt-2 mb-3">
+                      {[Math.ceil(actionParams.maxPrice * 0.5), Math.ceil(actionParams.maxPrice * 0.75), actionParams.maxPrice].map(price => (
+                        <ModernButton
+                          key={price}
+                          onClick={() => setActionParams({...actionParams, price})}
+                          variant={actionParams.price === price ? "primary" : "secondary"}
+                          size="sm"
+                          className={`text-center ${actionParams.price === price ? 'ring-2 ring-blue-300' : ''}`}
+                        >
+                          ¥{price}
+                        </ModernButton>
+                      ))}
+                    </div>
+                    <div className="mt-2">
+                      <label className="block text-xs text-gray-600 mb-1">カスタム価格:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max={actionParams.maxPrice}
+                        value={actionParams.price || ''}
+                        onChange={(e) => setActionParams({...actionParams, price: parseInt(e.target.value)})}
+                        className="w-full border rounded px-3 py-2 text-sm"
+                        placeholder={`1〜${actionParams.maxPrice}`}
+                      />
+                    </div>
+                  </div>
+                )}
+                {actionParams.price && (
+                  <div className="mt-2 p-2 bg-blue-50 rounded">
+                    <span className="text-sm text-blue-800">選択済み: ¥{actionParams.price}</span>
+                  </div>
+                )}
               </div>
             )}
             <div className="flex space-x-2">
