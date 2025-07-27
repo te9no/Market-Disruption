@@ -214,6 +214,25 @@ export const useSocket = () => {
             });
           }
           
+          // 規制推進の結果表示
+          if (lastAction.type === 'promote_regulation') {
+            console.log('⚖️ 規制推進結果:', {
+              dice: lastAction.dice,
+              total: lastAction.total,
+              success: lastAction.success,
+              newLevel: lastAction.newRegulationLevel
+            });
+            
+            const dice1 = lastAction.dice?.[0] || '?';
+            const dice2 = lastAction.dice?.[1] || '?';
+            const total = lastAction.total || 0;
+            const success = lastAction.success;
+            const resultText = success ? '成功' : '失敗';
+            const message = `規制推進結果: ダイス[${dice1}][${dice2}] 合計${total} → ${resultText}`;
+            
+            alert(message);
+          }
+          
           // Log phase transitions
           if (lastAction.type === 'phase_change') {
             console.log('🔄 Phase change detected:', {
@@ -423,7 +442,7 @@ export const useSocket = () => {
         return '日雇い労働を実行しました（+¥12, -3AP）';
       case 'regulate':
       case 'promote_regulation':
-        return '規制推進を実行しました（2AP, 2d6で10+成功）';
+        return '規制推進を実行しました（2AP, 2d6で9+成功）';
       case 'skip-automata':
         return 'オートマフェーズをスキップしました';
       case 'skip-market':
