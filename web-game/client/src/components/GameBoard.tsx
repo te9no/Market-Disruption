@@ -330,23 +330,22 @@ const GameBoard: React.FC = () => {
 
       {/* Main Layout with Sidebar and Content */}
       <div style={{ display: 'flex', height: 'calc(100vh - 200px)', position: 'relative' }}>
-        {/* Left Sidebar Menu */}
+        {/* Left Sidebar Menu - Hidden on mobile unless toggled */}
         <div style={{
-          width: '280px',
+          width: isMobile ? (showSidebar ? '280px' : '0') : '280px',
           background: 'rgba(255,255,255,0.95)',
           backdropFilter: 'blur(10px)',
           borderRight: '1px solid rgba(0,0,0,0.1)',
           boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
           overflowY: 'auto',
-          position: showSidebar ? 'fixed' : 'sticky',
-          top: showSidebar ? '0' : '0',
-          left: showSidebar ? '0' : 'auto',
-          height: showSidebar ? '100vh' : '100%',
-          zIndex: showSidebar ? 1000 : 'auto',
-          transform: showSidebar ? 'translateX(0)' : isMobile ? 'translateX(-100%)' : 'translateX(0)',
-          transition: 'transform 0.3s ease'
+          overflowX: 'hidden',
+          position: isMobile ? 'fixed' : 'sticky',
+          top: '0',
+          left: isMobile ? (showSidebar ? '0' : '-280px') : '0',
+          height: isMobile ? '100vh' : '100%',
+          zIndex: isMobile ? 1000 : 'auto',
+          transition: 'all 0.3s ease'
         }}
-        className="md:relative md:transform-none md:translate-x-0"
         >
           <div style={{ padding: '24px 16px' }}>
             <h3 style={{ 
@@ -419,30 +418,30 @@ const GameBoard: React.FC = () => {
 
         {/* Main Content Area */}
         <div style={{ 
-          flex: '1', 
+          flex: '1',
+          width: isMobile ? '100%' : 'auto',
+          minWidth: isMobile ? '100%' : 'auto',
           padding: isMobile ? '12px' : '24px',
           overflowY: 'auto',
-          height: '100%',
-          width: isMobile ? '100%' : 'auto'
+          height: '100%'
         }}>
           {renderMainContent()}
         </div>
 
-        {/* Right Sidebar - Play Log */}
-        <div style={{
-          width: '320px',
-          background: 'rgba(255,255,255,0.95)',
-          backdropFilter: 'blur(10px)',
-          borderLeft: '1px solid rgba(0,0,0,0.1)',
-          boxShadow: '-2px 0 10px rgba(0,0,0,0.1)',
-          overflowY: 'auto',
-          position: 'sticky',
-          top: 0,
-          height: '100%',
-          display: isMobile ? 'none' : 'block'
-        }}
-        className="hidden md:block"
-        >
+        {/* Right Sidebar - Play Log - Hidden on mobile */}
+        {!isMobile && (
+          <div style={{
+            width: '320px',
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(10px)',
+            borderLeft: '1px solid rgba(0,0,0,0.1)',
+            boxShadow: '-2px 0 10px rgba(0,0,0,0.1)',
+            overflowY: 'auto',
+            position: 'sticky',
+            top: 0,
+            height: '100%'
+          }}
+          >
           <div style={{ padding: '24px 16px', height: '100%' }}>
             <PlayLog 
               logs={playLogs}
@@ -450,7 +449,8 @@ const GameBoard: React.FC = () => {
               currentPhase={currentPhase}
             />
           </div>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Game Over Modal */}
