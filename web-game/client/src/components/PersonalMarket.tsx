@@ -70,9 +70,8 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({
     
     return (
       <div className={`w-16 h-16 border-2 border-gray-300 flex flex-col items-center justify-center text-white ${getCategoryColor(product.category)} hover:opacity-80 cursor-pointer rounded-lg shadow-sm relative transition-all group`}>
-        <div className="text-lg">{getCategoryEmoji(product.category)}</div>
+        <div className="text-xl">{getCategoryEmoji(product.category)}</div>
         <div className="text-xs font-bold">💎{product.value}</div>
-        <div className="text-xs font-bold">💰{product.price || price || 0}</div>
         {isResale && (
           <div className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
             🔄
@@ -438,7 +437,6 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap pointer-events-none shadow-lg">
                       <div className="font-bold text-yellow-300">{getCategoryName(personalMarket[price][popularity]!.category)}</div>
                       <div>価値: {personalMarket[price][popularity]!.value} | コスト: {personalMarket[price][popularity]!.cost}</div>
-                      <div>価格: ¥{price} | 人気度: {popularity}⭐</div>
                       {personalMarket[price][popularity]!.previousOwner && <div className="text-red-300">🔄 転売品</div>}
                     </div>
                   )}
