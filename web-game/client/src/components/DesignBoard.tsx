@@ -6,16 +6,6 @@ interface DesignBoardProps {
   openSourceDesigns: string[];
 }
 
-const getCategoryColor = (category: string) => {
-  switch (category) {
-    case 'game-console': return 'bg-gradient-to-br from-red-200 to-red-300 border-red-400 text-red-900 shadow-red-100';
-    case 'diy-gadget': return 'bg-gradient-to-br from-blue-200 to-blue-300 border-blue-400 text-blue-900 shadow-blue-100';
-    case 'figure': return 'bg-gradient-to-br from-purple-200 to-purple-300 border-purple-400 text-purple-900 shadow-purple-100';
-    case 'accessory': return 'bg-gradient-to-br from-green-200 to-green-300 border-green-400 text-green-900 shadow-green-100';
-    case 'toy': return 'bg-gradient-to-br from-yellow-200 to-yellow-300 border-yellow-400 text-yellow-900 shadow-yellow-100';
-    default: return 'bg-gray-100 border-gray-300 text-gray-800';
-  }
-};
 
 const getCategoryName = (category: string) => {
   switch (category) {
@@ -28,55 +18,103 @@ const getCategoryName = (category: string) => {
   }
 };
 
+const getCategoryBorderColor = (category: string) => {
+  switch (category) {
+    case 'game-console': return 'border-l-red-400';
+    case 'diy-gadget': return 'border-l-blue-400';
+    case 'figure': return 'border-l-purple-400';
+    case 'accessory': return 'border-l-green-400';
+    case 'toy': return 'border-l-yellow-400';
+    default: return 'border-l-gray-400';
+  }
+};
+
 const DesignBoard: React.FC<DesignBoardProps> = ({ designs, openSourceDesigns }) => {
+  const designSlots = [1, 2, 3, 4, 5, 6].map(slot => ({
+    slot,
+    design: designs[slot],
+    isOpenSource: designs[slot] && openSourceDesigns.includes(designs[slot].id)
+  }));
+
   return (
     <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-xl p-6 border border-blue-100">
-      <h3 className="text-xl font-bold mb-6 text-gray-800 flex items-center">
+      <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
         📋 設計図ボード
       </h3>
       
-      <div className="flex space-x-2 overflow-x-auto">
-        {[1, 2, 3, 4, 5, 6].map(slot => {
-          const design = designs[slot];
-          const isOpenSource = design && openSourceDesigns.includes(design.id);
-          
-          return (
-            <div key={slot} className="relative flex-shrink-0 w-24">
-              <div className={`border-2 rounded-lg p-1 h-20 flex flex-col justify-center transition-all duration-200 hover:scale-105 shadow-lg ${
-                design 
-                  ? `${getCategoryColor(design.category)} shadow-lg`
-                  : 'border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200'
-              }`}>
-                <div className="text-center">
-                  <div className="text-xs font-semibold text-gray-700 mb-0.5">#{slot}</div>
+      {/* Table format design board */}
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
+          <thead>
+            <tr className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+              <th className="px-3 py-2 text-center text-sm font-bold border-b-2 border-blue-700">スロット</th>
+              <th className="px-4 py-2 text-left text-sm font-bold border-b-2 border-blue-700">カテゴリー</th>
+              <th className="px-3 py-2 text-center text-sm font-bold border-b-2 border-blue-700">価値</th>
+              <th className="px-3 py-2 text-center text-sm font-bold border-b-2 border-blue-700">コスト</th>
+              <th className="px-3 py-2 text-center text-sm font-bold border-b-2 border-blue-700">OSS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {designSlots.map(({ slot, design, isOpenSource }, index) => (
+              <tr 
+                key={slot} 
+                className={`
+                  transition-colors duration-200 hover:bg-gray-50
+                  ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}
+                  ${design ? 'border-l-4' : 'border-l-4 border-l-gray-200'}
+                  ${design ? getCategoryBorderColor(design.category) : ''}
+                `}
+              >
+                <td className="px-3 py-3 text-center font-bold text-gray-700 border-b border-gray-200">
+                  #{slot}
+                </td>
+                <td className="px-4 py-3 border-b border-gray-200">
                   {design ? (
-                    <>
-                      <div className="font-bold text-xs leading-tight mb-0.5">{getCategoryName(design.category)}</div>
-                      <div className="text-xs font-medium leading-tight">💎 {design.value}</div>
-                      <div className="text-xs font-medium leading-tight">💰 {design.cost}</div>
-                    </>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-gray-800">{getCategoryName(design.category)}</span>
+                    </div>
                   ) : (
-                    <div className="text-gray-400 text-xs font-medium">
-                      <div className="text-base mb-0.5">📝</div>
-                      <div className="leading-tight">未設計</div>
+                    <div className="flex items-center space-x-2 text-gray-400">
+                      <span className="text-sm">📝</span>
+                      <span className="font-medium">未設計</span>
                     </div>
                   )}
-                </div>
-              </div>
-              
-              {/* Open Source Badge */}
-              {isOpenSource && (
-                <div className="absolute -top-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-400 text-yellow-900 text-xs px-2 py-0.5 rounded-full font-bold shadow-lg border border-white">
-                  🌐
-                </div>
-              )}
-            </div>
-          );
-        })}
+                </td>
+                <td className="px-3 py-3 text-center border-b border-gray-200">
+                  {design ? (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                      💎 {design.value}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400 text-sm">—</span>
+                  )}
+                </td>
+                <td className="px-3 py-3 text-center border-b border-gray-200">
+                  {design ? (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
+                      💰 {design.cost}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400 text-sm">—</span>
+                  )}
+                </td>
+                <td className="px-3 py-3 text-center border-b border-gray-200">
+                  {isOpenSource ? (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-400 text-yellow-900 border border-yellow-500">
+                      🌐 OSS
+                    </span>
+                  ) : (
+                    <span className="text-gray-400 text-sm">—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
       
       {/* Open Source Legend */}
-      <div className="mt-6 bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+      <div className="mt-4 bg-white rounded-lg p-3 shadow-sm border border-gray-200">
         <div className="flex items-center space-x-3">
           <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold border-2 border-white shadow">
             🌐 OSS
