@@ -450,37 +450,6 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({
           {renderTableView()}
         </div>
       )}
-      
-      {/* Legend */}
-      <div className="mt-4 bg-white rounded-lg p-3 shadow-sm">
-        <h4 className="text-sm font-bold mb-2 text-gray-700">🏷️ カテゴリー凡例</h4>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-red-500 rounded"></div>
-            <span>🎮 ゲーム機</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-blue-500 rounded"></div>
-            <span>🔧 自作ガジェット</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-purple-500 rounded"></div>
-            <span>🎭 フィギュア</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-green-500 rounded"></div>
-            <span>💍 アクセサリー</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-            <span>🧸 おもちゃ</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-red-600 rounded-full"></div>
-            <span>🔄 転売品</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
