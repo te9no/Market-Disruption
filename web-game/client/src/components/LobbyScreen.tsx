@@ -2,15 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { useSocket } from '../hooks/useSocket';
+import ModernButton from './ModernButton';
 
 const LobbyScreen: React.FC = () => {
   const [playerName, setPlayerName] = useState('');
   const [joinGameId, setJoinGameId] = useState('');
-  const [activeTab, setActiveTab] = useState<'create' | 'join'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'join' | 'browse'>('browse');
   const [forceRefresh, setForceRefresh] = useState(0);
+  const [availableGames, setAvailableGames] = useState<any[]>([]);
   
   const { gameState, currentPlayer, gameId } = useSelector((state: RootState) => state.game);
   const { socket, createGame, joinGame, startGame } = useSocket();
+  
+  // Fetch available games
+  useEffect(() => {
+    if (socket && activeTab === 'browse') {
+      socket.emit('list-games');
+      socket.on('games-list', (games) => {
+        setAvailableGames(games);
+      });
+      
+      const interval = setInterval(() => {
+        socket.emit('list-games');
+      }, 5000); // Refresh every 5 seconds
+      
+      return () => {
+        clearInterval(interval);
+        socket.off('games-list');
+      };
+    }
+  }, [socket, activeTab]);
   
   // Force component refresh when game state changes
   useEffect(() => {
@@ -244,128 +265,423 @@ const LobbyScreen: React.FC = () => {
     );
   }
 
-  // Show create/join game screen
+  // Show modern lobby screen
   return (
-    <div className="max-w-md mx-auto">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="flex border-b">
-          <button
-            onClick={() => setActiveTab('create')}
-            className={`flex-1 py-3 px-4 text-center font-medium ${
-              activeTab === 'create'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            ゲーム作成
-          </button>
-          <button
-            onClick={() => setActiveTab('join')}
-            className={`flex-1 py-3 px-4 text-center font-medium ${
-              activeTab === 'join'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            ゲーム参加
-          </button>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: '20px'
+    }}>
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 style={{
+            fontSize: '48px',
+            fontWeight: 'bold',
+            color: 'white',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+            marginBottom: '16px'
+          }}>
+            🎮 Market Disruption
+          </h1>
+          <p style={{
+            fontSize: '18px',
+            color: 'rgba(255,255,255,0.9)',
+            textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+          }}>
+            転売ヤーをテーマにしたストラテジーボードゲーム
+          </p>
         </div>
 
-        <div className="p-6">
-          <div className="mb-4">
-            <label htmlFor="playerName" className="block text-sm font-medium text-gray-700 mb-2">
-              プレイヤー名
+        {/* Modern Tab Navigation */}
+        <div style={{
+          background: 'rgba(255,255,255,0.95)',
+          borderRadius: '20px',
+          padding: '8px',
+          marginBottom: '24px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div className="flex space-x-2">
+            {[
+              { key: 'browse', icon: '🔍', label: 'ゲーム一覧' },
+              { key: 'create', icon: '➕', label: 'ゲーム作成' },
+              { key: 'join', icon: '🎯', label: 'ID参加' }
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as any)}
+                style={{
+                  flex: 1,
+                  padding: '16px',
+                  borderRadius: '16px',
+                  border: 'none',
+                  background: activeTab === tab.key 
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    : 'transparent',
+                  color: activeTab === tab.key ? 'white' : '#666',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <span style={{ fontSize: '20px' }}>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <div style={{
+          background: 'rgba(255,255,255,0.95)',
+          borderRadius: '20px',
+          padding: '32px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          backdropFilter: 'blur(10px)'
+        }}>
+          {/* Player Name Input - Always visible */}
+          <div className="mb-6">
+            <label style={{
+              display: 'block',
+              fontSize: '16px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>
+              👤 プレイヤー名
             </label>
             <input
               type="text"
-              id="playerName"
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="あなたの名前を入力"
+              style={{
+                width: '100%',
+                padding: '16px',
+                border: '2px solid #e5e7eb',
+                borderRadius: '12px',
+                fontSize: '16px',
+                background: 'white',
+                transition: 'all 0.3s ease'
+              }}
+              placeholder="あなたの名前を入力してください"
               maxLength={20}
+              onFocus={(e) => e.target.style.borderColor = '#667eea'}
+              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
             />
           </div>
 
-          {/* 保存されたゲーム情報の表示と再接続ボタン */}
+          {/* Browse Games Tab */}
+          {activeTab === 'browse' && (
+            <div>
+              <h3 style={{
+                fontSize: '24px',
+                fontWeight: 'bold',
+                color: '#374151',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                🔍 進行中のゲーム一覧
+              </h3>
+              
+              {availableGames.length === 0 ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '40px',
+                  background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
+                  borderRadius: '16px',
+                  border: '2px dashed #9ca3af'
+                }}>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎲</div>
+                  <p style={{ fontSize: '18px', color: '#6b7280', marginBottom: '8px' }}>
+                    現在進行中のゲームはありません
+                  </p>
+                  <p style={{ fontSize: '14px', color: '#9ca3af' }}>
+                    新しいゲームを作成するか、しばらく待ってから再確認してください
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {availableGames.map((game) => (
+                    <div
+                      key={game.id}
+                      style={{
+                        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '16px',
+                        padding: '20px',
+                        transition: 'all 0.3s ease',
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#667eea';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#e5e7eb';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            marginBottom: '8px'
+                          }}>
+                            <span style={{ fontSize: '20px' }}>
+                              {game.state === 'waiting' ? '⏳' : '🎮'}
+                            </span>
+                            <span style={{
+                              fontSize: '18px',
+                              fontWeight: 'bold',
+                              color: '#374151'
+                            }}>
+                              ゲーム {game.id}
+                            </span>
+                            <span style={{
+                              padding: '4px 12px',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              background: game.state === 'waiting' ? '#fef3c7' : '#dbeafe',
+                              color: game.state === 'waiting' ? '#92400e' : '#1e40af'
+                            }}>
+                              {game.state === 'waiting' ? '待機中' : '進行中'}
+                            </span>
+                          </div>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '16px',
+                            fontSize: '14px',
+                            color: '#6b7280'
+                          }}>
+                            <span>👥 {game.playerCount}/4人</span>
+                            <span>🎯 ラウンド {game.currentRound || 1}</span>
+                            <span>⏰ {game.createdAt ? new Date(game.createdAt).toLocaleTimeString() : ''}</span>
+                          </div>
+                        </div>
+                        <ModernButton
+                          onClick={() => {
+                            if (playerName.trim()) {
+                              setJoinGameId(game.id);
+                              joinGame(game.id, playerName.trim());
+                            } else {
+                              alert('プレイヤー名を入力してください');
+                            }
+                          }}
+                          variant="primary"
+                          size="md"
+                          disabled={!playerName.trim() || game.playerCount >= 4}
+                        >
+                          {game.playerCount >= 4 ? '満員' : '参加'}
+                        </ModernButton>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Create Game Tab */}
+          {activeTab === 'create' && (
+            <div>
+              <h3 style={{
+                fontSize: '24px',
+                fontWeight: 'bold',
+                color: '#374151',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                ➕ 新しいゲームを作成
+              </h3>
+              
+              <div style={{
+                background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+                border: '2px solid #10b981',
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px'
+              }}>
+                <h4 style={{
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: '#065f46',
+                  marginBottom: '12px'
+                }}>
+                  🎯 ゲームについて
+                </h4>
+                <ul style={{
+                  color: '#047857',
+                  fontSize: '14px',
+                  lineHeight: '1.6'
+                }}>
+                  <li>• プレイ人数: 2-4人</li>
+                  <li>• プレイ時間: 30-45分</li>
+                  <li>• ゲーム中の途中参加も可能です</li>
+                  <li>• あなたがホストとしてゲームを管理します</li>
+                </ul>
+              </div>
+              
+              <ModernButton
+                onClick={handleCreateGame}
+                disabled={!playerName.trim()}
+                variant="primary"
+                size="lg"
+                fullWidth
+              >
+                🎮 ゲームを作成してホストになる
+              </ModernButton>
+            </div>
+          )}
+
+          {/* Join by ID Tab */}
+          {activeTab === 'join' && (
+            <div>
+              <h3 style={{
+                fontSize: '24px',
+                fontWeight: 'bold',
+                color: '#374151',
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                🎯 ゲームIDで参加
+              </h3>
+              
+              <div style={{
+                background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                border: '2px solid #3b82f6',
+                borderRadius: '16px',
+                padding: '20px',
+                marginBottom: '24px'
+              }}>
+                <p style={{
+                  color: '#1e40af',
+                  fontSize: '14px',
+                  lineHeight: '1.6'
+                }}>
+                  ℹ️ 友達から教えてもらった8文字のゲームIDを入力してゲームに参加できます。
+                  進行中のゲームにも途中参加可能です。
+                </p>
+              </div>
+              
+              <div className="mb-6">
+                <label style={{
+                  display: 'block',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '8px'
+                }}>
+                  🎯 ゲームID
+                </label>
+                <input
+                  type="text"
+                  value={joinGameId}
+                  onChange={(e) => setJoinGameId(e.target.value.toUpperCase())}
+                  style={{
+                    width: '100%',
+                    padding: '16px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
+                    fontSize: '18px',
+                    fontFamily: 'monospace',
+                    letterSpacing: '2px',
+                    textAlign: 'center',
+                    background: 'white',
+                    transition: 'all 0.3s ease'
+                  }}
+                  placeholder="ABCD1234"
+                  maxLength={8}
+                  onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                  onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+                />
+              </div>
+              
+              <ModernButton
+                onClick={handleJoinGame}
+                disabled={!playerName.trim() || !joinGameId.trim()}
+                variant="primary"
+                size="lg"
+                fullWidth
+              >
+                🚀 ゲームに参加
+              </ModernButton>
+            </div>
+          )}
+
+          {/* Saved Game Section */}
           {getSavedGameInfo() && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-              <h4 className="text-sm font-medium text-yellow-800 mb-2">📱 前回のゲーム</h4>
-              <div className="text-xs text-yellow-700 mb-2">
+            <div style={{
+              marginTop: '32px',
+              padding: '20px',
+              background: 'linear-gradient(135deg, #fefce8 0%, #fef3c7 100%)',
+              border: '2px solid #f59e0b',
+              borderRadius: '16px'
+            }}>
+              <h4 style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#92400e',
+                marginBottom: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                📱 前回のゲーム
+              </h4>
+              <div style={{
+                fontSize: '14px',
+                color: '#a16207',
+                marginBottom: '16px'
+              }}>
                 ゲームID: {getSavedGameInfo()?.gameId}<br/>
                 プレイヤー名: {getSavedGameInfo()?.playerName}
               </div>
-              <div className="space-y-2">
-                <button
-                  onClick={handleReconnectToSavedGame}
-                  className="w-full py-2 px-3 text-sm bg-yellow-500 hover:bg-yellow-600 text-white rounded-md transition-colors"
-                >
-                  🔄 前回のゲームに再接続
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm('保存されたゲーム情報を削除しますか？')) {
-                      localStorage.removeItem('market-disruption-game');
-                      setForceRefresh(prev => prev + 1);
-                    }
-                  }}
-                  className="w-full py-1 px-3 text-xs bg-gray-400 hover:bg-gray-500 text-white rounded-md transition-colors"
-                >
-                  🗑️ 保存データを削除
-                </button>
+              <div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <ModernButton
+                    onClick={handleReconnectToSavedGame}
+                    variant="secondary"
+                    size="sm"
+                    fullWidth
+                  >
+                    🔄 再接続
+                  </ModernButton>
+                  <ModernButton
+                    onClick={() => {
+                      if (confirm('保存されたゲーム情報を削除しますか？')) {
+                        localStorage.removeItem('market-disruption-game');
+                        setForceRefresh(prev => prev + 1);
+                      }
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    fullWidth
+                  >
+                    🗑️ 削除
+                  </ModernButton>
+                </div>
               </div>
             </div>
           )}
-
-          {/* 進行中のゲームへの参加に関する注意事項 */}
-          {activeTab === 'join' && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <h4 className="text-sm font-medium text-blue-800 mb-2">ℹ️ 進行中のゲーム参加について</h4>
-              <div className="text-xs text-blue-700 space-y-1">
-                <div>• 進行中のゲームにも途中参加可能です</div>
-                <div>• 参加時に初期設定が自動で行われます</div>
-                <div>• 定員に空きがあれば参加できます (最大4人)</div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'join' && (
-            <div className="mb-4">
-              <label htmlFor="gameId" className="block text-sm font-medium text-gray-700 mb-2">
-                ゲームID
-              </label>
-              <input
-                type="text"
-                id="gameId"
-                value={joinGameId}
-                onChange={(e) => setJoinGameId(e.target.value.toUpperCase())}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="8文字のゲームID"
-                maxLength={8}
-              />
-            </div>
-          )}
-
-          <button
-            onClick={activeTab === 'create' ? handleCreateGame : handleJoinGame}
-            disabled={
-              !playerName.trim() || 
-              (activeTab === 'join' && !joinGameId.trim())
-            }
-            className={`w-full py-3 px-6 rounded-lg font-medium ${
-              playerName.trim() && (activeTab === 'create' || joinGameId.trim())
-                ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            {activeTab === 'create' ? 'ゲームを作成' : 'ゲームに参加'}
-          </button>
         </div>
-      </div>
-
-      <div className="mt-6 text-center text-sm text-gray-600">
-        <p>マーケット・ディスラプション</p>
-        <p>2-4人でプレイできます</p>
       </div>
     </div>
   );
