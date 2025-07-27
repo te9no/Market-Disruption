@@ -35,29 +35,29 @@ const DesignBoard: React.FC<DesignBoardProps> = ({ designs, openSourceDesigns })
         📋 設計図ボード
       </h3>
       
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-6 gap-3">
         {[1, 2, 3, 4, 5, 6].map(slot => {
           const design = designs[slot];
           const isOpenSource = design && openSourceDesigns.includes(design.id);
           
           return (
             <div key={slot} className="relative">
-              <div className={`border-3 rounded-xl p-4 h-28 flex flex-col justify-center transition-all duration-200 hover:scale-105 shadow-lg ${
+              <div className={`border-3 rounded-lg p-2 h-24 flex flex-col justify-center transition-all duration-200 hover:scale-105 shadow-lg ${
                 design 
                   ? `${getCategoryColor(design.category)} shadow-lg`
                   : 'border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200'
               }`}>
                 <div className="text-center">
-                  <div className="text-xs font-semibold text-gray-700 mb-2">#{slot}</div>
+                  <div className="text-xs font-semibold text-gray-700 mb-1">#{slot}</div>
                   {design ? (
                     <>
-                      <div className="font-bold text-sm mb-1">{getCategoryName(design.category)}</div>
+                      <div className="font-bold text-xs mb-1">{getCategoryName(design.category)}</div>
                       <div className="text-xs font-medium">💎 値: {design.value}</div>
                       <div className="text-xs font-medium">💰 コスト: {design.cost}</div>
                     </>
                   ) : (
-                    <div className="text-gray-400 text-sm font-medium">
-                      <div className="text-2xl mb-1">📝</div>
+                    <div className="text-gray-400 text-xs font-medium">
+                      <div className="text-lg mb-1">📝</div>
                       <div>未設計</div>
                     </div>
                   )}
@@ -66,8 +66,8 @@ const DesignBoard: React.FC<DesignBoardProps> = ({ designs, openSourceDesigns })
               
               {/* Open Source Badge */}
               {isOpenSource && (
-                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-yellow-900 text-xs px-3 py-1 rounded-full font-bold shadow-lg border-2 border-white">
-                  🌐 OSS
+                <div className="absolute -top-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-400 text-yellow-900 text-xs px-2 py-0.5 rounded-full font-bold shadow-lg border border-white">
+                  🌐
                 </div>
               )}
             </div>
