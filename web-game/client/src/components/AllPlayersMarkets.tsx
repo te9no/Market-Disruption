@@ -46,8 +46,9 @@ const AllPlayersMarkets: React.FC<AllPlayersMarketsProps> = ({
 
     sendGameAction({
       type: 'review',
-      sellerId: selectedPlayerId,
-      productId
+      targetProductId: productId,
+      reviewType: 'positive', // Default to positive review
+      useOutsourcing: false // Default to direct review
     });
   };
 

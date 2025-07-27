@@ -15,7 +15,7 @@ const AutomataMarketView: React.FC<AutomataMarketViewProps> = ({
   currentPlayerId, 
   isMyTurn 
 }) => {
-  const { socket } = useSocket();
+  const { sendGameAction } = useSocket();
   const automataName = type === 'manufacturer' ? 'メーカーオートマ' : '転売オートマ';
   const automataIcon = type === 'manufacturer' ? '🏭' : '💰';
   const automataId = type === 'manufacturer' ? 'manufacturer-automata' : 'resale-automata';
@@ -52,15 +52,13 @@ const AutomataMarketView: React.FC<AutomataMarketViewProps> = ({
   // Handle purchase from automata
   const handlePurchase = (productId: string, price: number, popularity: number) => {
     console.log(`🛒 Purchasing from ${automataName}:`, { productId, price, popularity });
-    if (socket) {
-      socket.emit('action', {
-        type: 'purchase',
-        sellerId: automataId,
-        productId,
-        price,
-        popularity
-      });
-    }
+    sendGameAction({
+      type: 'purchase',
+      sellerId: automataId,
+      productId,
+      price,
+      popularity
+    });
   };
 
   // Handle review of automata products
@@ -72,14 +70,12 @@ const AutomataMarketView: React.FC<AutomataMarketViewProps> = ({
       reviewType: 'positive',
       useOutsourcing: false
     });
-    if (socket) {
-      socket.emit('action', {
-        type: 'review',
-        targetProductId: productId,
-        reviewType: 'positive', // Default to positive review
-        useOutsourcing: false // Default to direct review
-      });
-    }
+    sendGameAction({
+      type: 'review',
+      targetProductId: productId,
+      reviewType: 'positive', // Default to positive review
+      useOutsourcing: false // Default to direct review
+    });
   };
 
   return (
