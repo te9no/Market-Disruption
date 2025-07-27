@@ -195,6 +195,23 @@ export const useSocket = () => {
             details: lastAction
           });
           
+          // すべてのアクション型をログ出力（デバッグ用）
+          console.log('🔍 All action types received:', lastAction.type);
+          
+          // 威厳購入の特別なデバッグ
+          if (lastAction.type === 'buy_dignity' || 
+              lastAction.type === 'prestige_purchase' || 
+              lastAction.type === 'purchase_prestige' ||
+              lastAction.type?.includes('dignity') ||
+              lastAction.type?.includes('prestige')) {
+            console.log('👑 威厳関連アクション受信:', {
+              type: lastAction.type,
+              player: lastAction.playerName,
+              details: lastAction,
+              timestamp: new Date().toISOString()
+            });
+          }
+          
           // Log phase transitions
           if (lastAction.type === 'phase_change') {
             console.log('🔄 Phase change detected:', {
@@ -305,6 +322,15 @@ export const useSocket = () => {
       const actionMessage = getActionMessage(actionData);
       console.log('🎯 Sending action:', actionData, 'Message:', actionMessage);
       
+      // 威厳購入の特別なデバッグ
+      if (actionData.type === 'buy_dignity') {
+        console.log('👑 威厳購入アクション送信:', {
+          type: actionData.type,
+          message: actionMessage,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
       socket.emit('game-action', actionData);
     }
   };
@@ -356,6 +382,8 @@ export const useSocket = () => {
       case 'resale':
         return `商品を転売しました（価格: ¥${params.price}）`;
       case 'buy_dignity':
+      case 'prestige_purchase':
+      case 'purchase_prestige':
         return '威厳を購入しました（-¥10, +威厳1）';
       case 'end_game':
         return 'ゲーム終了を宣言しました';

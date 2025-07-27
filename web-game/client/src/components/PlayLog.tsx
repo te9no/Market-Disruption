@@ -3,7 +3,7 @@ import React from 'react';
 interface LogEntry {
   id: string;
   timestamp: number;
-  type: 'action' | 'phase' | 'round' | 'game' | 'automata' | 'trend' | 'purchase' | 'sell' | 'manufacture' | 'design' | 'review' | 'labor' | 'regulate' | 'skip' | 'buy_dignity' | 'buyback' | 'resale' | 'promote_regulation' | 'end_game';
+  type: 'action' | 'phase' | 'round' | 'game' | 'automata' | 'trend' | 'purchase' | 'sell' | 'manufacture' | 'design' | 'review' | 'labor' | 'regulate' | 'skip' | 'buy_dignity' | 'buyback' | 'resale' | 'promote_regulation' | 'end_game' | 'prestige_purchase' | 'purchase_prestige';
   playerId?: string;
   playerName?: string;
   message: string;
@@ -33,7 +33,9 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
       case 'labor': return '💼';
       case 'regulate': return '⚖️';
       case 'skip': return '⏭️';
-      case 'buy_dignity': return '👑';
+      case 'buy_dignity': 
+      case 'prestige_purchase':
+      case 'purchase_prestige': return '👑';
       case 'buyback': return '🔄';
       case 'resale': return '🔃';
       case 'promote_regulation': return '📢';
@@ -58,7 +60,9 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
       case 'labor': return 'text-slate-600';
       case 'regulate': return 'text-rose-600';
       case 'skip': return 'text-gray-500';
-      case 'buy_dignity': return 'text-purple-600';
+      case 'buy_dignity': 
+      case 'prestige_purchase':
+      case 'purchase_prestige': return 'text-purple-600';
       case 'buyback': return 'text-cyan-600';
       case 'resale': return 'text-orange-600';
       case 'promote_regulation': return 'text-red-600';
@@ -94,6 +98,8 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
       case 'regulate':
         return `ダイス: [${details.dice?.join(', ') || '不明'}] | 成功: ${details.success ? 'はい' : 'いいえ'}`;
       case 'buy_dignity':
+      case 'prestige_purchase':
+      case 'purchase_prestige':
         return `支払い: ¥10 | 威厳: +1 | 残り資金: ¥${details.remainingFunds || '不明'}`;
       case 'buyback':
         return `価格: ¥${details.price} | 元の商品: ${details.productName || '不明'}`;
