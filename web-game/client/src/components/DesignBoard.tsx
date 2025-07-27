@@ -112,18 +112,6 @@ const DesignBoard: React.FC<DesignBoardProps> = ({ designs, openSourceDesigns })
           </tbody>
         </table>
       </div>
-      
-      {/* Open Source Legend */}
-      <div className="mt-2 bg-white rounded-lg p-2 shadow-sm border border-gray-200">
-        <div className="flex items-center space-x-2">
-          <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold border border-white shadow">
-            🌐 OSS
-          </div>
-          <span className="text-xs text-gray-700">
-            <strong>オープンソース設計:</strong> 他プレイヤーも製造可能、外注料収入+2威厳
-          </span>
-        </div>
-      </div>
     </div>
   );
 };

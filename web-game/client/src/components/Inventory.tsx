@@ -91,21 +91,6 @@ const Inventory: React.FC<InventoryProps> = ({ inventory }) => {
           );
         })}
       </div>
-      
-      {/* Legend */}
-      <div className="mt-6 bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-        <h4 className="text-sm font-bold mb-2 text-gray-700">🏷️ 商品説明</h4>
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          <div className="flex items-center space-x-2">
-            <div className="bg-gradient-to-r from-orange-400 to-red-400 text-white px-2 py-1 rounded-full text-xs font-bold">🔄 転</div>
-            <span className="text-gray-700">転売用商品 (他プレイヤーから購入)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-bold">#</div>
-            <span className="text-gray-700">設計スロット番号</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
