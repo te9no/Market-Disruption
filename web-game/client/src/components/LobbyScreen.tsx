@@ -145,17 +145,58 @@ const LobbyScreen: React.FC = () => {
   // If game has started, don't show lobby
   if (gameState?.state === 'playing' && currentPlayer) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-green-100 border border-green-400 rounded-lg p-6 text-center">
-          <h2 className="text-2xl font-bold mb-4 text-green-800">ゲーム開始済み</h2>
-          <p className="text-green-700 mb-4">ゲームが開始されています。画面が切り替わらない場合は、ページを更新してください。</p>
-          <button
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{
+          maxWidth: '500px',
+          width: '100%',
+          background: 'rgba(255,255,255,0.95)',
+          borderRadius: '20px',
+          padding: '40px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+          backdropFilter: 'blur(10px)',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: '20px' }}>🎮</div>
+          <h2 style={{
+            fontSize: '28px',
+            fontWeight: 'bold',
+            marginBottom: '16px',
+            color: '#10b981'
+          }}>
+            ゲーム開始済み
+          </h2>
+          <p style={{
+            fontSize: '16px',
+            color: '#6b7280',
+            marginBottom: '24px',
+            lineHeight: '1.6'
+          }}>
+            ゲームが開始されています。<br/>
+            画面が切り替わらない場合は、ページを更新してください。
+          </p>
+          <ModernButton
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium"
+            variant="success"
+            size="lg"
+            fullWidth
           >
             🔄 ページを更新
-          </button>
-          <div className="mt-4 text-sm text-gray-600">
+          </ModernButton>
+          <div style={{
+            marginTop: '20px',
+            fontSize: '14px',
+            color: '#9ca3af',
+            padding: '12px',
+            background: 'rgba(0,0,0,0.05)',
+            borderRadius: '8px'
+          }}>
             ゲーム状態: {gameState.state} | プレイヤー: {currentPlayer.name}
           </div>
         </div>
@@ -166,100 +207,291 @@ const LobbyScreen: React.FC = () => {
   // If we're in a game lobby, show waiting room
   if (gameState && currentPlayer) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold mb-4">ゲームロビー</h2>
-          
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">ゲームID: {gameId}</h3>
-              <div className="text-sm text-gray-600">
-                プレイヤー数: {playerCount}/4
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '20px'
+      }}>
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              color: 'white',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+              marginBottom: '16px'
+            }}>
+              🎮 Market Disruption
+            </h1>
+            <p style={{
+              fontSize: '18px',
+              color: 'rgba(255,255,255,0.9)',
+              textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+            }}>
+              ゲーム待機室
+            </p>
+          </div>
+
+          <div style={{
+            background: 'rgba(255,255,255,0.95)',
+            borderRadius: '20px',
+            padding: '32px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <div className="mb-8">
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '24px',
+                flexWrap: 'wrap',
+                gap: '16px'
+              }}>
+                <div>
+                  <h3 style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    color: '#374151',
+                    marginBottom: '8px'
+                  }}>
+                    🎯 ゲームID: {gameId}
+                  </h3>
+                  <div style={{
+                    fontSize: '16px',
+                    color: '#6b7280',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    flexWrap: 'wrap'
+                  }}>
+                    <span>👥 {playerCount}/4人参加中</span>
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      background: playerCount >= 1 ? '#dcfce7' : '#fef3c7',
+                      color: playerCount >= 1 ? '#166534' : '#92400e'
+                    }}>
+                      {canStartGame ? '✅ 開始可能' : '⏳ 待機中'}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
             
-            <div className="space-y-2">
+            <div style={{ display: 'grid', gap: '12px' }}>
+              <h4 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: '8px'
+              }}>
+                👥 参加プレイヤー
+              </h4>
               {gameState.players.map((player, index) => (
                 <div 
                   key={player.id} 
-                  className={`flex items-center justify-between p-3 rounded ${
-                    player.id === currentPlayer.id ? 'bg-blue-100' : 'bg-gray-50'
-                  }`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '16px 20px',
+                    borderRadius: '12px',
+                    background: player.id === currentPlayer.id 
+                      ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)'
+                      : 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                    border: player.id === currentPlayer.id 
+                      ? '2px solid #3b82f6' 
+                      : '2px solid #e2e8f0',
+                    transition: 'all 0.3s ease'
+                  }}
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      background: player.id === currentPlayer.id 
+                        ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
+                        : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: '16px'
+                    }}>
                       {index + 1}
                     </div>
-                    <span className="font-medium">{player.name}</span>
-                    {player.role === 'host' && (
-                      <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
-                        ホスト
+                    <div>
+                      <span style={{ 
+                        fontWeight: '600', 
+                        fontSize: '16px',
+                        color: '#374151'
+                      }}>
+                        {player.name}
                       </span>
-                    )}
-                    {player.role === 'ai' && (
-                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                        🤖 AI
-                      </span>
-                    )}
-                    {player.id === currentPlayer.id && (
-                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                        あなた
-                      </span>
-                    )}
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                        {player.role === 'host' && (
+                          <span style={{
+                            background: '#fef3c7',
+                            color: '#92400e',
+                            fontSize: '12px',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontWeight: '600'
+                          }}>
+                            👑 ホスト
+                          </span>
+                        )}
+                        {player.role === 'ai' && (
+                          <span style={{
+                            background: '#dbeafe',
+                            color: '#1e40af',
+                            fontSize: '12px',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontWeight: '600'
+                          }}>
+                            🤖 AI
+                          </span>
+                        )}
+                        {player.id === currentPlayer.id && (
+                          <span style={{
+                            background: '#dcfce7',
+                            color: '#166534',
+                            fontSize: '12px',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontWeight: '600'
+                          }}>
+                            ✨ あなた
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+            </div>
 
           {isHost ? (
-            <div className="flex flex-col space-y-4">
-              <button
-                onClick={handleStartGame}
-                disabled={!canStartGame}
-                className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
-                  canStartGame
-                    ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-                key={`start-button-${forceRefresh}`}
-              >
-                ゲーム開始 {!canStartGame && '(1人以上必要)'}
-              </button>
+            <div style={{
+              marginTop: '32px',
+              padding: '24px',
+              background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+              borderRadius: '16px',
+              border: '2px solid #cbd5e1'
+            }}>
+              <h4 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: '16px',
+                textAlign: 'center'
+              }}>
+                👑 ホストコントロール
+              </h4>
               
-              <button
-                onClick={handleRefreshGameState}
-                className="w-full py-2 px-4 rounded-lg font-medium bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200"
-              >
-                🔄 参加者状況を更新
-              </button>
-              
-              <p className="text-sm text-gray-600 text-center">
-                {canStartGame
-                  ? 'ゲーム開始の準備ができました！' 
-                  : '他のプレイヤーの参加を待っています...'
-                }
-              </p>
-              <div className="text-xs text-gray-400 text-center">
-                現在のプレイヤー数: {playerCount} | ホスト: {isHost ? 'Yes' : 'No'}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <ModernButton
+                  onClick={handleStartGame}
+                  disabled={!canStartGame}
+                  variant={canStartGame ? "success" : "secondary"}
+                  size="lg"
+                  fullWidth
+                  key={`start-button-${forceRefresh}`}
+                >
+                  {canStartGame ? '🚀 ゲーム開始' : '⏳ ゲーム開始 (1人以上必要)'}
+                </ModernButton>
+                
+                <ModernButton
+                  onClick={handleRefreshGameState}
+                  variant="primary"
+                  size="md"
+                  fullWidth
+                >
+                  🔄 参加者状況を更新
+                </ModernButton>
+                
+                <div style={{
+                  textAlign: 'center',
+                  padding: '16px',
+                  background: canStartGame ? '#dcfce7' : '#fef3c7',
+                  color: canStartGame ? '#166534' : '#92400e',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  {canStartGame
+                    ? '✅ ゲーム開始の準備ができました！' 
+                    : '⏳ 他のプレイヤーの参加を待っています...'
+                  }
+                </div>
+                
+                <div style={{
+                  fontSize: '12px',
+                  color: '#9ca3af',
+                  textAlign: 'center',
+                  padding: '8px',
+                  background: 'rgba(0,0,0,0.05)',
+                  borderRadius: '8px'
+                }}>
+                  現在のプレイヤー数: {playerCount}/4 | ホスト権限: 有効
+                </div>
               </div>
             </div>
           ) : (
-            <div className="text-center space-y-4">
-              <p className="text-gray-600">ホストがゲームを開始するのを待っています...</p>
+            <div style={{
+              marginTop: '32px',
+              textAlign: 'center',
+              padding: '24px',
+              background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+              borderRadius: '16px',
+              border: '2px solid #93c5fd'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
+              <h4 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: '#1e40af',
+                marginBottom: '16px'
+              }}>
+                ホストの判断を待っています
+              </h4>
+              <p style={{
+                color: '#3730a3',
+                marginBottom: '20px',
+                fontSize: '14px'
+              }}>
+                ホストがゲームを開始するまでお待ちください
+              </p>
               
-              <button
+              <ModernButton
                 onClick={handleRefreshGameState}
-                className="px-4 py-2 rounded-lg font-medium bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200"
+                variant="primary"
+                size="md"
+                fullWidth
               >
                 🔄 ゲーム状態を確認
-              </button>
+              </ModernButton>
               
-              <div className="text-xs text-gray-400">
-                現在のプレイヤー数: {playerCount} | ホスト: {isHost ? 'Yes' : 'No'}
+              <div style={{
+                fontSize: '12px',
+                color: '#6b7280',
+                marginTop: '16px',
+                padding: '8px',
+                background: 'rgba(0,0,0,0.05)',
+                borderRadius: '8px'
+              }}>
+                現在のプレイヤー数: {playerCount}/4 | ホスト権限: なし
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
     );
