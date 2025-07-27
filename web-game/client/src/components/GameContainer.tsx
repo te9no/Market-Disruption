@@ -3,7 +3,6 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import LobbyScreen from './LobbyScreen';
 import GameBoard from './GameBoard';
-import ConnectionStatus from './ConnectionStatus';
 
 const GameContainer: React.FC = () => {
   const { gameState, currentPlayer } = useSelector((state: RootState) => state.game);
@@ -52,7 +51,6 @@ const GameContainer: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <ConnectionStatus />
       {renderContent()}
     </div>
   );

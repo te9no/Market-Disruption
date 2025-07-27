@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
-import PlayerBoard from './PlayerBoard';
 import GameStatus from './GameStatus';
 import ActionPanel from './ActionPanel';
 import AutomataLog from './AutomataLog';
@@ -9,10 +8,14 @@ import PlayerMarketView from './PlayerMarketView';
 import AutomataMarketView from './AutomataMarketView';
 import PlayLog from './PlayLog';
 import TrendResultDialog from './TrendResultDialog';
+import PersonalMarket from './PersonalMarket';
+import Inventory from './Inventory';
+import DesignBoard from './DesignBoard';
 import { useSocket } from '../hooks/useSocket';
 
 const GameBoard: React.FC = () => {
   const { gameState, gameId } = useSelector((state: RootState) => state.game);
+  const { isConnected } = useSelector((state: RootState) => state.socket);
   const { socket, socketId } = useSocket();
   const [refreshing, setRefreshing] = useState(false);
   const [activeView, setActiveView] = useState<string>('game');
@@ -20,6 +23,7 @@ const GameBoard: React.FC = () => {
   const [showTrendDialog, setShowTrendDialog] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [bottomView, setBottomView] = useState<'design' | 'log'>('design');
   
   console.log('🔥 NEW GameBoard rendering with sidebar!', { activeView });
 
@@ -169,19 +173,23 @@ const GameBoard: React.FC = () => {
   const renderMainContent = () => {
     if (activeView === 'game') {
       return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-          {/* Main Game Area - Now takes more space */}
-          <div className="lg:col-span-2">
-            <PlayerBoard player={currentPlayer} />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
+          {/* Main Game Area - Personal Market only */}
+          <div className="lg:col-span-3">
+            <PersonalMarket 
+              personalMarket={currentPlayer.personalMarket} 
+              playerId={currentPlayer.id}
+            />
           </div>
-          {/* Action Panel - Smaller but still functional */}
-          <div className="lg:col-span-1">
+          {/* Right Panel - Action + Inventory */}
+          <div className="lg:col-span-1 flex flex-col gap-6">
             <ActionPanel 
               player={currentPlayer}
               isMyTurn={isCurrentPlayerTurn}
               gamePhase={currentPhase}
               gameState={gameState}
             />
+            <Inventory inventory={currentPlayer.inventory} />
           </div>
         </div>
       );
@@ -260,7 +268,17 @@ const GameBoard: React.FC = () => {
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>🎮 Market Disruption</h1>
+              <div>
+                <h1 style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>🎮 Market Disruption</h1>
+                <div style={{ 
+                  fontSize: '14px', 
+                  color: 'rgba(255,255,255,0.9)',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
+                  marginTop: '4px'
+                }}>
+                  転売ヤーをテーマにしたストラテジーボードゲーム
+                </div>
+              </div>
               <div style={{
                 background: 'rgba(255,255,255,0.25)',
                 backdropFilter: 'blur(10px)',
@@ -277,6 +295,67 @@ const GameBoard: React.FC = () => {
                 }}>
                   ラウンド {gameState.currentRound} | {currentPhase === 'action' ? '🎯 アクション' : currentPhase === 'automata' ? '🤖 オートマ' : '🏪 市場'}フェーズ
                 </div>
+              </div>
+              <div style={{
+                background: 'rgba(255,255,255,0.25)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '12px',
+                padding: '8px 16px',
+                border: '1px solid rgba(255,255,255,0.4)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      background: isConnected ? '#10b981' : '#ef4444',
+                      boxShadow: isConnected ? '0 0 6px rgba(16, 185, 129, 0.6)' : '0 0 6px rgba(239, 68, 68, 0.6)'
+                    }}
+                  />
+                  <span style={{ 
+                    fontSize: '12px', 
+                    fontWeight: '600',
+                    color: 'white',
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+                  }}>
+                    {isConnected ? '接続済み' : '切断'}
+                  </span>
+                </div>
+                {gameId && (
+                  <>
+                    <div style={{ 
+                      width: '1px', 
+                      height: '16px', 
+                      background: 'rgba(255,255,255,0.3)' 
+                    }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ 
+                        fontSize: '12px', 
+                        color: 'rgba(255,255,255,0.8)',
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+                      }}>
+                        ID:
+                      </span>
+                      <code style={{
+                        fontSize: '12px',
+                        fontFamily: 'monospace',
+                        background: 'rgba(255,255,255,0.2)',
+                        color: 'white',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontWeight: 'bold',
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+                      }}>
+                        {gameId}
+                      </code>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -467,21 +546,94 @@ const GameBoard: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom Section: Play Log */}
+        {/* Bottom Section: Design Board + Play Log */}
         <div style={{
-          height: isMobile ? '200px' : '280px',
+          height: isMobile ? '240px' : '280px',
           background: 'rgba(255,255,255,0.95)',
           backdropFilter: 'blur(10px)',
           borderTop: '1px solid rgba(0,0,0,0.1)',
           boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
         }}>
-          <div style={{ padding: isMobile ? '12px' : '16px', height: '100%' }}>
-            <PlayLog 
-              logs={playLogs}
-              currentRound={gameState.currentRound}
-              currentPhase={currentPhase}
-            />
+          {/* Mobile Tab Bar */}
+          {isMobile && (
+            <div style={{
+              display: 'flex',
+              borderBottom: '1px solid rgba(0,0,0,0.1)',
+              background: 'rgba(255,255,255,0.95)'
+            }}>
+              <button
+                onClick={() => setBottomView('design')}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  background: bottomView === 'design' ? '#667eea' : 'transparent',
+                  color: bottomView === 'design' ? 'white' : '#6b7280',
+                  border: 'none',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                📋 設計図
+              </button>
+              <button
+                onClick={() => setBottomView('log')}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  background: bottomView === 'log' ? '#667eea' : 'transparent',
+                  color: bottomView === 'log' ? 'white' : '#6b7280',
+                  border: 'none',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                📜 ログ
+              </button>
+            </div>
+          )}
+          
+          {/* Content Area */}
+          <div style={{ 
+            flex: 1,
+            display: 'flex',
+            gap: isMobile ? '0' : '16px',
+            overflow: 'hidden'
+          }}>
+            {/* Design Board */}
+            <div style={{ 
+              width: isMobile ? '100%' : '400px',
+              padding: isMobile ? '12px' : '16px',
+              overflowY: 'auto',
+              display: isMobile ? (bottomView === 'design' ? 'block' : 'none') : 'block'
+            }}>
+              <DesignBoard 
+                designs={currentPlayer.designs} 
+                openSourceDesigns={currentPlayer.openSourceDesigns}
+              />
+            </div>
+            
+            {/* Play Log */}
+            <div style={{ 
+              flex: isMobile ? 'none' : '1',
+              width: isMobile ? '100%' : 'auto',
+              padding: isMobile ? '12px' : '16px',
+              height: '100%',
+              minWidth: '0',
+              display: isMobile ? (bottomView === 'log' ? 'block' : 'none') : 'block'
+            }}>
+              <PlayLog 
+                logs={playLogs}
+                currentRound={gameState.currentRound}
+                currentPhase={currentPhase}
+              />
+            </div>
           </div>
         </div>
       </div>

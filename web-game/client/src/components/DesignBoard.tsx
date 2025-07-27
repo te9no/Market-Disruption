@@ -37,8 +37,8 @@ const DesignBoard: React.FC<DesignBoardProps> = ({ designs, openSourceDesigns })
   }));
 
   return (
-    <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-xl p-6 border border-blue-100">
-      <h3 className="text-xl font-bold mb-4 text-gray-800 flex items-center">
+    <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-xl p-4 border border-blue-100 h-full">
+      <h3 className="text-lg font-bold mb-3 text-gray-800 flex items-center">
         📋 設計図ボード
       </h3>
       
@@ -114,13 +114,13 @@ const DesignBoard: React.FC<DesignBoardProps> = ({ designs, openSourceDesigns })
       </div>
       
       {/* Open Source Legend */}
-      <div className="mt-4 bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold border-2 border-white shadow">
+      <div className="mt-2 bg-white rounded-lg p-2 shadow-sm border border-gray-200">
+        <div className="flex items-center space-x-2">
+          <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold border border-white shadow">
             🌐 OSS
           </div>
-          <span className="text-sm text-gray-700">
-            <strong>オープンソース設計:</strong> 他のプレイヤーも製造可能、外注料収入あり (+2威厳)
+          <span className="text-xs text-gray-700">
+            <strong>オープンソース設計:</strong> 他プレイヤーも製造可能、外注料収入+2威厳
           </span>
         </div>
       </div>
