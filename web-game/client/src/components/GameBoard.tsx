@@ -18,8 +18,22 @@ const GameBoard: React.FC = () => {
   const [activeView, setActiveView] = useState<string>('game');
   const [trendResult, setTrendResult] = useState<any>(null);
   const [showTrendDialog, setShowTrendDialog] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   console.log('🔥 NEW GameBoard rendering with sidebar!', { activeView });
+
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Listen for game update events to catch trend research results
   useEffect(() => {
@@ -238,53 +252,75 @@ const GameBoard: React.FC = () => {
                 </div>
               </div>
             </div>
-            <button
-              onClick={handleRefreshGameState}
-              disabled={refreshing}
-              style={{
-                background: refreshing ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                color: 'white',
-                padding: '12px 18px',
-                borderRadius: '12px',
-                cursor: refreshing ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s ease',
-                fontWeight: '500',
-                backdropFilter: 'blur(10px)',
-                opacity: refreshing ? 0.6 : 1
-              }}
-              onMouseEnter={(e) => !refreshing && (e.currentTarget.style.background = 'rgba(255,255,255,0.3)')}
-              onMouseLeave={(e) => !refreshing && (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
-            >
-              {refreshing ? '🔄 更新中...' : '🔄 更新'}
-            </button>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setShowSidebar(!showSidebar)}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  color: 'white',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  fontWeight: '500',
+                  backdropFilter: 'blur(10px)',
+                  display: 'block'
+                }}
+                className="md:hidden"
+              >
+                {showSidebar ? '✕' : '☰'}
+              </button>
+              
+              <button
+                onClick={handleRefreshGameState}
+                disabled={refreshing}
+                style={{
+                  background: refreshing ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  color: 'white',
+                  padding: '12px 18px',
+                  borderRadius: '12px',
+                  cursor: refreshing ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease',
+                  fontWeight: '500',
+                  backdropFilter: 'blur(10px)',
+                  opacity: refreshing ? 0.6 : 1
+                }}
+                onMouseEnter={(e) => !refreshing && (e.currentTarget.style.background = 'rgba(255,255,255,0.3)')}
+                onMouseLeave={(e) => !refreshing && (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
+              >
+                {refreshing ? '🔄 更新中...' : '🔄 更新'}
+              </button>
+            </div>
           </div>
           
           {/* Compact Stats Bar */}
           <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
             {[
-              { icon: '👥', value: `${gameState.players.length}人`, label: 'プレイヤー', color: '#4ade80' },
-              { icon: '💰', value: `¥${currentPlayer.funds.toLocaleString()}`, label: '資金', color: '#fbbf24' },
-              { icon: '👑', value: currentPlayer.prestige, label: '威厳', color: '#a855f7' },
-              { icon: '⚡', value: `${currentPlayer.actionPoints}/3`, label: 'AP', color: '#3b82f6' },
-              { icon: '🔄', value: currentPlayer.resaleHistory, label: '転売回数', color: '#ef4444' }
-            ].map((stat, index) => (
+              { icon: '👥', value: `${gameState.players.length}人`, label: 'プレイヤー', color: '#4ade80', priority: 3 },
+              { icon: '💰', value: `¥${currentPlayer.funds.toLocaleString()}`, label: '資金', color: '#fbbf24', priority: 1 },
+              { icon: '👑', value: currentPlayer.prestige, label: '威厳', color: '#a855f7', priority: 2 },
+              { icon: '⚡', value: `${currentPlayer.actionPoints}/3`, label: 'AP', color: '#3b82f6', priority: 1 },
+              { icon: '🔄', value: currentPlayer.resaleHistory, label: '転売回数', color: '#ef4444', priority: 3 }
+            ].filter(stat => !isMobile || stat.priority <= 2).map((stat, index) => (
               <div key={index} style={{
                 background: 'rgba(255,255,255,0.15)',
                 backdropFilter: 'blur(10px)',
                 borderRadius: '16px',
-                padding: '12px 16px',
+                padding: isMobile ? '8px 12px' : '12px 16px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
+                gap: isMobile ? '6px' : '10px',
                 border: '1px solid rgba(255,255,255,0.2)',
-                minWidth: '120px',
+                minWidth: isMobile ? '80px' : '120px',
                 transition: 'all 0.3s ease'
               }}>
-                <span style={{ fontSize: '20px' }}>{stat.icon}</span>
+                <span style={{ fontSize: isMobile ? '16px' : '20px' }}>{stat.icon}</span>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: stat.color }}>{stat.value}</div>
-                  <div style={{ fontSize: '11px', opacity: 0.8 }}>{stat.label}</div>
+                  <div style={{ fontSize: isMobile ? '12px' : '14px', fontWeight: 'bold', color: stat.color }}>{stat.value}</div>
+                  <div style={{ fontSize: isMobile ? '9px' : '11px', opacity: 0.8 }}>{stat.label}</div>
                 </div>
               </div>
             ))}
@@ -293,7 +329,7 @@ const GameBoard: React.FC = () => {
       </div>
 
       {/* Main Layout with Sidebar and Content */}
-      <div style={{ display: 'flex', height: 'calc(100vh - 200px)' }}>
+      <div style={{ display: 'flex', height: 'calc(100vh - 200px)', position: 'relative' }}>
         {/* Left Sidebar Menu */}
         <div style={{
           width: '280px',
@@ -302,10 +338,16 @@ const GameBoard: React.FC = () => {
           borderRight: '1px solid rgba(0,0,0,0.1)',
           boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
           overflowY: 'auto',
-          position: 'sticky',
-          top: 0,
-          height: '100%'
-        }}>
+          position: showSidebar ? 'fixed' : 'sticky',
+          top: showSidebar ? '0' : '0',
+          left: showSidebar ? '0' : 'auto',
+          height: showSidebar ? '100vh' : '100%',
+          zIndex: showSidebar ? 1000 : 'auto',
+          transform: showSidebar ? 'translateX(0)' : isMobile ? 'translateX(-100%)' : 'translateX(0)',
+          transition: 'transform 0.3s ease'
+        }}
+        className="md:relative md:transform-none md:translate-x-0"
+        >
           <div style={{ padding: '24px 16px' }}>
             <h3 style={{ 
               fontSize: '18px', 
@@ -359,12 +401,29 @@ const GameBoard: React.FC = () => {
           </div>
         </div>
 
+        {/* Mobile Overlay */}
+        {isMobile && showSidebar && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.5)',
+              zIndex: 999
+            }}
+            onClick={() => setShowSidebar(false)}
+          />
+        )}
+
         {/* Main Content Area */}
         <div style={{ 
           flex: '1', 
-          padding: '24px',
+          padding: isMobile ? '12px' : '24px',
           overflowY: 'auto',
-          height: '100%'
+          height: '100%',
+          width: isMobile ? '100%' : 'auto'
         }}>
           {renderMainContent()}
         </div>
@@ -379,8 +438,11 @@ const GameBoard: React.FC = () => {
           overflowY: 'auto',
           position: 'sticky',
           top: 0,
-          height: '100%'
-        }}>
+          height: '100%',
+          display: isMobile ? 'none' : 'block'
+        }}
+        className="hidden md:block"
+        >
           <div style={{ padding: '24px 16px', height: '100%' }}>
             <PlayLog 
               logs={playLogs}
