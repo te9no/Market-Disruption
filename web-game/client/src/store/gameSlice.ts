@@ -93,7 +93,42 @@ const gameSlice = createSlice({
         newPlayerCount: action.payload?.players?.length || 0,
         newGameState: action.payload
       });
-      state.gameState = action.payload;
+      
+      // クライアント側で追加したプレイログエントリを保持
+      const existingClientLogs = state.gameState?.playLog?.filter(log => 
+        log.id.startsWith('dignity-') || 
+        log.id.startsWith('client-')
+      ) || [];
+      
+      // 古いクライアント側ログを除去（5分以上前のもの）
+      const now = Date.now();
+      const recentClientLogs = existingClientLogs.filter(log => 
+        now - log.timestamp < 5 * 60 * 1000
+      );
+      
+      const newGameState = { ...action.payload };
+      
+      // サーバーのプレイログとクライアントログをマージ
+      if (recentClientLogs.length > 0) {
+        const serverLogs = newGameState.playLog || [];
+        const mergedLogs = [...serverLogs, ...recentClientLogs]
+          .sort((a, b) => a.timestamp - b.timestamp);
+        
+        // 重複除去（同じIDのログは1つだけ）
+        const uniqueLogs = mergedLogs.filter((log, index, self) => 
+          index === self.findIndex(l => l.id === log.id)
+        );
+        
+        newGameState.playLog = uniqueLogs;
+        console.log('📝 Merged client logs with server logs:', {
+          serverLogsCount: serverLogs.length,
+          clientLogsCount: recentClientLogs.length,
+          mergedLogsCount: uniqueLogs.length,
+          expiredClientLogs: existingClientLogs.length - recentClientLogs.length
+        });
+      }
+      
+      state.gameState = newGameState;
     },
     setCurrentPlayer: (state, action: PayloadAction<Player>) => {
       state.currentPlayer = action.payload;

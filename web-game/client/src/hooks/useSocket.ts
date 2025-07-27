@@ -324,34 +324,65 @@ export const useSocket = () => {
       const actionMessage = getActionMessage(actionData);
       console.log('🎯 Sending action:', actionData, 'Message:', actionMessage);
       
-      // 威厳購入の特別なデバッグ
-      if (actionData.type === 'buy_dignity') {
-        console.log('👑 威厳購入アクション送信:', {
-          type: actionData.type,
-          message: actionMessage,
-          timestamp: new Date().toISOString()
-        });
-        
-        // 即座にプレイログエントリを追加
-        const logEntry = {
-          id: `dignity-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          timestamp: Date.now(),
-          type: 'buy_dignity' as const,
-          message: actionMessage,
-          playerId: currentPlayer?.id,
-          playerName: currentPlayer?.name,
-          details: {
-            cost: 10,
-            prestigeGain: 1,
-            remainingFunds: (currentPlayer?.funds || 10) - 10
-          }
-        };
-        
-        dispatch(addPlayLogEntry(logEntry));
-        console.log('📝 威厳購入ログエントリを手動追加:', logEntry);
-      }
+      // すべてのアクションでクライアント側ログを生成
+      const logEntry = {
+        id: `client-${actionData.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: Date.now(),
+        type: actionData.type as any,
+        message: actionMessage,
+        playerId: currentPlayer?.id,
+        playerName: currentPlayer?.name,
+        details: getActionDetails(actionData, currentPlayer)
+      };
+      
+      dispatch(addPlayLogEntry(logEntry));
+      console.log('📝 クライアント側ログエントリを追加:', logEntry);
       
       socket.emit('game-action', actionData);
+    }
+  };
+
+  // アクションタイプに応じた詳細情報を生成
+  const getActionDetails = (actionData: any, player: any) => {
+    const { type, ...params } = actionData;
+    
+    switch (type) {
+      case 'buy_dignity':
+        return {
+          cost: 10,
+          prestigeGain: 1,
+          remainingFunds: (player?.funds || 10) - 10
+        };
+      case 'purchase':
+        return {
+          price: params.price,
+          popularity: params.popularity,
+          sellerId: params.sellerId
+        };
+      case 'sell':
+      case 'resale':
+        return {
+          price: params.price,
+          productId: params.productId
+        };
+      case 'manufacture':
+        return {
+          cost: params.cost,
+          design: params.selectedDesign || params.designSlot
+        };
+      case 'review':
+        return {
+          reviewType: params.reviewType,
+          useOutsourcing: params.useOutsourcing,
+          targetProductId: params.targetProductId
+        };
+      case 'design':
+        return {
+          dice: params.selectedDice,
+          designSlot: params.designSlot
+        };
+      default:
+        return params;
     }
   };
 
