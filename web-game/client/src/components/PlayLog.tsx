@@ -137,67 +137,65 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
 
   return (
     <div className="bg-white rounded-lg shadow-lg h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200">
-        <h3 className="text-lg font-bold text-gray-800 flex items-center">
-          📜 プレイログ
-        </h3>
-        <div className="text-sm text-gray-600 mt-1">
-          ラウンド {currentRound} | {currentPhase === 'action' ? '🎯 アクション' : currentPhase === 'automata' ? '🤖 オートマ' : '🏪 市場'}フェーズ
+      <div className="px-4 py-2 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
+            📜 プレイログ
+            <span className="text-xs text-gray-500 font-normal">
+              ラウンド {currentRound} | {currentPhase === 'action' ? '🎯 アクション' : currentPhase === 'automata' ? '🤖 オートマ' : '🏪 市場'}フェーズ
+            </span>
+          </h3>
+          <button
+            onClick={() => {
+              const logContainer = document.querySelector('[data-playlog-scroll]');
+              if (logContainer) {
+                logContainer.scrollTop = logContainer.scrollHeight;
+              }
+            }}
+            className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-2 rounded transition-colors"
+          >
+            ⬇️ 最新
+          </button>
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-3" data-playlog-scroll>
+      <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2" data-playlog-scroll>
         {logs.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
-            <div className="text-4xl mb-3">📜</div>
-            <div className="font-medium">まだログがありません</div>
-            <div className="text-sm mt-2">ゲームが進行するとここに表示されます</div>
+          <div className="text-center text-gray-500 py-4">
+            <div className="text-2xl mb-2">📜</div>
+            <div className="text-sm font-medium">まだログがありません</div>
+            <div className="text-xs mt-1">ゲームが進行するとここに表示されます</div>
           </div>
         ) : (
           logs.slice().reverse().map((log) => (
             <div
               key={log.id}
-              className="bg-gray-50 rounded-lg p-3 border-l-4 border-blue-200 hover:bg-gray-100 transition-colors"
+              className="bg-gray-50 rounded-md p-2 border-l-3 border-blue-200 hover:bg-gray-100 transition-colors"
             >
-              <div className="flex items-start justify-between mb-1">
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg">{getLogTypeIcon(log.type)}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 flex-1 min-w-0">
+                  <span className="text-sm">{getLogTypeIcon(log.type)}</span>
                   {log.playerName && (
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-xs font-medium text-gray-700 flex-shrink-0">
                       {log.playerName}
                     </span>
                   )}
+                  <div className={`text-xs ${getLogTypeColor(log.type)} flex-1 min-w-0`}>
+                    <div className="truncate">{log.message}</div>
+                    {log.details && (
+                      <div className="text-xs text-gray-500 mt-0.5 truncate">
+                        {renderLogDetails(log.details, log.type)}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
                   {formatTime(log.timestamp)}
                 </span>
-              </div>
-              <div className={`text-sm ${getLogTypeColor(log.type)}`}>
-                {log.message}
-                {log.details && (
-                  <div className="text-xs text-gray-500 mt-1">
-                    {renderLogDetails(log.details, log.type)}
-                  </div>
-                )}
               </div>
             </div>
           ))
         )}
-      </div>
-      
-      {/* Auto-scroll to bottom button */}
-      <div className="p-3 border-t border-gray-200">
-        <button
-          onClick={() => {
-            const logContainer = document.querySelector('[data-playlog-scroll]');
-            if (logContainer) {
-              logContainer.scrollTop = logContainer.scrollHeight;
-            }
-          }}
-          className="w-full text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-3 rounded transition-colors"
-        >
-          ⬇️ 最新ログへ
-        </button>
       </div>
     </div>
   );

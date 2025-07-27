@@ -169,13 +169,13 @@ const GameBoard: React.FC = () => {
   const renderMainContent = () => {
     if (activeView === 'game') {
       return (
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-full">
-          {/* Main Game Area */}
-          <div className="xl:col-span-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+          {/* Main Game Area - Now takes more space */}
+          <div className="lg:col-span-2">
             <PlayerBoard player={currentPlayer} />
           </div>
-          {/* Action Panel */}
-          <div className="xl:col-span-1">
+          {/* Action Panel - Smaller but still functional */}
+          <div className="lg:col-span-1">
             <ActionPanel 
               player={currentPlayer}
               isMyTurn={isCurrentPlayerTurn}
@@ -329,7 +329,6 @@ const GameBoard: React.FC = () => {
               { icon: '👥', value: `${gameState.players.length}人`, label: 'プレイヤー', priority: 3 },
               { icon: '💰', value: `¥${currentPlayer.funds.toLocaleString()}`, label: '資金', priority: 1 },
               { icon: '👑', value: currentPlayer.prestige, label: '威厳', priority: 2 },
-              { icon: '⚡', value: `${currentPlayer.actionPoints}/3`, label: 'AP', priority: 1 },
               { icon: '🔄', value: currentPlayer.resaleHistory, label: '転売回数', priority: 3 }
             ].filter(stat => !isMobile || stat.priority <= 2).map((stat, index) => (
               <div key={index} style={{
@@ -365,129 +364,126 @@ const GameBoard: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Layout with Sidebar and Content */}
-      <div style={{ display: 'flex', height: 'calc(100vh - 200px)', position: 'relative' }}>
-        {/* Left Sidebar Menu - Hidden on mobile unless toggled */}
-        <div style={{
-          width: isMobile ? (showSidebar ? '280px' : '0') : '280px',
-          background: 'rgba(255,255,255,0.95)',
-          backdropFilter: 'blur(10px)',
-          borderRight: '1px solid rgba(0,0,0,0.1)',
-          boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          position: isMobile ? 'fixed' : 'sticky',
-          top: '0',
-          left: isMobile ? (showSidebar ? '0' : '-280px') : '0',
-          height: isMobile ? '100vh' : '100%',
-          zIndex: isMobile ? 1000 : 'auto',
-          transition: 'all 0.3s ease'
-        }}
-        >
-          <div style={{ padding: '24px 16px' }}>
-            <h3 style={{ 
-              fontSize: '18px', 
-              fontWeight: 'bold', 
-              marginBottom: '16px',
-              color: '#374151'
-            }}>
-              📋 メニュー
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {menuItems.map((item) => {
-                const isActive = activeView === item.key;
-                return (
-                  <button
-                    key={item.key}
-                    onClick={() => setActiveView(item.key)}
-                    style={{
-                      padding: '12px 16px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      textAlign: 'left',
-                      border: 'none',
-                      borderRadius: '8px',
-                      background: isActive ? '#667eea' : 'transparent',
-                      color: isActive ? 'white' : '#6b7280',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = 'rgba(0,0,0,0.05)';
-                        e.currentTarget.style.color = '#374151';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = '#6b7280';
-                      }
-                    }}
-                  >
-                    <span style={{ fontSize: '16px' }}>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
+      {/* Main Layout with Top Area and Bottom Play Log */}
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)', position: 'relative' }}>
+        {/* Upper Section: Sidebar + Main Content */}
+        <div style={{ display: 'flex', flex: '1', minHeight: '0' }}>
+          {/* Left Sidebar Menu - Hidden on mobile unless toggled */}
+          <div style={{
+            width: isMobile ? (showSidebar ? '280px' : '0') : '280px',
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(10px)',
+            borderRight: '1px solid rgba(0,0,0,0.1)',
+            boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            position: isMobile ? 'fixed' : 'relative',
+            top: isMobile ? '0' : 'auto',
+            left: isMobile ? (showSidebar ? '0' : '-280px') : 'auto',
+            height: isMobile ? '100vh' : '100%',
+            zIndex: isMobile ? 1000 : 'auto',
+            transition: 'all 0.3s ease'
+          }}
+          >
+            <div style={{ padding: '24px 16px' }}>
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: 'bold', 
+                marginBottom: '16px',
+                color: '#374151'
+              }}>
+                📋 メニュー
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {menuItems.map((item) => {
+                  const isActive = activeView === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => setActiveView(item.key)}
+                      style={{
+                        padding: '12px 16px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        textAlign: 'left',
+                        border: 'none',
+                        borderRadius: '8px',
+                        background: isActive ? '#667eea' : 'transparent',
+                        color: isActive ? 'white' : '#6b7280',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = 'rgba(0,0,0,0.05)';
+                          e.currentTarget.style.color = '#374151';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = '#6b7280';
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: '16px' }}>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+          </div>
+
+          {/* Mobile Overlay */}
+          {isMobile && showSidebar && (
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.5)',
+                zIndex: 999
+              }}
+              onClick={() => setShowSidebar(false)}
+            />
+          )}
+
+          {/* Main Content Area - Now takes full width */}
+          <div style={{ 
+            flex: '1',
+            width: isMobile ? '100%' : 'auto',
+            minWidth: isMobile ? '100%' : 'auto',
+            padding: isMobile ? '12px' : '24px',
+            overflowY: 'auto',
+            height: '100%'
+          }}>
+            {renderMainContent()}
           </div>
         </div>
 
-        {/* Mobile Overlay */}
-        {isMobile && showSidebar && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0,0,0,0.5)',
-              zIndex: 999
-            }}
-            onClick={() => setShowSidebar(false)}
-          />
-        )}
-
-        {/* Main Content Area */}
-        <div style={{ 
-          flex: '1',
-          width: isMobile ? '100%' : 'auto',
-          minWidth: isMobile ? '100%' : 'auto',
-          padding: isMobile ? '12px' : '24px',
-          overflowY: 'auto',
-          height: '100%'
+        {/* Bottom Section: Play Log */}
+        <div style={{
+          height: isMobile ? '200px' : '280px',
+          background: 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(10px)',
+          borderTop: '1px solid rgba(0,0,0,0.1)',
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+          overflow: 'hidden'
         }}>
-          {renderMainContent()}
-        </div>
-
-        {/* Right Sidebar - Play Log - Hidden on mobile */}
-        {!isMobile && (
-          <div style={{
-            width: '320px',
-            background: 'rgba(255,255,255,0.95)',
-            backdropFilter: 'blur(10px)',
-            borderLeft: '1px solid rgba(0,0,0,0.1)',
-            boxShadow: '-2px 0 10px rgba(0,0,0,0.1)',
-            overflowY: 'auto',
-            position: 'sticky',
-            top: 0,
-            height: '100%'
-          }}
-          >
-          <div style={{ padding: '24px 16px', height: '100%' }}>
+          <div style={{ padding: isMobile ? '12px' : '16px', height: '100%' }}>
             <PlayLog 
               logs={playLogs}
               currentRound={gameState.currentRound}
               currentPhase={currentPhase}
             />
           </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Game Over Modal */}
