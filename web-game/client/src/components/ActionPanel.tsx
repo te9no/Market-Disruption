@@ -77,55 +77,93 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   };
 
   const handleDesignAction = (params: any) => {
-    // Simulate dice roll (3 dice)
-    const dice1 = { 
-      category: ['game-console', 'diy-gadget', 'figure', 'accessory', 'toy'][Math.floor(Math.random() * 5)],
-      value: Math.floor(Math.random() * 6) + 1,
-      cost: 0
-    };
-    const dice2 = { 
-      category: ['game-console', 'diy-gadget', 'figure', 'accessory', 'toy'][Math.floor(Math.random() * 5)],
-      value: Math.floor(Math.random() * 6) + 1,
-      cost: 0
-    };
-    const dice3 = { 
-      category: ['game-console', 'diy-gadget', 'figure', 'accessory', 'toy'][Math.floor(Math.random() * 5)],
-      value: Math.floor(Math.random() * 6) + 1,
-      cost: 0
-    };
+    try {
+      // Simulate dice roll (3 dice)
+      const categories = ['game-console', 'diy-gadget', 'figure', 'accessory', 'toy'];
+      const dice1 = { 
+        category: categories[Math.floor(Math.random() * categories.length)],
+        value: Math.floor(Math.random() * 6) + 1,
+        cost: 0
+      };
+      const dice2 = { 
+        category: categories[Math.floor(Math.random() * categories.length)],
+        value: Math.floor(Math.random() * 6) + 1,
+        cost: 0
+      };
+      const dice3 = { 
+        category: categories[Math.floor(Math.random() * categories.length)],
+        value: Math.floor(Math.random() * 6) + 1,
+        cost: 0
+      };
 
-    // Calculate costs
-    const costMap = { 6: 1, 5: 2, 4: 3, 3: 4, 2: 5, 1: 6 };
-    dice1.cost = costMap[dice1.value as keyof typeof costMap] || dice1.value;
-    dice2.cost = costMap[dice2.value as keyof typeof costMap] || dice2.value;
-    dice3.cost = costMap[dice3.value as keyof typeof costMap] || dice3.value;
+      // Calculate costs
+      const costMap = { 6: 1, 5: 2, 4: 3, 3: 4, 2: 5, 1: 6 };
+      dice1.cost = costMap[dice1.value as keyof typeof costMap] || dice1.value;
+      dice2.cost = costMap[dice2.value as keyof typeof costMap] || dice2.value;
+      dice3.cost = costMap[dice3.value as keyof typeof costMap] || dice3.value;
 
-    setDiceOptions([dice1, dice2, dice3]);
-    setShowDiceSelection(true);
-    setActionParams(params);
+      const diceResults = [dice1, dice2, dice3];
+      if (diceResults.some(dice => !dice.category || !dice.value || !dice.cost)) {
+        throw new Error('ダイス生成に失敗しました');
+      }
+
+      setDiceOptions(diceResults);
+      setShowDiceSelection(true);
+      setActionParams(params);
+    } catch (error) {
+      console.error('❌ Design action error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`設計アクションエラー: ${errorMessage}`);
+      
+      // Reset states on error
+      setSelectedAction(null);
+      setActionParams({});
+    }
   };
 
   const handleDiceSelection = (selectedDiceIndex: number) => {
-    const dice = diceOptions[selectedDiceIndex];
-    setSelectedDice(dice);
-    setShowDiceSelection(false);
-    setShowSlotSelection(true);
+    try {
+      const dice = diceOptions[selectedDiceIndex];
+      if (!dice) {
+        throw new Error('選択されたダイスが無効です');
+      }
+      setSelectedDice(dice);
+      setShowDiceSelection(false);
+      setShowSlotSelection(true);
+    } catch (error) {
+      console.error('❌ Dice selection error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`ダイス選択エラー: ${errorMessage}`);
+    }
   };
 
   const handleSlotSelection = (slotNumber: number) => {
-    sendGameAction({ 
-      type: 'design', 
-      ...actionParams,
-      selectedDice,
-      designSlot: slotNumber
-    });
-    
-    // Reset states
-    setShowSlotSelection(false);
-    setSelectedDice(null);
-    setDiceOptions([]);
-    setSelectedAction(null);
-    setActionParams({});
+    try {
+      setIsProcessingAction(true);
+      sendGameAction({ 
+        type: 'design', 
+        ...actionParams,
+        selectedDice,
+        designSlot: slotNumber
+      });
+      
+      // Reset states after a delay to allow server response
+      setTimeout(() => {
+        setShowSlotSelection(false);
+        setSelectedDice(null);
+        setDiceOptions([]);
+        setSelectedAction(null);
+        setActionParams({});
+        setIsProcessingAction(false);
+      }, 1000);
+    } catch (error) {
+      console.error('❌ Design slot selection error:', error);
+      setIsProcessingAction(false);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`設計スロット選択エラー: ${errorMessage}`);
+      
+      // Don't reset states on error, allow user to retry
+    }
   };
 
   const renderDiceSelection = () => {
@@ -137,7 +175,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {diceOptions.map((dice, index) => (
             <div key={index} className="border-2 border-gray-300 rounded-lg p-4 hover:border-blue-500 cursor-pointer transition-all"
-                 onClick={() => handleDiceSelection(index)}>
+                 onClick={() => !isProcessingAction && handleDiceSelection(index)}>
               <div className="text-center">
                 <div className="text-4xl mb-2">🎲</div>
                 <div className="font-bold text-lg mb-1">ダイス {index + 1}</div>
@@ -146,8 +184,13 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   <div><span className="font-medium">価値:</span> {dice.value}</div>
                   <div><span className="font-medium">コスト:</span> {dice.cost}</div>
                 </div>
-                <ModernButton className="mt-3 w-full" variant="primary" size="md">
-                  選択
+                <ModernButton 
+                  className="mt-3 w-full" 
+                  variant="primary" 
+                  size="md"
+                  disabled={isProcessingAction}
+                >
+                  {isProcessingAction ? '処理中...' : '選択'}
                 </ModernButton>
               </div>
             </div>
@@ -196,12 +239,17 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             {availableSlots.map((slotNumber) => (
               <div key={slotNumber} 
                    className="border-2 border-gray-300 rounded-lg p-4 hover:border-green-500 cursor-pointer transition-all text-center"
-                   onClick={() => handleSlotSelection(slotNumber)}>
+                   onClick={() => !isProcessingAction && handleSlotSelection(slotNumber)}>
                 <div className="text-2xl mb-2">📋</div>
                 <div className="font-bold">スロット {slotNumber}</div>
                 <div className="text-sm text-gray-600">空き</div>
-                <ModernButton className="mt-3 w-full" variant="primary" size="md">
-                  選択
+                <ModernButton 
+                  className="mt-3 w-full" 
+                  variant="primary" 
+                  size="md"
+                  disabled={isProcessingAction}
+                >
+                  {isProcessingAction ? '処理中...' : '選択'}
                 </ModernButton>
               </div>
             ))}
