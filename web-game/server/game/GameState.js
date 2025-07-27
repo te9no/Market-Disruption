@@ -440,6 +440,8 @@ export class GameState {
   
 
   actionReview(player, { targetProductId, reviewType, useOutsourcing = false }) {
+    console.log(`🔍 actionReview: Searching for product ${targetProductId}, reviewType: ${reviewType}, useOutsourcing: ${useOutsourcing}`);
+    
     if (!player.hasActionPoints(1)) {
       throw new Error('Not enough action points');
     }
@@ -452,11 +454,13 @@ export class GameState {
     let popularity = null;
 
     // Check players' markets
+    console.log(`🔍 Checking ${this.players.length} players' markets`);
     for (const p of this.players) {
       for (const priceKey in p.personalMarket) {
         for (const popularityKey in p.personalMarket[priceKey]) {
           const prod = p.personalMarket[priceKey][popularityKey];
           if (prod && prod.id === targetProductId) {
+            console.log(`✅ Found product in player ${p.name}'s market at price ${priceKey}, popularity ${popularityKey}`);
             targetPlayer = p;
             targetMarket = p.personalMarket;
             product = prod;
@@ -472,11 +476,16 @@ export class GameState {
 
     // Check automata markets if not found in player markets
     if (!product) {
+      console.log(`🔍 Checking manufacturer automata market`);
       // Check manufacturer automata
       for (const priceKey in this.manufacturerAutomata.personalMarket) {
         for (const popularityKey in this.manufacturerAutomata.personalMarket[priceKey]) {
           const prod = this.manufacturerAutomata.personalMarket[priceKey][popularityKey];
+          if (prod) {
+            console.log(`🔍 Found manufacturer product at ${priceKey}/${popularityKey}: id=${prod.id}`);
+          }
           if (prod && prod.id === targetProductId) {
+            console.log(`✅ Found product in manufacturer automata market at price ${priceKey}, popularity ${popularityKey}`);
             targetPlayer = this.manufacturerAutomata;
             targetMarket = this.manufacturerAutomata.personalMarket;
             product = prod;
@@ -490,11 +499,16 @@ export class GameState {
     }
 
     if (!product) {
+      console.log(`🔍 Checking resale automata market`);
       // Check resale automata
       for (const priceKey in this.resaleAutomata.personalMarket) {
         for (const popularityKey in this.resaleAutomata.personalMarket[priceKey]) {
           const prod = this.resaleAutomata.personalMarket[priceKey][popularityKey];
+          if (prod) {
+            console.log(`🔍 Found resale product at ${priceKey}/${popularityKey}: id=${prod.id}`);
+          }
           if (prod && prod.id === targetProductId) {
+            console.log(`✅ Found product in resale automata market at price ${priceKey}, popularity ${popularityKey}`);
             targetPlayer = this.resaleAutomata;
             targetMarket = this.resaleAutomata.personalMarket;
             product = prod;
@@ -508,7 +522,8 @@ export class GameState {
     }
 
     if (!product) {
-      throw new Error('Product not found');
+      console.log(`❌ Product ${targetProductId} not found in any market`);
+      throw new Error(`Product not found: ${targetProductId}`);
     }
 
     player.spendActionPoints(1);

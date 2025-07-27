@@ -65,7 +65,13 @@ const AutomataMarketView: React.FC<AutomataMarketViewProps> = ({
 
   // Handle review of automata products
   const handleReview = (productId: string) => {
-    console.log(`⭐ Reviewing ${automataName} product:`, productId);
+    console.log(`⭐ Reviewing ${automataName} product:`, {
+      productId,
+      automataId,
+      automataName,
+      reviewType: 'positive',
+      useOutsourcing: false
+    });
     if (socket) {
       socket.emit('action', {
         type: 'review',
