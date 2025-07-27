@@ -3,10 +3,11 @@ import React from 'react';
 interface LogEntry {
   id: string;
   timestamp: number;
-  type: 'action' | 'phase' | 'round' | 'game' | 'automata' | 'trend';
+  type: 'action' | 'phase' | 'round' | 'game' | 'automata' | 'trend' | 'purchase' | 'sell' | 'manufacture' | 'design' | 'review' | 'labor' | 'regulate' | 'skip';
   playerId?: string;
   playerName?: string;
   message: string;
+  details?: any; // 追加の詳細情報
 }
 
 interface PlayLogProps {
@@ -24,6 +25,14 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
       case 'game': return '🎮';
       case 'automata': return '🤖';
       case 'trend': return '📈';
+      case 'purchase': return '🛒';
+      case 'sell': return '💰';
+      case 'manufacture': return '🏭';
+      case 'design': return '📐';
+      case 'review': return '⭐';
+      case 'labor': return '💼';
+      case 'regulate': return '⚖️';
+      case 'skip': return '⏭️';
       default: return '📝';
     }
   };
@@ -36,6 +45,14 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
       case 'game': return 'text-red-600';
       case 'automata': return 'text-orange-600';
       case 'trend': return 'text-pink-600';
+      case 'purchase': return 'text-emerald-600';
+      case 'sell': return 'text-yellow-600';
+      case 'manufacture': return 'text-indigo-600';
+      case 'design': return 'text-violet-600';
+      case 'review': return 'text-amber-600';
+      case 'labor': return 'text-slate-600';
+      case 'regulate': return 'text-rose-600';
+      case 'skip': return 'text-gray-500';
       default: return 'text-gray-600';
     }
   };
@@ -46,6 +63,31 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
       minute: '2-digit',
       second: '2-digit'
     });
+  };
+
+  const renderLogDetails = (details: any, type: string) => {
+    if (!details) return null;
+
+    switch (type) {
+      case 'purchase':
+        return `価格: ¥${details.price} | 人気度: ${details.popularity || '不明'}`;
+      case 'sell':
+        return `価格: ¥${details.price} | スロット: ${details.slot || '不明'}`;
+      case 'manufacture':
+        return `コスト: ¥${details.cost} | 設計: ${details.design || '不明'}`;
+      case 'design':
+        return `ダイス: [${details.dice?.join(', ') || '不明'}] | 結果: ${details.result || '不明'}`;
+      case 'review':
+        return `タイプ: ${details.reviewType === 'positive' ? 'ポジティブ' : 'ネガティブ'} | 外注: ${details.useOutsourcing ? 'はい' : 'いいえ'}`;
+      case 'trend':
+        return `ダイス: [${details.dice?.join(', ') || '不明'}] | 効果: ${details.effect || '不明'}`;
+      case 'regulate':
+        return `ダイス: [${details.dice?.join(', ') || '不明'}] | 成功: ${details.success ? 'はい' : 'いいえ'}`;
+      default:
+        return Object.entries(details)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(' | ');
+    }
   };
 
   return (
@@ -87,6 +129,11 @@ const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) =
               </div>
               <div className={`text-sm ${getLogTypeColor(log.type)}`}>
                 {log.message}
+                {log.details && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    {renderLogDetails(log.details, log.type)}
+                  </div>
+                )}
               </div>
             </div>
           ))

@@ -186,6 +186,15 @@ export const useSocket = () => {
       try {
         dispatch(setGameState(gameState));
         console.log('✅ Game state dispatched successfully after action');
+        
+        // Log the action details for better user experience
+        if (lastAction) {
+          console.log('📝 Action details logged:', {
+            type: lastAction.type,
+            player: lastAction.playerName || lastAction.playerId,
+            details: lastAction
+          });
+        }
       } catch (error) {
         console.error('❌ Error updating state after action:', error);
       }
@@ -275,7 +284,61 @@ export const useSocket = () => {
 
   const sendGameAction = (actionData: any) => {
     if (socket) {
+      // クライアント側でアクション実行ログを生成
+      const actionMessage = getActionMessage(actionData);
+      console.log('🎯 Sending action:', actionData, 'Message:', actionMessage);
+      
       socket.emit('game-action', actionData);
+    }
+  };
+
+  // アクションタイプに応じたログメッセージを生成
+  const getActionMessage = (actionData: any) => {
+    const { type, ...params } = actionData;
+    
+    switch (type) {
+      case 'manufacture':
+        return `${params.selectedDesign || params.designSlot || '商品'}を製造しました（コスト: ¥${params.cost || '不明'}）`;
+      case 'sell':
+        if (params.previousOwner) {
+          return `商品を転売しました（価格: ¥${params.price}）`;
+        } else {
+          return `商品を販売しました（価格: ¥${params.price}）`;
+        }
+      case 'purchase':
+        const sellerName = params.sellerId === 'manufacturer-automata' ? 'メーカーオートマ' : 
+                          params.sellerId === 'resale-automata' ? '転売オートマ' : 
+                          '他プレイヤー';
+        return `${sellerName}から商品を購入しました（価格: ¥${params.price}, 人気度: ${params.popularity}）`;
+      case 'review':
+        const reviewText = params.reviewType === 'positive' ? 'ポジティブ' : 'ネガティブ';
+        const outsourcing = params.useOutsourcing ? '（外注）' : '';
+        return `商品に${reviewText}レビューを付けました${outsourcing}`;
+      case 'design':
+        if (params.selectedDice?.length) {
+          return `設計を実行しました（ダイス: ${params.selectedDice.join(', ')}）`;
+        } else {
+          return '設計を実行しました';
+        }
+      case 'trend_research':
+        return 'トレンド調査を実行しました';
+      case 'labor':
+      case 'part_time_job':
+        return 'アルバイトを実行しました（+¥5, -2AP）';
+      case 'day_labor':
+        return '日雇い労働を実行しました（+¥12, -3AP）';
+      case 'regulate':
+        return '規制推進を実行しました';
+      case 'skip-automata':
+        return 'オートマフェーズをスキップしました';
+      case 'skip-market':
+        return 'マーケットフェーズをスキップしました';
+      case 'buyback':
+        return `商品を買い戻しました（価格: ¥${params.price}）`;
+      case 'resale':
+        return `商品を転売しました（価格: ¥${params.price}）`;
+      default:
+        return `${type}アクションを実行しました`;
     }
   };
 

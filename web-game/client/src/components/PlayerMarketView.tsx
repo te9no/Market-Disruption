@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Player } from '../store/gameSlice';
 import PersonalMarket from './PersonalMarket';
+import { useSocket } from '../hooks/useSocket';
 
 interface PlayerMarketViewProps {
   player: Player;
@@ -13,6 +14,7 @@ const PlayerMarketView: React.FC<PlayerMarketViewProps> = ({
   currentPlayerId, 
   isMyTurn 
 }) => {
+  const { sendGameAction } = useSocket();
   const isCurrentPlayer = player.id === currentPlayerId;
 
   const getPrestigeStatus = (prestige: number) => {
@@ -26,6 +28,29 @@ const PlayerMarketView: React.FC<PlayerMarketViewProps> = ({
   };
 
   const prestigeInfo = getPrestigeStatus(player.prestige);
+
+  // Handle purchase from this player's market
+  const handlePurchase = (productId: string, price: number, popularity: number) => {
+    console.log(`🛒 Purchasing from ${player.name}:`, { productId, price, popularity });
+    sendGameAction({
+      type: 'purchase',
+      sellerId: player.id,
+      productId,
+      price,
+      popularity
+    });
+  };
+
+  // Handle review of this player's products
+  const handleReview = (productId: string) => {
+    console.log(`⭐ Reviewing ${player.name}'s product:`, { productId });
+    sendGameAction({
+      type: 'review',
+      targetProductId: productId,
+      reviewType: 'positive', // Default to positive review
+      useOutsourcing: false // Default to direct review
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -101,6 +126,8 @@ const PlayerMarketView: React.FC<PlayerMarketViewProps> = ({
         currentPlayerId={currentPlayerId}
         isMyTurn={isMyTurn}
         canInteract={isMyTurn && !isCurrentPlayer}
+        onPurchase={handlePurchase}
+        onReview={handleReview}
       />
     </div>
   );
