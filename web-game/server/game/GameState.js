@@ -438,55 +438,77 @@ export class GameState {
     return { type: 'sell', product: marketProduct, originalPrice: price, adjustedPrice };
   }
   
-  actionPurchase(player, { targetPlayerId, price, popularity }) {
-    if (!player.hasActionPoints(1)) {
-      throw new Error('Not enough action points');
-    }
-    
-    const targetPlayer = this.players.find(p => p.id === targetPlayerId);
-    if (!targetPlayer) {
-      throw new Error('Target player not found');
-    }
-    
-    const product = targetPlayer.personalMarket[price][popularity];
-    if (!product) {
-      throw new Error('No product at specified location');
-    }
-    
-    if (!player.canAfford(price)) {
-      throw new Error('Cannot afford product');
-    }
-    
-    player.spendActionPoints(1);
-    player.spendFunds(price);
-    targetPlayer.gainFunds(price);
-    
-    // Remove from target's market and add to buyer's inventory
-    targetPlayer.removeProductFromMarket(price, popularity);
-    
-    // Add ownership history
-    product.previousOwner = product.ownerId;
-    product.ownerId = player.id;
-    product.purchasePrice = price;
-    
-    player.inventory.push(product);
-    
-    return { type: 'purchase', product, targetPlayerId, price };
-  }
 
-  actionReview(player, { targetPlayerId, price, popularity, reviewType, useOutsourcing = false }) {
+  actionReview(player, { targetProductId, reviewType, useOutsourcing = false }) {
     if (!player.hasActionPoints(1)) {
       throw new Error('Not enough action points');
     }
 
-    const targetPlayer = this.players.find(p => p.id === targetPlayerId);
-    if (!targetPlayer) {
-      throw new Error('Target player not found');
+    // Find product by ID across all markets
+    let targetPlayer = null;
+    let targetMarket = null;
+    let product = null;
+    let price = null;
+    let popularity = null;
+
+    // Check players' markets
+    for (const p of this.players) {
+      for (const priceKey in p.personalMarket) {
+        for (const popularityKey in p.personalMarket[priceKey]) {
+          const prod = p.personalMarket[priceKey][popularityKey];
+          if (prod && prod.id === targetProductId) {
+            targetPlayer = p;
+            targetMarket = p.personalMarket;
+            product = prod;
+            price = parseInt(priceKey);
+            popularity = parseInt(popularityKey);
+            break;
+          }
+        }
+        if (product) break;
+      }
+      if (product) break;
     }
 
-    const product = targetPlayer.personalMarket[price][popularity];
+    // Check automata markets if not found in player markets
     if (!product) {
-      throw new Error('No product at specified location');
+      // Check manufacturer automata
+      for (const priceKey in this.manufacturerAutomata.personalMarket) {
+        for (const popularityKey in this.manufacturerAutomata.personalMarket[priceKey]) {
+          const prod = this.manufacturerAutomata.personalMarket[priceKey][popularityKey];
+          if (prod && prod.id === targetProductId) {
+            targetPlayer = this.manufacturerAutomata;
+            targetMarket = this.manufacturerAutomata.personalMarket;
+            product = prod;
+            price = parseInt(priceKey);
+            popularity = parseInt(popularityKey);
+            break;
+          }
+        }
+        if (product) break;
+      }
+    }
+
+    if (!product) {
+      // Check resale automata
+      for (const priceKey in this.resaleAutomata.personalMarket) {
+        for (const popularityKey in this.resaleAutomata.personalMarket[priceKey]) {
+          const prod = this.resaleAutomata.personalMarket[priceKey][popularityKey];
+          if (prod && prod.id === targetProductId) {
+            targetPlayer = this.resaleAutomata;
+            targetMarket = this.resaleAutomata.personalMarket;
+            product = prod;
+            price = parseInt(priceKey);
+            popularity = parseInt(popularityKey);
+            break;
+          }
+        }
+        if (product) break;
+      }
+    }
+
+    if (!product) {
+      throw new Error('Product not found');
     }
 
     player.spendActionPoints(1);
@@ -512,9 +534,17 @@ export class GameState {
       
       if (newPopularity !== product.popularity) {
         // Move product to new popularity slot
-        targetPlayer.removeProductFromMarket(price, popularity);
-        product.popularity = newPopularity;
-        targetPlayer.addProductToMarket(product, price);
+        if (targetPlayer.removeProductFromMarket) {
+          // Player has the method
+          targetPlayer.removeProductFromMarket(price, popularity);
+          product.popularity = newPopularity;
+          targetPlayer.addProductToMarket(product, price);
+        } else {
+          // Automata - handle manually
+          targetMarket[price][popularity] = null;
+          product.popularity = newPopularity;
+          targetMarket[price][newPopularity] = product;
+        }
       }
 
       return { 
@@ -539,9 +569,17 @@ export class GameState {
       
       if (newPopularity !== product.popularity) {
         // Move product to new popularity slot
-        targetPlayer.removeProductFromMarket(price, popularity);
-        product.popularity = newPopularity;
-        targetPlayer.addProductToMarket(product, price);
+        if (targetPlayer.removeProductFromMarket) {
+          // Player has the method
+          targetPlayer.removeProductFromMarket(price, popularity);
+          product.popularity = newPopularity;
+          targetPlayer.addProductToMarket(product, price);
+        } else {
+          // Automata - handle manually
+          targetMarket[price][popularity] = null;
+          product.popularity = newPopularity;
+          targetMarket[price][newPopularity] = product;
+        }
       }
 
       return { 

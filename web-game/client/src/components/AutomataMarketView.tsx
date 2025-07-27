@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSocket } from '../hooks/useSocket';
 import PersonalMarket from './PersonalMarket';
 
 interface AutomataMarketViewProps {
@@ -14,6 +15,7 @@ const AutomataMarketView: React.FC<AutomataMarketViewProps> = ({
   currentPlayerId, 
   isMyTurn 
 }) => {
+  const { socket } = useSocket();
   const automataName = type === 'manufacturer' ? 'メーカーオートマ' : '転売オートマ';
   const automataIcon = type === 'manufacturer' ? '🏭' : '💰';
   const automataId = type === 'manufacturer' ? 'manufacturer-automata' : 'resale-automata';
@@ -46,6 +48,33 @@ const AutomataMarketView: React.FC<AutomataMarketViewProps> = ({
 
   // Convert automata market to the format expected by PersonalMarket
   const personalMarket = automata?.personalMarket || {};
+
+  // Handle purchase from automata
+  const handlePurchase = (productId: string, price: number, popularity: number) => {
+    console.log(`🛒 Purchasing from ${automataName}:`, { productId, price, popularity });
+    if (socket) {
+      socket.emit('action', {
+        type: 'purchase',
+        sellerId: automataId,
+        productId,
+        price,
+        popularity
+      });
+    }
+  };
+
+  // Handle review of automata products
+  const handleReview = (productId: string) => {
+    console.log(`⭐ Reviewing ${automataName} product:`, productId);
+    if (socket) {
+      socket.emit('action', {
+        type: 'review',
+        targetProductId: productId,
+        reviewType: 'positive', // Default to positive review
+        useOutsourcing: false // Default to direct review
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -102,6 +131,8 @@ const AutomataMarketView: React.FC<AutomataMarketViewProps> = ({
         currentPlayerId={currentPlayerId}
         isMyTurn={isMyTurn}
         canInteract={isMyTurn}
+        onPurchase={handlePurchase}
+        onReview={handleReview}
       />
     </div>
   );
