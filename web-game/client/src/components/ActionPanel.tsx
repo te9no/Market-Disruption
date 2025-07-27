@@ -337,117 +337,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           </div>
         );
 
-      case 'resale':
-        return (
-          <div className="space-y-3">
-            <h4 className="font-bold">転売アクション (1AP)</h4>
-            <div>
-              <label className="block text-sm font-medium mb-1">転売商品:</label>
-              <SimpleSelect
-                value={actionParams.productId || ''}
-                onChange={(value) => {
-                  const product = player.inventory.find(p => p.id === value);
-                  if (product && product.previousOwner) {
-                    const basePrice = (product.purchasePrice || 0) + 5 + player.resaleHistory <= 1 ? 0 : 
-                                    player.resaleHistory <= 4 ? 3 : 
-                                    player.resaleHistory <= 7 ? 6 : 10;
-                    setActionParams({
-                      ...actionParams, 
-                      productId: value,
-                      basePrice,
-                      maxPrice: basePrice // Will be adjusted by regulation
-                    });
-                  }
-                }}
-                placeholder="転売商品を選択"
-                options={player.inventory
-                  .filter(product => product.previousOwner)
-                  .map((product) => ({
-                    value: product.id,
-                    label: `${product.category} (購入価格${product.purchasePrice || 0})`
-                  }))}
-              />
-            </div>
-            {actionParams.productId && (
-              <div>
-                <div className="text-sm text-gray-600 mb-2">
-                  基本転売価格: {actionParams.basePrice}資金
-                  {gameState.regulationLevel >= 2 && (
-                    <div className="text-red-600">規制により価格制限あり</div>
-                  )}
-                </div>
-                <label className="block text-sm font-medium mb-1">
-                  転売価格を選択 (範囲: ¥{actionParams.basePrice} - ¥{actionParams.maxPrice}):
-                </label>
-                {(actionParams.maxPrice - actionParams.basePrice + 1) <= 10 ? (
-                  <div className="grid grid-cols-4 gap-2 mt-2">
-                    {Array.from({length: actionParams.maxPrice - actionParams.basePrice + 1}, (_, i) => actionParams.basePrice + i).map(price => (
-                      <ModernButton
-                        key={price}
-                        onClick={() => setActionParams({...actionParams, targetPrice: price})}
-                        variant={actionParams.targetPrice === price ? "primary" : "ghost"}
-                        size="sm"
-                        className={`text-center ${actionParams.targetPrice === price ? 'ring-2 ring-blue-300' : ''}`}
-                      >
-                        ¥{price}
-                      </ModernButton>
-                    ))}
-                  </div>
-                ) : (
-                  <div>
-                    <div className="grid grid-cols-3 gap-2 mt-2 mb-3">
-                      {[actionParams.basePrice, Math.ceil((actionParams.basePrice + actionParams.maxPrice) / 2), actionParams.maxPrice].map(price => (
-                        <ModernButton
-                          key={price}
-                          onClick={() => setActionParams({...actionParams, targetPrice: price})}
-                          variant={actionParams.targetPrice === price ? "primary" : "secondary"}
-                          size="sm"
-                          className={`text-center ${actionParams.targetPrice === price ? 'ring-2 ring-green-300' : ''}`}
-                        >
-                          ¥{price}
-                        </ModernButton>
-                      ))}
-                    </div>
-                    <div className="mt-2">
-                      <label className="block text-xs text-gray-600 mb-1">カスタム転売価格:</label>
-                      <input
-                        type="number"
-                        min={actionParams.basePrice}
-                        max={actionParams.maxPrice}
-                        value={actionParams.targetPrice || ''}
-                        onChange={(e) => setActionParams({...actionParams, targetPrice: parseInt(e.target.value)})}
-                        className="w-full border rounded px-3 py-2 text-sm"
-                        placeholder={`${actionParams.basePrice}〜${actionParams.maxPrice}`}
-                      />
-                    </div>
-                  </div>
-                )}
-                {actionParams.targetPrice && (
-                  <div className="mt-2 p-2 bg-green-50 rounded">
-                    <span className="text-sm text-green-800">選択済み: ¥{actionParams.targetPrice}</span>
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="flex space-x-2">
-              <ModernButton
-                onClick={() => handleAction('resale', actionParams)}
-                disabled={!actionParams.productId}
-                variant="primary"
-                size="md"
-              >
-                転売実行
-              </ModernButton>
-              <ModernButton
-                onClick={() => setSelectedAction(null)}
-                variant="secondary"
-                size="md"
-              >
-                キャンセル
-              </ModernButton>
-            </div>
-          </div>
-        );
 
       case 'sell':
         const inventoryOptions = (player.inventory || []).map((product) => {
@@ -490,16 +379,29 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               onChange={(value) => {
                 const product = player.inventory?.find(p => p.id === value);
                 if (product) {
+                  let maxPrice;
+                  if (product.previousOwner) {
+                    // 転売品の場合は転売価格を計算
+                    const basePrice = (product.purchasePrice || 0) + 5 + (player.resaleHistory <= 1 ? 0 : 
+                                    player.resaleHistory <= 4 ? 3 : 
+                                    player.resaleHistory <= 7 ? 6 : 10);
+                    maxPrice = basePrice;
+                  } else {
+                    // 通常の販売は製造コストの1.5倍
+                    maxPrice = Math.floor((product.cost || 0) * 1.5) || 1;
+                  }
                   setActionParams({
                     ...actionParams, 
                     productId: value,
-                    maxPrice: Math.floor((product.cost || 0) * 1.5) || 1
+                    maxPrice,
+                    isResale: !!product.previousOwner
                   });
                 } else {
                   setActionParams({
                     ...actionParams, 
                     productId: value,
-                    maxPrice: 1
+                    maxPrice: 1,
+                    isResale: false
                   });
                 }
               }}
@@ -509,6 +411,16 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             />
             {actionParams.productId && (
               <div>
+                {actionParams.isResale && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
+                    <div className="text-sm text-orange-800">
+                      🔄 転売品: 購入価格+5+転売履歴ペナルティ
+                      {gameState.regulationLevel >= 2 && (
+                        <div className="text-red-600 mt-1">⚠️ 規制により価格制限あり</div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <label className="block text-sm font-medium mb-1">
                   価格を選択 (上限: {actionParams.maxPrice}):
                 </label>
@@ -564,7 +476,10 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             )}
             <div className="flex space-x-2">
               <ModernButton
-                onClick={() => handleAction('sell', actionParams)}
+                onClick={() => {
+                  const actionType = actionParams.isResale ? 'resale' : 'sell';
+                  handleAction(actionType, actionParams);
+                }}
                 disabled={!actionParams.productId || !actionParams.price}
                 variant="primary"
                 size="md"
@@ -1204,24 +1119,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 </div>
               </ModernButton>
               
-              <ModernButton
-                onClick={() => setSelectedAction('resale')}
-                disabled={player.inventory.filter(p => p.previousOwner).length === 0 || player.actionPoints < 1}
-                variant="primary"
-                size="lg"
-              className="action-card-button bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 border-orange-200"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">🔄</span>
-                  <div className="text-left">
-                    <div className="font-medium text-orange-900">転売</div>
-                    <div className="text-xs text-orange-600">購入済み商品を転売</div>
-                    {player.inventory.filter(p => p.previousOwner).length === 0 && 
-                      <div className="text-xs text-red-500">⚠️ 転売可能商品なし</div>
-                    }
-                  </div>
-                </div>
-              </ModernButton>
               
               <ModernButton
                 onClick={() => setSelectedAction('review')}
