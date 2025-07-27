@@ -38,9 +38,11 @@ export class Player {
   addProductToMarket(product, price) {
     const slot = this.personalMarket[price][product.popularity];
     if (slot !== null) {
-      throw new Error('Market slot already occupied');
+      console.log(`🚫 Player.addProductToMarket: slot occupied at price ${price}, popularity ${product.popularity}:`, slot);
+      throw new Error(`Market slot already occupied at price ${price}, popularity ${product.popularity}`);
     }
     
+    console.log(`✅ Player.addProductToMarket: adding product at price ${price}, popularity ${product.popularity}`);
     this.personalMarket[price][product.popularity] = product;
     return true;
   }

@@ -420,8 +420,10 @@ export class GameState {
     marketProduct.price = adjustedPrice;
     
     // Verify market slot is available before proceeding
-    if (player.personalMarket[adjustedPrice] && player.personalMarket[adjustedPrice][marketProduct.popularity]) {
-      throw new Error('Market slot already occupied');
+    const existingProduct = player.personalMarket[adjustedPrice] && player.personalMarket[adjustedPrice][marketProduct.popularity];
+    if (existingProduct !== null) {
+      console.log(`🚫 Market slot occupied at price ${adjustedPrice}, popularity ${marketProduct.popularity}:`, existingProduct);
+      throw new Error(`Market slot already occupied at price ${adjustedPrice}, popularity ${marketProduct.popularity}`);
     }
     
     // Only spend action points and remove from inventory after all checks pass
@@ -1537,8 +1539,10 @@ export class GameState {
     marketProduct.price = finalPrice;
     
     // Verify market slot is available before proceeding
-    if (player.personalMarket[finalPrice] && player.personalMarket[finalPrice][marketProduct.popularity]) {
-      throw new Error('Market slot already occupied');
+    const existingProduct = player.personalMarket[finalPrice] && player.personalMarket[finalPrice][marketProduct.popularity];
+    if (existingProduct !== null) {
+      console.log(`🚫 Resale market slot occupied at price ${finalPrice}, popularity ${marketProduct.popularity}:`, existingProduct);
+      throw new Error(`Market slot already occupied at price ${finalPrice}, popularity ${marketProduct.popularity}`);
     }
 
     // Only spend action points and remove from inventory after all checks pass
