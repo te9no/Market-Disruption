@@ -17,6 +17,25 @@ interface PlayLogProps {
 }
 
 const PlayLog: React.FC<PlayLogProps> = ({ logs, currentRound, currentPhase }) => {
+  // 威厳購入関連のログをデバッグ出力
+  React.useEffect(() => {
+    const dignityLogs = logs.filter(log => 
+      log.type === 'buy_dignity' || 
+      log.type === 'prestige_purchase' ||
+      log.type === 'purchase_prestige' ||
+      log.type?.includes('dignity') ||
+      log.type?.includes('prestige') ||
+      log.message?.includes('威厳')
+    );
+    
+    if (dignityLogs.length > 0) {
+      console.log('👑 威厳関連ログ found in PlayLog:', dignityLogs);
+    }
+    
+    // 全ログのタイプを確認
+    const allTypes = [...new Set(logs.map(log => log.type))];
+    console.log('📋 All log types in PlayLog:', allTypes);
+  }, [logs]);
   const getLogTypeIcon = (type: string) => {
     switch (type) {
       case 'action': return '⚡';

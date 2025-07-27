@@ -144,6 +144,27 @@ const GameBoard: React.FC = () => {
 
   // Use actual play logs from game state
   const playLogs = gameState.playLog || [];
+  
+  // プレイログのデバッグ出力
+  useEffect(() => {
+    if (playLogs.length > 0) {
+      const dignityLogs = playLogs.filter(log => 
+        log.type === 'buy_dignity' || 
+        log.type === 'prestige_purchase' ||
+        log.type === 'purchase_prestige' ||
+        log.type?.includes('dignity') ||
+        log.type?.includes('prestige') ||
+        log.message?.includes('威厳')
+      );
+      
+      if (dignityLogs.length > 0) {
+        console.log('👑 威厳関連ログ found in GameBoard:', dignityLogs);
+      }
+      
+      console.log('📋 GameBoard playLogs total:', playLogs.length);
+      console.log('📋 Latest 5 logs:', playLogs.slice(-5));
+    }
+  }, [playLogs]);
 
   const renderMainContent = () => {
     if (activeView === 'game') {

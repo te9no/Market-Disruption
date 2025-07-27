@@ -9,6 +9,7 @@ import {
   setGameId, 
   setError,
   removePlayerFromGame,
+  addPlayLogEntry,
 } from '../store/gameSlice';
 
 const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -34,6 +35,7 @@ export const useSocket = () => {
   const dispatch = useDispatch();
   const socket = useSelector((state: RootState) => state.socket.socket);
   const isConnected = useSelector((state: RootState) => state.socket.isConnected);
+  const currentPlayer = useSelector((state: RootState) => state.game.currentPlayer);
 
   useEffect(() => {
     // 既に接続済みの場合は何もしない
@@ -329,6 +331,24 @@ export const useSocket = () => {
           message: actionMessage,
           timestamp: new Date().toISOString()
         });
+        
+        // 即座にプレイログエントリを追加
+        const logEntry = {
+          id: `dignity-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: Date.now(),
+          type: 'buy_dignity' as const,
+          message: actionMessage,
+          playerId: currentPlayer?.id,
+          playerName: currentPlayer?.name,
+          details: {
+            cost: 10,
+            prestigeGain: 1,
+            remainingFunds: (currentPlayer?.funds || 10) - 10
+          }
+        };
+        
+        dispatch(addPlayLogEntry(logEntry));
+        console.log('📝 威厳購入ログエントリを手動追加:', logEntry);
       }
       
       socket.emit('game-action', actionData);

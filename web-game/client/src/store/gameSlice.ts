@@ -58,10 +58,11 @@ export interface GameState {
   playLog?: Array<{
     id: string;
     timestamp: number;
-    type: 'action' | 'phase' | 'round' | 'game' | 'automata';
+    type: 'action' | 'phase' | 'round' | 'game' | 'automata' | 'trend' | 'purchase' | 'sell' | 'manufacture' | 'design' | 'review' | 'labor' | 'regulate' | 'skip' | 'buy_dignity' | 'buyback' | 'resale' | 'promote_regulation' | 'end_game' | 'prestige_purchase' | 'purchase_prestige';
     message: string;
     playerId?: string;
     playerName?: string;
+    details?: any;
   }>;
   winner: Player | null;
 }
@@ -134,6 +135,23 @@ const gameSlice = createSlice({
         state.gameState.currentRound = action.payload.currentRound;
       }
     },
+    addPlayLogEntry: (state, action: PayloadAction<{
+      id: string;
+      timestamp: number;
+      type: 'action' | 'phase' | 'round' | 'game' | 'automata' | 'trend' | 'purchase' | 'sell' | 'manufacture' | 'design' | 'review' | 'labor' | 'regulate' | 'skip' | 'buy_dignity' | 'buyback' | 'resale' | 'promote_regulation' | 'end_game' | 'prestige_purchase' | 'purchase_prestige';
+      message: string;
+      playerId?: string;
+      playerName?: string;
+      details?: any;
+    }>) => {
+      if (state.gameState) {
+        if (!state.gameState.playLog) {
+          state.gameState.playLog = [];
+        }
+        state.gameState.playLog.push(action.payload);
+        console.log('📝 Play log entry added:', action.payload);
+      }
+    },
     resetGame: (state) => {
       state.gameState = null;
       state.currentPlayer = null;
@@ -153,6 +171,7 @@ export const {
   addPlayerToGame,
   removePlayerFromGame,
   updateGamePhase,
+  addPlayLogEntry,
   resetGame,
 } = gameSlice.actions;
 
