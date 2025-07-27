@@ -35,30 +35,30 @@ const DesignBoard: React.FC<DesignBoardProps> = ({ designs, openSourceDesigns })
         📋 設計図ボード
       </h3>
       
-      <div className="grid grid-cols-6 gap-3">
+      <div className="flex space-x-2 overflow-x-auto">
         {[1, 2, 3, 4, 5, 6].map(slot => {
           const design = designs[slot];
           const isOpenSource = design && openSourceDesigns.includes(design.id);
           
           return (
-            <div key={slot} className="relative">
-              <div className={`border-3 rounded-lg p-2 h-24 flex flex-col justify-center transition-all duration-200 hover:scale-105 shadow-lg ${
+            <div key={slot} className="relative flex-shrink-0 w-24">
+              <div className={`border-2 rounded-lg p-1 h-20 flex flex-col justify-center transition-all duration-200 hover:scale-105 shadow-lg ${
                 design 
                   ? `${getCategoryColor(design.category)} shadow-lg`
                   : 'border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200'
               }`}>
                 <div className="text-center">
-                  <div className="text-xs font-semibold text-gray-700 mb-1">#{slot}</div>
+                  <div className="text-xs font-semibold text-gray-700 mb-0.5">#{slot}</div>
                   {design ? (
                     <>
-                      <div className="font-bold text-xs mb-1">{getCategoryName(design.category)}</div>
-                      <div className="text-xs font-medium">💎 値: {design.value}</div>
-                      <div className="text-xs font-medium">💰 コスト: {design.cost}</div>
+                      <div className="font-bold text-xs leading-tight mb-0.5">{getCategoryName(design.category)}</div>
+                      <div className="text-xs font-medium leading-tight">💎 {design.value}</div>
+                      <div className="text-xs font-medium leading-tight">💰 {design.cost}</div>
                     </>
                   ) : (
                     <div className="text-gray-400 text-xs font-medium">
-                      <div className="text-lg mb-1">📝</div>
-                      <div>未設計</div>
+                      <div className="text-base mb-0.5">📝</div>
+                      <div className="leading-tight">未設計</div>
                     </div>
                   )}
                 </div>
