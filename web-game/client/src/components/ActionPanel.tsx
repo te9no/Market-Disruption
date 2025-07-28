@@ -793,7 +793,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           <div className="space-y-3">
             <h4 className="font-bold">購入アクション (1AP)</h4>
             <div className="text-sm text-gray-600 mb-3">
-              他のプレイヤーの商品を購入します。
+              他のプレイヤーやオートマの商品を購入します。
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">対象プレイヤー:</label>
@@ -801,12 +801,24 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 value={actionParams.targetPlayerId || ''}
                 onChange={(value) => setActionParams({...actionParams, targetPlayerId: value})}
                 placeholder="対象プレイヤーを選択"
-                options={gameState.players
-                  .filter(p => p.id !== player.id)
-                  .map((p) => ({
-                    value: p.id,
-                    label: p.name
-                  }))}
+                options={[
+                  // 他のプレイヤー
+                  ...gameState.players
+                    .filter(p => p.id !== player.id)
+                    .map((p) => ({
+                      value: p.id,
+                      label: p.name
+                    })),
+                  // オートマ
+                  {
+                    value: 'manufacturer-automata',
+                    label: '🤖 メーカーオートマ'
+                  },
+                  {
+                    value: 'resale-automata', 
+                    label: '🔄 転売オートマ'
+                  }
+                ]}
               />
             </div>
             {actionParams.targetPlayerId && (
@@ -820,11 +832,22 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   }}
                   placeholder="商品を選択"
                   options={(() => {
-                    const targetPlayer = gameState.players.find(p => p.id === actionParams.targetPlayerId);
-                    if (!targetPlayer?.personalMarket) return [];
+                    let targetMarket = null;
+                    
+                    // プレイヤーかオートマかを判定
+                    if (actionParams.targetPlayerId === 'manufacturer-automata') {
+                      targetMarket = gameState.manufacturerAutomata?.personalMarket;
+                    } else if (actionParams.targetPlayerId === 'resale-automata') {
+                      targetMarket = gameState.resaleAutomata?.personalMarket;
+                    } else {
+                      const targetPlayer = gameState.players.find(p => p.id === actionParams.targetPlayerId);
+                      targetMarket = targetPlayer?.personalMarket;
+                    }
+                    
+                    if (!targetMarket) return [];
                     
                     const availableProducts: Array<{value: string; label: string}> = [];
-                    Object.entries(targetPlayer.personalMarket).forEach(([price, priceRow]) => {
+                    Object.entries(targetMarket).forEach(([price, priceRow]) => {
                       Object.entries(priceRow || {}).forEach(([popularity, product]) => {
                         if (product) {
                           const categoryIcon = {
@@ -854,7 +877,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     });
                     return availableProducts;
                   })()}
-                  emptyMessage="対象プレイヤーの商品がありません"
+                  emptyMessage="対象の商品がありません"
                 />
               </div>
             )}
