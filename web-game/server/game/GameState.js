@@ -31,7 +31,8 @@ export class GameState {
     this.resaleAutomata = {
       funds: 20,
       inventory: [],
-      personalMarket: this.initializeAutomataMarket()
+      personalMarket: this.initializeAutomataMarket(),
+      pauseRounds: 0
     };
     
     // Dice pools
@@ -720,17 +721,17 @@ export class GameState {
       throw new Error('Not enough action points');
     }
 
-    if (player.funds < 5) {
+    if (player.funds < 10) {
       throw new Error('Not enough funds to buy dignity');
     }
 
     player.spendActionPoints(1);
-    player.spendFunds(5);
+    player.spendFunds(10);
     player.modifyPrestige(1);
 
     return { 
       type: 'buy_dignity', 
-      cost: 5,
+      cost: 10,
       prestigeGained: 1,
       newPrestige: player.prestige,
       newFunds: player.funds
@@ -791,25 +792,44 @@ export class GameState {
     if (success) {
       this.regulationLevel = Math.min(3, this.regulationLevel + 1);
       
-      if (this.regulationLevel === 3) {
-        // Regulation activated - confiscate all resale inventory
+      if (this.regulationLevel === 1) {
+        // Stage 1: Public Comment
+        this.addToPlayLog('regulation', '段階1: パブリックコメント募集開始 - 転売規制が検討されています');
+        // Reduce resale automata mass purchase by 1
+      } else if (this.regulationLevel === 2) {
+        // Stage 2: Under Consideration  
+        this.addToPlayLog('regulation', '段階2: 規制検討中 - 転売価格制限発動（購入価格+3資金まで）');
+      } else if (this.regulationLevel === 3) {
+        // Stage 3: Regulation Activated
+        this.addToPlayLog('regulation', '段階3: 転売規制発動 - 全転売品没収、価格制限強化（購入価格+1資金まで）');
+        
+        // Confiscate all resale products and fine players
         this.players.forEach(p => {
+          // Remove resale products from inventory
           p.inventory = p.inventory.filter(product => !product.previousOwner);
           
           // Remove resale products from personal markets
           for (let price = 1; price <= 20; price++) {
             for (let popularity = 1; popularity <= 6; popularity++) {
               const product = p.personalMarket[price][popularity];
-              if (product && product.previousOwner) {
+              if (product && product.isResale) {
                 p.removeProductFromMarket(price, popularity);
               }
             }
           }
+          
+          // Fine based on resale history
+          const fine = p.resaleHistory * 2;
+          if (fine > 0) {
+            p.spendFunds(Math.min(fine, p.funds)); // Don't allow negative funds
+            this.addToPlayLog('regulation', `${p.name}に転売履歴${p.resaleHistory}回による罰金${fine}資金を課す`, p.id, p.name);
+          }
         });
 
-        // Reset resale automata inventory
+        // Reset resale automata and pause for 2 rounds
         this.resaleAutomata.inventory = [];
-        this.resaleAutomata.personalMarket = {};
+        this.resaleAutomata.personalMarket = this.initializeAutomataMarket();
+        this.resaleAutomata.pauseRounds = 2;
       }
     }
 
@@ -1039,22 +1059,22 @@ export class GameState {
 
   getTrendEffect(total) {
     const trends = {
-      3: { name: '経済特需', effect: 'All players gain 15 funds', cost: 0 },
-      4: { name: '技術革新', effect: 'Reduce any design dice value by 1', cost: 0 },
-      5: { name: 'インフルエンサー紹介', effect: 'Choose category, +2 popularity to your products', cost: 0 },
-      6: { name: '汚染改善キャンペーン', effect: 'Remove 1 pollution marker from any category', cost: 0 },
-      7: { name: 'サステナビリティ', effect: '+1 popularity to all open source products', cost: 1 },
-      8: { name: 'DIYブーム', effect: 'All diy-gadget designs -1 dice value', cost: 0 },
-      9: { name: 'インフレ進行', effect: 'All non-resale product prices +2', cost: 0 },
-      10: { name: 'ショート動画ブーム', effect: '+2 funds bonus per resale success', cost: 0 },
-      11: { name: 'ショート動画ブーム', effect: '+2 funds bonus per resale success', cost: 0 },
-      12: { name: 'テレワーク需要', effect: '+1 popularity to game-console and diy-gadget', cost: 0 },
-      13: { name: 'ギフト需要', effect: '+1 popularity to accessory and toy', cost: 0 },
-      14: { name: '緑化促進', effect: 'Remove 2 pollution markers total', cost: 3 },
-      15: { name: '消費者不信', effect: 'All other players -1 prestige', cost: 2 },
-      16: { name: '市場開放', effect: 'Free design, manufacture, and sell', cost: 0 },
-      17: { name: '風評操作', effect: 'Target player -3 prestige', cost: 2 },
-      18: { name: '市場の寵児', effect: 'You gain +5 prestige', cost: 0 }
+      3: { name: '経済特需', effect: '全プレイヤーに+15資金', cost: 'なし' },
+      4: { name: '技術革新', effect: '自身の任意の設計1つのダイス値-1', cost: 'なし' },
+      5: { name: 'インフルエンサー紹介', effect: '自身の全商品の人気度を+1', cost: 'なし' },
+      6: { name: '汚染改善キャンペーン', effect: '市場汚染レベルを-2', cost: 'なし' },
+      7: { name: 'サステナビリティ', effect: '任意の商品の人気度を+3（任意の組み合わせ）', cost: '1威厳' },
+      8: { name: 'DIYブーム', effect: '全てのプレイヤーの最新設計のダイス値-1', cost: 'なし' },
+      9: { name: 'インフレ進行', effect: '全ての転売ではない商品の価格+2（発動後永続）', cost: 'なし' },
+      10: { name: 'ショート動画ブーム', effect: '転売が成功するたびに+2資金ボーナス（発動後永続）', cost: 'なし' },
+      11: { name: 'ショート動画ブーム', effect: '転売が成功するたびに+2資金ボーナス（発動後永続）', cost: 'なし' },
+      12: { name: 'テレワーク需要', effect: '価格10以下の全商品の人気度を+1', cost: 'なし' },
+      13: { name: 'ギフト需要', effect: '人気度3以下の全商品の人気度を+1', cost: 'なし' },
+      14: { name: '緑化促進', effect: '市場汚染レベルを-3', cost: '3威厳' },
+      15: { name: '消費者不信', effect: 'あなた以外の全プレイヤーの威厳-1', cost: '2威厳' },
+      16: { name: '市場開放', effect: 'ダイスを3つ引き、コスト0で設計（オープンソース不可）、製造、販売を行うことができる。使用しなかったダイスはダイスプールに戻す。', cost: 'なし' },
+      17: { name: '風評操作', effect: '任意のプレイヤー1人の威厳-3', cost: '2威厳' },
+      18: { name: '市場の寵児', effect: 'あなたの威厳+5', cost: 'なし' }
     };
 
     return trends[total] || trends[10]; // Default to common trend

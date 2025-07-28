@@ -703,14 +703,23 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <div className="flex space-x-2">
               <ModernButton
                 onClick={() => {
-                  console.log('🔍 Review action params:', actionParams);
-                  console.log('🔍 Required params check:', {
-                    targetPlayerId: actionParams.targetPlayerId,
-                    price: actionParams.price,
-                    popularity: actionParams.popularity,
-                    reviewType: actionParams.reviewType
+                  // Find the actual product from the market position
+                  const targetPlayer = gameState.players.find(p => p.id === actionParams.targetPlayerId);
+                  const product = targetPlayer?.personalMarket?.[actionParams.price]?.[actionParams.popularity];
+                  
+                  const reviewParams = {
+                    targetProductId: product?.id,
+                    reviewType: actionParams.reviewType,
+                    useOutsourcing: actionParams.useOutsourcing || false
+                  };
+                  
+                  console.log('🔍 Review action params:', {
+                    original: actionParams,
+                    converted: reviewParams,
+                    foundProduct: product
                   });
-                  handleAction('review', actionParams);
+                  
+                  handleAction('review', reviewParams);
                 }}
                 disabled={!actionParams.targetPlayerId || !actionParams.reviewType || !actionParams.price || !actionParams.popularity}
                 variant="primary"

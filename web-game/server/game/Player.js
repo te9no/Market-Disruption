@@ -119,7 +119,7 @@ export class Player {
   
   // Update prestige
   modifyPrestige(amount) {
-    this.prestige = Math.max(1, this.prestige + amount); // Minimum prestige is 1
+    this.prestige = Math.max(-5, Math.min(26, this.prestige + amount)); // Range: -5 to +26
   }
   
   // Update resale history
