@@ -1,7 +1,7 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert';
-import GameState from '../../game/GameState.js';
-import Player from '../../game/Player.js';
+import { GameState } from '../../game/GameState.js';
+import { Player } from '../../game/Player.js';
 
 describe('Player Actions Tests', () => {
   let gameState;
