@@ -23,8 +23,8 @@ describe('GameState Tests', () => {
   describe('Basic Game Flow', () => {
     it('should initialize with correct default values', () => {
       assert.strictEqual(gameState.state, 'waiting');
-      assert.strictEqual(gameState.currentRound, 1);
-      assert.strictEqual(gameState.phase, 'action');
+      assert.strictEqual(gameState.currentRound, 0);
+      assert.strictEqual(gameState.currentPhase, 'action');
       assert.strictEqual(gameState.currentPlayerIndex, 0);
       assert.strictEqual(gameState.regulationLevel, 0);
     });
@@ -40,7 +40,7 @@ describe('GameState Tests', () => {
         assert.strictEqual(player.funds, 30);
         assert.strictEqual(player.prestige, 5);
         assert.strictEqual(player.actionPoints, 3);
-        assert.strictEqual(Object.keys(player.designs).length, 2); // 初期設計2個
+        assert.strictEqual(player.designs.size, 2); // 初期設計2個
       });
     });
 
@@ -60,13 +60,18 @@ describe('GameState Tests', () => {
     it('should progress phases correctly', () => {
       gameState.startGame();
       
+      // Initially in action phase
+      assert.strictEqual(gameState.currentPhase, 'action');
+      assert.strictEqual(gameState.currentRound, 1);
+      
       // 全プレイヤーがターン終了
       gameState.players.forEach(player => {
         gameState.actionEndTurn(player);
       });
       
-      // オートマフェーズに移行
-      assert.strictEqual(gameState.phase, 'automata');
+      // All phases are processed automatically, should be round 2 now
+      assert.strictEqual(gameState.currentRound, 2);
+      assert.strictEqual(gameState.currentPhase, 'action');
     });
   });
 
