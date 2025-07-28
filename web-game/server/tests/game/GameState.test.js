@@ -78,9 +78,8 @@ describe('GameState Tests', () => {
       player1.prestige = 17;
       player1.funds = 75;
       
-      const winner = gameState.checkVictory();
-      assert.strictEqual(winner.id, player1.id);
-      assert.strictEqual(winner.victoryType, 'prestige');
+      const isWinner = gameState.checkVictory(player1);
+      assert.strictEqual(isWinner, true);
     });
 
     it('should detect funds victory correctly', () => {
@@ -89,9 +88,8 @@ describe('GameState Tests', () => {
       // 資金勝利条件を設定
       player2.funds = 150;
       
-      const winner = gameState.checkVictory();
-      assert.strictEqual(winner.id, player2.id);
-      assert.strictEqual(winner.victoryType, 'funds');
+      const isWinner = gameState.checkVictory(player2);
+      assert.strictEqual(isWinner, true);
     });
 
     it('should not detect victory with insufficient conditions', () => {
@@ -101,8 +99,8 @@ describe('GameState Tests', () => {
       player1.prestige = 17;
       player1.funds = 50; // 75未満
       
-      const winner = gameState.checkVictory();
-      assert.strictEqual(winner, null);
+      const isWinner = gameState.checkVictory(player1);
+      assert.strictEqual(isWinner, false);
     });
   });
 
@@ -125,14 +123,14 @@ describe('GameState Tests', () => {
       
       assert.throws(() => {
         player1.spendActionPoints(2);
-      }, /Not enough action points/);
+      }, /Insufficient action points/);
     });
 
     it('should reset AP at round start', () => {
       gameState.startGame();
       player1.actionPoints = 0;
       
-      gameState.startNewRound();
+      gameState.nextRound();
       
       assert.strictEqual(player1.actionPoints, 3);
     });
@@ -146,7 +144,7 @@ describe('GameState Tests', () => {
       player1.spendFunds(10);
       assert.strictEqual(player1.funds, initialFunds - 10);
       
-      player1.addFunds(5);
+      player1.gainFunds(5);
       assert.strictEqual(player1.funds, initialFunds - 5);
     });
 
@@ -155,17 +153,17 @@ describe('GameState Tests', () => {
       
       assert.throws(() => {
         player1.spendFunds(player1.funds + 1);
-      }, /Not enough funds/);
+      }, /Insufficient funds/);
     });
 
     it('should handle prestige correctly', () => {
       gameState.startGame();
       const initialPrestige = player1.prestige;
       
-      player1.addPrestige(2);
+      player1.modifyPrestige(2);
       assert.strictEqual(player1.prestige, initialPrestige + 2);
       
-      player1.spendPrestige(1);
+      player1.modifyPrestige(-1);
       assert.strictEqual(player1.prestige, initialPrestige + 1);
     });
   });

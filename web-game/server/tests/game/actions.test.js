@@ -46,7 +46,7 @@ describe('Player Actions Tests', () => {
         
         assert.throws(() => {
           gameState.actionManufacture(player1, { designSlot: 1 });
-        }, /Not enough funds/);
+        }, /Insufficient funds/);
       });
 
       it('should fail when design slot is empty', () => {
@@ -211,7 +211,7 @@ describe('Player Actions Tests', () => {
         
         assert.throws(() => {
           gameState.actionBuyDignity(player1);
-        }, /Not enough funds/);
+        }, /Insufficient funds/);
       });
     });
   });

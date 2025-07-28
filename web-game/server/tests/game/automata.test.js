@@ -25,7 +25,7 @@ describe('Automata System Tests', () => {
       
       const initialMarketSize = Object.keys(gameState.manufacturerAutomata.personalMarket).length;
       
-      const result = gameState.runManufacturerAutomata();
+      const result = gameState.processManufacturerAutomata();
       
       assert.strictEqual(result.action, 'manufacture');
       assert(result.product); // 製造された商品が存在
@@ -50,7 +50,7 @@ describe('Automata System Tests', () => {
       const originalRandom = Math.random;
       Math.random = () => 0.9; // ダイス合計11-12で在庫一掃
       
-      const result = gameState.runManufacturerAutomata();
+      const result = gameState.processManufacturerAutomata();
       
       assert.strictEqual(result.action, 'clearance_sale');
       
@@ -62,7 +62,7 @@ describe('Automata System Tests', () => {
       const originalRandom = Math.random;
       Math.random = () => 0.1; // ダイス合計2-5で休息
       
-      const result = gameState.runManufacturerAutomata();
+      const result = gameState.processManufacturerAutomata();
       
       assert.strictEqual(result.action, 'rest');
       
@@ -89,7 +89,7 @@ describe('Automata System Tests', () => {
       
       const initialFunds = gameState.resaleAutomata.funds;
       
-      const result = gameState.runResaleAutomata();
+      const result = gameState.processResaleAutomata();
       
       assert.strictEqual(result.action, 'mass_purchase');
       assert(result.purchased); // 購入した商品リスト
@@ -114,7 +114,7 @@ describe('Automata System Tests', () => {
       const originalRandom = Math.random;
       Math.random = () => 0.7; // ダイス合計8-12で転売
       
-      const result = gameState.runResaleAutomata();
+      const result = gameState.processResaleAutomata();
       
       assert.strictEqual(result.action, 'resale');
       
@@ -125,7 +125,7 @@ describe('Automata System Tests', () => {
       gameState.regulationLevel = 3;
       gameState.resaleAutomata.pauseRounds = 2;
       
-      const result = gameState.runResaleAutomata();
+      const result = gameState.processResaleAutomata();
       
       assert.strictEqual(result.action, 'paused');
       assert.strictEqual(result.reason, 'regulation');
@@ -150,7 +150,7 @@ describe('Automata System Tests', () => {
       const originalRandom = Math.random;
       Math.random = () => 0.2;
       
-      const result = gameState.runResaleAutomata();
+      const result = gameState.processResaleAutomata();
       
       // 資金不足でも正常に処理される
       assert.strictEqual(result.action, 'mass_purchase');
@@ -162,7 +162,7 @@ describe('Automata System Tests', () => {
 
   describe('Automata Integration', () => {
     it('should run both automata in sequence', () => {
-      const results = gameState.runAutomataPhase();
+      const results = gameState.processAutomataPhase();
       
       assert.strictEqual(results.length, 2);
       assert.strictEqual(results[0].automata, 'manufacturer');
@@ -185,8 +185,8 @@ describe('Automata System Tests', () => {
       const originalRandom = Math.random;
       Math.random = () => 0.2; // 大量購入モード
       
-      const manufacturerResult = gameState.runManufacturerAutomata();
-      const resaleResult = gameState.runResaleAutomata();
+      const manufacturerResult = gameState.processManufacturerAutomata();
+      const resaleResult = gameState.processResaleAutomata();
       
       // 転売オートマがメーカーオートマの商品を購入する可能性がある
       assert(resaleResult.action);
@@ -215,7 +215,7 @@ describe('Automata System Tests', () => {
       const originalRandom = Math.random;
       Math.random = () => 0.2; // 大量購入
       
-      const result = gameState.runResaleAutomata();
+      const result = gameState.processResaleAutomata();
       
       if (result.action === 'mass_purchase') {
         // 規制レベル1では購入制限がある
@@ -251,7 +251,7 @@ describe('Automata System Tests', () => {
       const originalRandom = Math.random;
       Math.random = () => 0.5; // ダイス合計7（おもちゃカテゴリー）
       
-      const result = gameState.runMarketPhase();
+      const result = gameState.processMarketPhase();
       
       assert(result.demandDice);
       assert.strictEqual(result.demandDice.length, 2);
