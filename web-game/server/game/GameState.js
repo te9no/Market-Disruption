@@ -875,8 +875,29 @@ export class GameState {
 
     // Find product
     const product = sellerMarket[price]?.[popularity];
-    if (!product || product.id !== productId) {
-      throw new Error('Product not found');
+    if (!product) {
+      console.log('🔍 Product not found at location:', {
+        sellerId,
+        price,
+        popularity,
+        availableMarket: Object.keys(sellerMarket).map(p => ({
+          price: p,
+          products: Object.keys(sellerMarket[p] || {})
+        }))
+      });
+      throw new Error('Product not found at specified location');
+    }
+    
+    // If productId is provided, verify it matches
+    if (productId && product.id !== productId) {
+      console.log('🔍 Product ID mismatch:', {
+        expectedId: productId,
+        actualId: product.id,
+        price,
+        popularity,
+        sellerId
+      });
+      throw new Error('Product ID mismatch');
     }
 
     // Check if player can afford

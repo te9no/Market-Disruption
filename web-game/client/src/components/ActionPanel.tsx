@@ -652,7 +652,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <label className="block text-sm font-medium mb-1">対象プレイヤー:</label>
               <SimpleSelect
                 value={actionParams.targetPlayerId || ''}
-                onChange={(value) => setActionParams({...actionParams, targetPlayerId: value, price: undefined, popularity: undefined})}
+                onChange={(value) => setActionParams({...actionParams, targetPlayerId: value, price: undefined, popularity: undefined, productId: undefined})}
                 placeholder="対象プレイヤーを選択"
                 options={gameState.players.map((p) => ({
                   value: p.id,
@@ -869,7 +869,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <label className="block text-sm font-medium mb-1">対象プレイヤー:</label>
               <SimpleSelect
                 value={actionParams.targetPlayerId || ''}
-                onChange={(value) => setActionParams({...actionParams, targetPlayerId: value})}
+                onChange={(value) => setActionParams({...actionParams, targetPlayerId: value, price: undefined, popularity: undefined, productId: undefined})}
                 placeholder="対象プレイヤーを選択"
                 options={[
                   // 他のプレイヤー
@@ -895,10 +895,12 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-1">商品 (価格-人気度):</label>
                 <SimpleSelect
-                  value={`${actionParams.price}-${actionParams.popularity}` || ''}
+                  value={actionParams.productId ? `${actionParams.price}-${actionParams.popularity}-${actionParams.productId}` : ''}
                   onChange={(value) => {
-                    const [price, popularity] = value.split('-').map(Number);
-                    setActionParams({...actionParams, price, popularity});
+                    const [priceStr, popularityStr, productId] = value.split('-');
+                    const price = Number(priceStr);
+                    const popularity = Number(popularityStr);
+                    setActionParams({...actionParams, price, popularity, productId});
                   }}
                   placeholder="商品を選択"
                   options={(() => {
@@ -942,7 +944,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                           const isResale = product.previousOwner !== undefined;
                           
                           availableProducts.push({
-                            value: `${price}-${popularity}`,
+                            value: `${price}-${popularity}-${product.id}`,
                             label: `${categoryIcon} ${categoryName} ${isResale ? '(転売品)' : ''} - ¥${price} (人気度${popularity})`
                           });
                         }
@@ -958,10 +960,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <ModernButton
                 onClick={() => handleAction('purchase', {
                   sellerId: actionParams.targetPlayerId,
+                  productId: actionParams.productId,
                   price: actionParams.price,
                   popularity: actionParams.popularity
                 })}
-                disabled={!actionParams.targetPlayerId || !actionParams.price}
+                disabled={!actionParams.targetPlayerId || !actionParams.price || !actionParams.productId}
                 variant="primary"
                 size="md"
               >
