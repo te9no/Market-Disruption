@@ -8,6 +8,7 @@ import PlayerMarketView from './PlayerMarketView';
 import AutomataMarketView from './AutomataMarketView';
 import PlayLog from './PlayLog';
 import TrendResultDialog from './TrendResultDialog';
+import VictoryDialog from './VictoryDialog';
 import PersonalMarket from './PersonalMarket';
 import Inventory from './Inventory';
 import DesignBoard from './DesignBoard';
@@ -21,6 +22,7 @@ const GameBoard: React.FC = () => {
   const [activeView, setActiveView] = useState<string>('game');
   const [trendResult, setTrendResult] = useState<any>(null);
   const [showTrendDialog, setShowTrendDialog] = useState(false);
+  const [showVictoryDialog, setShowVictoryDialog] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [bottomView, setBottomView] = useState<'design' | 'log'>('design');
@@ -39,7 +41,7 @@ const GameBoard: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Listen for game update events to catch trend research results
+  // Listen for game update events to catch trend research results and victory conditions
   useEffect(() => {
     if (!socket) return;
 
@@ -60,6 +62,14 @@ const GameBoard: React.FC = () => {
       socket.off('game-update', handleGameUpdate);
     };
   }, [socket]);
+
+  // Check for victory conditions when game state changes
+  useEffect(() => {
+    if (gameState?.state === 'finished' && gameState.winner) {
+      console.log('🏆 Game finished, showing victory dialog:', gameState.winner);
+      setShowVictoryDialog(true);
+    }
+  }, [gameState?.state, gameState?.winner]);
 
   const handleRefreshGameState = async () => {
     setRefreshing(true);
@@ -638,35 +648,13 @@ const GameBoard: React.FC = () => {
         </div>
       </div>
 
-      {/* Game Over Modal */}
-      {gameState.state === 'finished' && gameState.winner && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-center mb-4">🎉 ゲーム終了 🎉</h2>
-            <div className="text-center">
-              <p className="text-lg mb-2">勝者:</p>
-              <p className="text-2xl font-bold text-blue-600 mb-4">{gameState.winner.name}</p>
-              <div className="bg-gray-100 rounded p-4 mb-4">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="text-gray-600">最終資金:</span>
-                    <span className="font-medium ml-1">¥{gameState.winner.funds}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">最終威厳:</span>
-                    <span className="font-medium ml-1">{gameState.winner.prestige}</span>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => window.location.reload()}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg"
-              >
-                新しいゲームを開始
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Victory Dialog */}
+      {showVictoryDialog && gameState.winner && (
+        <VictoryDialog
+          winner={gameState.winner}
+          players={gameState.players}
+          onClose={() => setShowVictoryDialog(false)}
+        />
       )}
 
       {/* Trend Result Dialog */}

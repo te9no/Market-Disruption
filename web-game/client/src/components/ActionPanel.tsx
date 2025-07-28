@@ -21,6 +21,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const { sendGameAction } = useSocket();
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   // Debug logging
   console.log('🎯 ActionPanel player data:', {
@@ -38,9 +40,75 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
 
   const canPerformActions = isMyTurn && gamePhase === 'action' && player.actionPoints > 0 && !isProcessingAction && gameState.state !== 'finished';
 
+  // Clear messages after delay
+  React.useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
+
+  React.useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    console.error('❌ ActionPanel Error:', message);
+  };
+
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    console.log('✅ ActionPanel Success:', message);
+  };
+
   const handleAction = (actionType: string, params: any = {}) => {
     try {
       console.log('🎯 Executing action:', actionType, params);
+      setErrorMessage(null);
+      setSuccessMessage(null);
+
+      // Validate action prerequisites
+      if (!canPerformActions) {
+        showError('現在アクションを実行できません');
+        return;
+      }
+
+      // Validate AP requirements
+      const apCosts = {
+        'manufacture': 1, 'sell': 1, 'purchase': 1, 'review': 1, 'buyback': 1, 'buy_dignity': 1,
+        'design': 2, 'part_time_job': 2, 'promote_regulation': 2, 'trend_research': 2,
+        'day_labor': 3
+      };
+      const requiredAP = apCosts[actionType as keyof typeof apCosts] || 0;
+      if (player.actionPoints < requiredAP) {
+        showError(`アクションポイントが不足しています (必要: ${requiredAP}AP, 現在: ${player.actionPoints}AP)`);
+        return;
+      }
+
+      // Specific validations
+      if (actionType === 'manufacture' && (!player.designs || Object.keys(player.designs).length === 0)) {
+        showError('製造に必要な設計がありません');
+        return;
+      }
+
+      if (actionType === 'sell' && (!player.inventory || player.inventory.length === 0)) {
+        showError('販売する商品がありません');
+        return;
+      }
+
+      if (actionType === 'buy_dignity' && player.funds < 10) {
+        showError('威厳購入に必要な資金が不足しています (必要: 10資金)');
+        return;
+      }
+
+      if (actionType === 'day_labor' && player.funds > 100) {
+        showError('日雇い労働は資金100以下の場合のみ利用できます');
+        return;
+      }
       
       if (actionType === 'design') {
         // For design action, first show dice roll
@@ -49,6 +117,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         // For trend research, handle result display
         setIsProcessingAction(true);
         sendGameAction({ type: actionType, ...params });
+        showSuccess('トレンド調査を実行しました');
         
         // Note: We'll receive the trend result through game update events
         // The trend dialog will be shown via useSocket event handling
@@ -60,6 +129,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
       } else {
         setIsProcessingAction(true);
         sendGameAction({ type: actionType, ...params });
+        showSuccess(`${actionType}アクションを実行しました`);
         
         // Reset UI state after action
         setTimeout(() => {
@@ -72,7 +142,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
       console.error('❌ Action execution error:', error);
       setIsProcessingAction(false);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      alert(`アクション実行エラー: ${errorMessage}`);
+      showError(`アクション実行エラー: ${errorMessage}`);
     }
   };
 
@@ -1159,6 +1229,25 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         </div>
       </div>
 
+      {/* Error and Success Messages */}
+      {errorMessage && (
+        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-lg">
+          <div className="flex items-center">
+            <span className="text-xl mr-2">❌</span>
+            <span className="font-medium">{errorMessage}</span>
+          </div>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-400 text-green-700 rounded-lg">
+          <div className="flex items-center">
+            <span className="text-xl mr-2">✅</span>
+            <span className="font-medium">{successMessage}</span>
+          </div>
+        </div>
+      )}
+
       {showDiceSelection ? (
         renderDiceSelection()
       ) : showSlotSelection ? (
@@ -1177,7 +1266,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <div className="grid grid-cols-1 gap-2">
               <ModernButton
                 onClick={() => setSelectedAction('manufacture')}
-                disabled={!player.designs || Object.keys(player.designs).length === 0 || player.actionPoints < 1}
+                disabled={!canPerformActions || !player.designs || Object.keys(player.designs).length === 0 || player.actionPoints < 1}
                 variant="primary"
                 size="lg"
               className="action-card-button bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-blue-200"
@@ -1196,7 +1285,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               
               <ModernButton
                 onClick={() => setSelectedAction('sell')}
-                disabled={!player.inventory || player.inventory.length === 0 || player.actionPoints < 1}
+                disabled={!canPerformActions || !player.inventory || player.inventory.length === 0 || player.actionPoints < 1}
                 variant="primary"
                 size="lg"
               className="action-card-button bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border-green-200"
@@ -1215,7 +1304,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               
               <ModernButton
                 onClick={() => setSelectedAction('purchase')}
-                disabled={player.actionPoints < 1}
+                disabled={!canPerformActions || player.actionPoints < 1}
                 variant="primary"
                 icon="🛒"
                 fullWidth
@@ -1231,7 +1320,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               
               <ModernButton
                 onClick={() => setSelectedAction('review')}
-                disabled={player.actionPoints < 1}
+                disabled={!canPerformActions || player.actionPoints < 1}
                 variant="primary"
                 size="lg"
               className="action-card-button bg-gradient-to-r from-indigo-50 to-indigo-100 hover:from-indigo-100 hover:to-indigo-200 border-indigo-200"
@@ -1247,7 +1336,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               
               <ModernButton
                 onClick={() => setSelectedAction('buyback')}
-                disabled={Object.values(player.personalMarket).every(priceRow => 
+                disabled={!canPerformActions || Object.values(player.personalMarket).every(priceRow => 
                   Object.values(priceRow).every(product => product === null)
                 ) || player.actionPoints < 1}
                 variant="primary"
@@ -1265,7 +1354,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               
               <ModernButton
                 onClick={() => setSelectedAction('buy_dignity')}
-                disabled={player.actionPoints < 1 || player.funds < 10}
+                disabled={!canPerformActions || player.actionPoints < 1 || player.funds < 10}
                 variant="primary"
                 size="lg"
               className="action-card-button bg-gradient-to-r from-violet-50 to-violet-100 hover:from-violet-100 hover:to-violet-200 border-violet-200"
@@ -1294,7 +1383,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <div className="grid grid-cols-1 gap-2">
               <ModernButton
                 onClick={() => setSelectedAction('design')}
-                disabled={player.actionPoints < 2}
+                disabled={!canPerformActions || player.actionPoints < 2}
                 variant="primary"
                 size="lg"
               className="action-card-button bg-gradient-to-r from-cyan-50 to-cyan-100 hover:from-cyan-100 hover:to-cyan-200 border-cyan-200"
@@ -1310,7 +1399,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               
               <ModernButton
                 onClick={() => setSelectedAction('part_time_job')}
-                disabled={player.actionPoints < 2}
+                disabled={!canPerformActions || player.actionPoints < 2}
                 variant="primary"
                 size="lg"
               className="action-card-button bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 border-emerald-200"
@@ -1326,7 +1415,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               
               <ModernButton
                 onClick={() => setSelectedAction('promote_regulation')}
-                disabled={player.actionPoints < 2}
+                disabled={!canPerformActions || player.actionPoints < 2}
                 variant="primary"
                 size="lg"
               className="action-card-button bg-gradient-to-r from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border-red-200"
@@ -1342,7 +1431,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               
               <ModernButton
                 onClick={() => setSelectedAction('trend_research')}
-                disabled={player.actionPoints < 2}
+                disabled={!canPerformActions || player.actionPoints < 2}
                 variant="primary"
                 size="lg"
               className="action-card-button bg-gradient-to-r from-pink-50 to-pink-100 hover:from-pink-100 hover:to-pink-200 border-pink-200"
@@ -1367,7 +1456,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             
             <ModernButton
               onClick={() => setSelectedAction('day_labor')}
-              disabled={player.actionPoints < 3 || player.funds > 100}
+              disabled={!canPerformActions || player.actionPoints < 3 || player.funds > 100}
               variant="primary"
               size="lg"
               className="action-card-button bg-gradient-to-r from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 border-amber-200 w-full"

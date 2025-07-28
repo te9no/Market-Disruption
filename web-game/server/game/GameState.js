@@ -273,6 +273,9 @@ export class GameState {
         case 'purchase':
           result = this.actionPurchase(player, params);
           break;
+        case 'resale':
+          result = this.actionResale(player, params);
+          break;
         case 'review':
           result = this.actionReview(player, params);
           break;
@@ -718,17 +721,17 @@ export class GameState {
       throw new Error('Not enough action points');
     }
 
-    if (player.funds < 10) {
+    if (player.funds < 5) {
       throw new Error('Not enough funds to buy dignity');
     }
 
     player.spendActionPoints(1);
-    player.spendFunds(10);
+    player.spendFunds(5);
     player.modifyPrestige(1);
 
     return { 
       type: 'buy_dignity', 
-      cost: 10,
+      cost: 5,
       prestigeGained: 1,
       newPrestige: player.prestige,
       newFunds: player.funds
@@ -1053,10 +1056,7 @@ export class GameState {
   
   getPollutionPenalty(category) {
     const pollutionLevel = this.pollution[category];
-    if (pollutionLevel === 0) return 0;
-    if (pollutionLevel === 1) return 1;
-    if (pollutionLevel === 2) return 3;
-    if (pollutionLevel >= 3) return 5;
+    return Math.min(pollutionLevel, 4); // Linear penalty: 0,1,2,3,4
   }
   
   processAutomataPhase() {
@@ -1558,69 +1558,105 @@ export class GameState {
     return demandValues;
   }
 
-  // Enhanced resale system
-  actionResale(player, { productId, targetPrice }) {
-    if (!player.hasActionPoints(1)) {
-      throw new Error('Not enough action points');
+  // Enhanced resale system - direct purchase and resale
+  actionResale(player, { sellerId, productId, price, popularity }) {
+    if (!player.hasActionPoints(2)) {
+      throw new Error('Not enough action points (resale requires 2AP)');
     }
 
-    const productIndex = player.inventory.findIndex(p => p.id === productId);
-    if (productIndex === -1) {
-      throw new Error('Product not found in inventory');
-    }
-
-    const product = player.inventory[productIndex];
+    // Find seller (player or automata)
+    let seller;
+    let sellerMarket;
     
-    if (!product.previousOwner) {
-      throw new Error('Can only resale purchased products');
+    if (sellerId === 'manufacturer-automata') {
+      seller = this.manufacturerAutomata;
+      sellerMarket = this.manufacturerAutomata.personalMarket;
+    } else if (sellerId === 'resale-automata') {
+      seller = this.resaleAutomata;
+      sellerMarket = this.resaleAutomata.personalMarket;
+    } else {
+      seller = this.players.find(p => p.id === sellerId);
+      if (!seller) {
+        throw new Error('Seller not found');
+      }
+      sellerMarket = seller.personalMarket;
     }
 
-    // Calculate resale price with regulations
-    const basePrice = product.purchasePrice + 5 + player.getResaleBonus();
-    let maxResalePrice = basePrice;
+    // Find product
+    const product = sellerMarket[price]?.[popularity];
+    if (!product || product.id !== productId) {
+      throw new Error('Product not found');
+    }
 
+    // Check if player can afford
+    if (!player.canAfford(price)) {
+      throw new Error('Cannot afford product');
+    }
+
+    // Calculate resale price with bonus
+    const resaleBonus = player.getResaleBonus();
+    let resalePrice = price + resaleBonus;
+
+    // Apply regulation limits
     if (this.regulationLevel === 2) {
-      maxResalePrice = product.purchasePrice + 3;
+      resalePrice = Math.min(resalePrice, price + 3);
     } else if (this.regulationLevel === 3) {
-      maxResalePrice = product.purchasePrice + 1;
+      resalePrice = Math.min(resalePrice, price + 1);
     }
 
-    const finalPrice = Math.min(targetPrice || basePrice, maxResalePrice);
+    // Cap at 20
+    resalePrice = Math.min(resalePrice, 20);
 
-    // Prepare product for market (before removing from inventory)
-    const marketProduct = { ...product };
-    marketProduct.price = finalPrice;
-    
-    // Verify market slot is available before proceeding
-    const existingProduct = player.personalMarket[finalPrice] && player.personalMarket[finalPrice][marketProduct.popularity];
+    // Verify resale market slot is available before proceeding
+    const existingProduct = player.personalMarket[resalePrice] && player.personalMarket[resalePrice][product.popularity];
     if (existingProduct !== null) {
-      console.log(`🚫 Resale market slot occupied at price ${finalPrice}, popularity ${marketProduct.popularity}:`, existingProduct);
-      throw new Error(`Market slot already occupied at price ${finalPrice}, popularity ${marketProduct.popularity}`);
+      throw new Error(`Resale market slot already occupied at price ${resalePrice}, popularity ${product.popularity}`);
     }
 
-    // Only spend action points and remove from inventory after all checks pass
-    player.spendActionPoints(1);
-    player.inventory.splice(productIndex, 1);
+    // Execute purchase and resale
+    player.spendActionPoints(2);
+    player.spendFunds(price);
 
-    // Add to personal market (should not fail now)
-    player.addProductToMarket(marketProduct, finalPrice);
+    // Remove product from seller's market
+    if (sellerId === 'manufacturer-automata' || sellerId === 'resale-automata') {
+      delete sellerMarket[price][popularity];
+      seller.funds += price;
+    } else {
+      seller.removeProductFromMarket(price, popularity);
+      seller.gainFunds(price);
+    }
 
-    // Update resale history and prestige
+    // Create resale product with original dice value preserved
+    const resaleProduct = {
+      ...product,
+      price: resalePrice,
+      previousOwner: sellerId,
+      originalPrice: price,
+      ownerId: player.id
+    };
+
+    // Add to buyer's market immediately
+    player.addProductToMarket(resaleProduct, resalePrice);
+
+    // Update buyer's resale history and prestige (after placing in market as per rules)
     player.incrementResaleHistory();
     player.modifyPrestige(-1);
 
     // Add pollution marker
-    this.pollution[marketProduct.category]++;
+    this.pollution[resaleProduct.category]++;
 
-    this.addToPlayLog('action', `${marketProduct.category}を¥${finalPrice}で転売しました`, player.id, player.name);
+    this.addToPlayLog('action', `${resaleProduct.category}を¥${price}で購入し¥${resalePrice}で転売しました`, player.id, player.name);
 
     return { 
       type: 'resale', 
-      product: marketProduct, 
-      finalPrice, 
-      basePrice, 
-      maxResalePrice,
-      newResaleHistory: player.resaleHistory 
+      product: resaleProduct, 
+      purchasePrice: price,
+      resalePrice,
+      resaleBonus,
+      sellerId,
+      newResaleHistory: player.resaleHistory,
+      buyerFunds: player.funds,
+      sellerFunds: seller.funds
     };
   }
   
