@@ -236,6 +236,7 @@ const GameBoard: React.FC = () => {
             currentPlayerIndex={gameState.currentPlayerIndex}
             players={gameState.players}
             pollution={gameState.pollution}
+            globalPollution={gameState.globalPollution}
             regulationLevel={gameState.regulationLevel}
           />
           <AutomataLog 

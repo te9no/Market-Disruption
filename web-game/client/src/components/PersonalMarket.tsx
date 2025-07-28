@@ -64,7 +64,7 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({
       );
     }
 
-    const isResale = product.previousOwner !== undefined;
+    const isResale = product.isResale === true;
     const isOtherPlayer = canInteract && playerId !== currentPlayerId;
     const canPurchaseOrReview = isOtherPlayer && isMyTurn;
     
@@ -73,8 +73,8 @@ const PersonalMarket: React.FC<PersonalMarketProps> = ({
         <div className="text-xl">{getCategoryEmoji(product.category)}</div>
         <div className="text-xs font-bold">💎{product.value}</div>
         {isResale && (
-          <div className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-            🔄
+          <div className="absolute -top-1 -right-1 bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+            🥤
           </div>
         )}
         

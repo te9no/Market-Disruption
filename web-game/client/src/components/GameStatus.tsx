@@ -6,13 +6,14 @@ interface GameStatusProps {
   phase: 'action' | 'automata' | 'market';
   currentPlayerIndex: number;
   players: Player[];
-  pollution: {
+  pollution?: {
     'game-console': number;
     'diy-gadget': number;
     'figure': number;
     'accessory': number;
     'toy': number;
   };
+  globalPollution?: number;
   regulationLevel: number;
 }
 
@@ -52,13 +53,14 @@ const GameStatus: React.FC<GameStatusProps> = ({
   currentPlayerIndex, 
   players, 
   pollution, 
+  globalPollution,
   regulationLevel 
 }) => {
   const currentPlayer = players[currentPlayerIndex];
   const regulation = getRegulationStatus(regulationLevel);
 
   // Calculate overall market health
-  const totalPollution = Object.values(pollution).reduce((sum, level) => sum + level, 0);
+  const totalPollution = globalPollution || (pollution ? Object.values(pollution).reduce((sum, level) => sum + level, 0) : 0);
   const marketHealth = Math.max(0, 100 - (totalPollution * 4));
 
   const getPhaseIcon = (phase: string) => {

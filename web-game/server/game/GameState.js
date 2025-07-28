@@ -16,6 +16,9 @@ export class GameState {
       'toy': 0
     };
     
+    // Global pollution level (for new rule system)
+    this.globalPollution = 0;
+    
     // Regulation progress (0-3: no regulation, public comment, consideration, active)
     this.regulationLevel = 0;
     
@@ -410,13 +413,9 @@ export class GameState {
       throw new Error(`Price exceeds limit (max: ${maxPrice})`);
     }
     
-    // Apply pollution penalty to regular sales
-    const pollutionPenalty = this.getPollutionPenalty(product.category);
+    // Apply pollution penalty to regular sales (not resales)
+    const pollutionPenalty = this.getPollutionPenalty();
     const adjustedPrice = Math.max(1, price - pollutionPenalty);
-    
-    if (this.pollution[product.category] >= 5) {
-      throw new Error('Category too polluted for regular sales');
-    }
     
     // Prepare product for market (before removing from inventory)
     const marketProduct = { ...product };
@@ -1075,9 +1074,13 @@ export class GameState {
     return false;
   }
   
-  getPollutionPenalty(category) {
-    const pollutionLevel = this.pollution[category];
-    return Math.min(pollutionLevel, 4); // Linear penalty: 0,1,2,3,4
+  getPollutionPenalty() {
+    const globalPollution = this.globalPollution || 0;
+    if (globalPollution <= 2) return 0;
+    if (globalPollution <= 5) return 1;
+    if (globalPollution <= 8) return 2;
+    if (globalPollution <= 11) return 3;
+    return 4;
   }
   
   processAutomataPhase() {
@@ -1273,20 +1276,30 @@ export class GameState {
     // Process purchased products for resale
     purchasedProducts.forEach(product => {
       const resalePrice = product.price + 5;
-      product.previousOwner = product.ownerId;
-      product.ownerId = 'resale-automata';
-      product.purchasePrice = product.price;
-      product.price = resalePrice;
+      
+      // Create new resale product with automata's "own dice" (same concept as player resale)
+      const resaleProduct = {
+        id: `resale-automata-${Date.now()}`,
+        cost: product.cost,
+        value: product.value,
+        category: product.category,
+        price: resalePrice,
+        popularity: product.popularity,
+        isResale: true,
+        originalOwner: product.ownerId,
+        reseller: 'resale-automata',
+        ownerId: 'resale-automata'
+      };
       
       // Add to resale automata market
-      console.log(`💰 Resale automata putting product on market: ${product.category} at price ${resalePrice}`);
+      console.log(`💰 Resale automata putting product on market: ${resaleProduct.category} at price ${resalePrice}`);
       if (!this.resaleAutomata.personalMarket[resalePrice]) {
         this.resaleAutomata.personalMarket[resalePrice] = {};
       }
-      this.resaleAutomata.personalMarket[resalePrice][product.popularity] = product;
+      this.resaleAutomata.personalMarket[resalePrice][resaleProduct.popularity] = resaleProduct;
       
-      // Add pollution
-      this.pollution[product.category]++;
+      // Add global pollution (new rule system)
+      this.globalPollution = (this.globalPollution || 0) + 1;
     });
     
     console.log(`Resale automata: ${action}, purchased ${purchasedProducts.length} products`);
@@ -1594,6 +1607,10 @@ export class GameState {
     if (!player.hasActionPoints(2)) {
       throw new Error('Not enough action points (resale requires 2AP)');
     }
+    
+    if (player.prestige < 1) {
+      throw new Error('Not enough prestige (resale requires 1 prestige)');
+    }
 
     // Find seller (player or automata)
     let seller;
@@ -1646,6 +1663,7 @@ export class GameState {
 
     // Execute purchase and resale
     player.spendActionPoints(2);
+    player.modifyPrestige(-1); // Spend 1 prestige for resale action
     player.spendFunds(price);
 
     // Remove product from seller's market
@@ -1657,24 +1675,29 @@ export class GameState {
       seller.gainFunds(price);
     }
 
-    // Create resale product with original dice value preserved
+    // Create resale product with buyer's own dice (same value, buyer's color)
+    // In web version, we use buyer's ID as the product owner
     const resaleProduct = {
-      ...product,
+      id: `resale-${player.id}-${Date.now()}`,
+      cost: product.cost, // Keep original dice value
+      value: product.value, // Keep original dice value for display
+      category: product.category,
       price: resalePrice,
-      previousOwner: sellerId,
-      originalPrice: price,
-      ownerId: player.id
+      popularity: product.popularity,
+      isResale: true,
+      originalOwner: product.ownerId || sellerId,
+      reseller: player.id,
+      ownerId: player.id // New owner is the reseller
     };
 
     // Add to buyer's market immediately
     player.addProductToMarket(resaleProduct, resalePrice);
 
-    // Update buyer's resale history and prestige (after placing in market as per rules)
+    // Update buyer's resale history (no additional prestige penalty)
     player.incrementResaleHistory();
-    player.modifyPrestige(-1);
 
-    // Add pollution marker
-    this.pollution[resaleProduct.category]++;
+    // Add pollution marker (global pollution instead of category-based)
+    this.globalPollution = (this.globalPollution || 0) + 1;
 
     this.addToPlayLog('action', `${resaleProduct.category}を¥${price}で購入し¥${resalePrice}で転売しました`, player.id, player.name);
 

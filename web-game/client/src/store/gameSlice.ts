@@ -50,6 +50,7 @@ export interface GameState {
     'accessory': number;
     'toy': number;
   };
+  globalPollution?: number;
   regulationLevel: number;
   manufacturerAutomata: any;
   resaleAutomata: any;
