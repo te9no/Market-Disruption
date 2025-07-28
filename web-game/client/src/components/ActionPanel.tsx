@@ -920,21 +920,24 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     Object.entries(targetMarket).forEach(([price, priceRow]) => {
                       Object.entries(priceRow || {}).forEach(([popularity, product]) => {
                         if (product) {
-                          const categoryIcon = {
+                          const categoryIcons = {
                             'game-console': '🎮',
                             'diy-gadget': '🔧',
                             'figure': '🎭',
                             'accessory': '💍',
                             'toy': '🧸'
-                          }[product.category] || '📦';
+                          } as const;
                           
-                          const categoryName = {
+                          const categoryNames = {
                             'game-console': 'ゲーム機',
                             'diy-gadget': '自作ガジェット',
-                            'figure': 'フィギュア',
+                            'figure': 'フィギュア', 
                             'accessory': 'アクセサリー',
                             'toy': 'おもちゃ'
-                          }[product.category] || product.category;
+                          } as const;
+                          
+                          const categoryIcon = categoryIcons[product.category as keyof typeof categoryIcons] || '📦';
+                          const categoryName = categoryNames[product.category as keyof typeof categoryNames] || product.category;
                           
                           const isResale = product.previousOwner !== undefined;
                           
