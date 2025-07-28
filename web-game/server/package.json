@@ -7,7 +7,10 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "build": "echo 'No build step required'"
+    "build": "echo 'No build step required'",
+    "test": "NODE_ENV=test node --test tests/**/*.test.js",
+    "test:watch": "NODE_ENV=test node --test --watch tests/**/*.test.js",
+    "test:coverage": "NODE_ENV=test c8 node --test tests/**/*.test.js"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -20,7 +23,9 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "c8": "^8.0.1",
+    "socket.io-client": "^4.7.4"
   },
   "keywords": ["board-game", "socket.io", "express"],
   "author": "",
