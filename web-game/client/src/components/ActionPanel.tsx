@@ -963,7 +963,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         const categoryIcon = categoryIcons[product.category as keyof typeof categoryIcons] || '📦';
                         const categoryName = categoryNames[product.category as keyof typeof categoryNames] || product.category;
                         
-                        const isResale = product.previousOwner !== undefined;
+                        const isResale = product.isResale === true;
                         
                         availableProducts.push({
                           value: `${price}-${popularity}-${product.id}`,
@@ -1127,7 +1127,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         const categoryIcon = categoryIcons[product.category as keyof typeof categoryIcons] || '📦';
                         const categoryName = categoryNames[product.category as keyof typeof categoryNames] || product.category;
                         
-                        const isResale = product.previousOwner !== undefined;
+                        const isResale = product.isResale === true;
                         
                         // Calculate potential profit for display
                         const resaleBonus = 5 + (player.resaleHistory <= 1 ? 0 : 
@@ -1170,12 +1170,21 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             )}
             <div className="flex space-x-2">
               <ModernButton
-                onClick={() => handleAction('resale', {
-                  sellerId: actionParams.targetPlayerId,
-                  productId: actionParams.productId,
-                  price: actionParams.price,
-                  popularity: actionParams.popularity
-                })}
+                onClick={() => {
+                  console.log('🔄 Resale action debug:', {
+                    sellerId: actionParams.targetPlayerId,
+                    productId: actionParams.productId,
+                    price: actionParams.price,
+                    popularity: actionParams.popularity,
+                    selectedProductKey: actionParams.selectedProductKey
+                  });
+                  handleAction('resale', {
+                    sellerId: actionParams.targetPlayerId,
+                    productId: actionParams.productId,
+                    price: actionParams.price,
+                    popularity: actionParams.popularity
+                  });
+                }}
                 disabled={!actionParams.targetPlayerId || !actionParams.price || !actionParams.productId || player.funds < actionParams.price}
                 variant="primary"
                 size="md"
