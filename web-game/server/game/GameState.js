@@ -1581,6 +1581,16 @@ export class GameState {
 
   // Enhanced resale system - direct purchase and resale
   actionResale(player, { sellerId, productId, price, popularity }) {
+    console.log('🔄 Resale action debug:', {
+      buyerId: player.id,
+      buyerName: player.name,
+      sellerId,
+      productId,
+      price,
+      popularity,
+      availablePlayers: this.players.map(p => ({ id: p.id, name: p.name }))
+    });
+    
     if (!player.hasActionPoints(2)) {
       throw new Error('Not enough action points (resale requires 2AP)');
     }

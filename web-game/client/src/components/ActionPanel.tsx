@@ -80,7 +80,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
       // Validate AP requirements
       const apCosts = {
         'manufacture': 1, 'sell': 1, 'purchase': 1, 'review': 1, 'buyback': 1, 'buy_dignity': 1,
-        'design': 2, 'part_time_job': 2, 'promote_regulation': 2, 'trend_research': 2,
+        'design': 2, 'part_time_job': 2, 'promote_regulation': 2, 'trend_research': 2, 'resale': 2,
         'day_labor': 3
       };
       const requiredAP = apCosts[actionType as keyof typeof apCosts] || 0;
@@ -1004,6 +1004,184 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           </div>
         );
 
+      case 'resale':
+        return (
+          <div className="space-y-3">
+            <h4 className="font-bold">転売アクション (2AP)</h4>
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+              <div className="text-sm text-orange-800">
+                他のプレイヤーやオートマから商品を購入し、即座に転売価格で自分のマーケットに出品します。
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">対象プレイヤー:</label>
+              <SimpleSelect
+                value={actionParams.targetPlayerId || ''}
+                onChange={(value) => setActionParams({...actionParams, targetPlayerId: value, price: undefined, popularity: undefined, productId: undefined})}
+                placeholder="対象プレイヤーを選択"
+                options={[
+                  // 他のプレイヤー
+                  ...gameState.players
+                    .filter(p => p.id !== player.id)
+                    .map((p) => ({
+                      value: p.id,
+                      label: p.name
+                    })),
+                  // オートマ
+                  {
+                    value: 'manufacturer-automata',
+                    label: '🤖 メーカーオートマ'
+                  },
+                  {
+                    value: 'resale-automata', 
+                    label: '🔄 転売オートマ'
+                  }
+                ]}
+              />
+            </div>
+            {actionParams.targetPlayerId && (
+              <div>
+                <label className="block text-sm font-medium mb-1">商品 (価格-人気度):</label>
+                <SimpleSelect
+                  value={actionParams.selectedProductKey || ''}
+                  onChange={(value) => {
+                    if (!value) {
+                      setActionParams({...actionParams, price: undefined, popularity: undefined, productId: undefined, selectedProductKey: undefined});
+                      return;
+                    }
+                    
+                    // Find the actual product from the market
+                    let targetMarket = null;
+                    if (actionParams.targetPlayerId === 'manufacturer-automata') {
+                      targetMarket = gameState.manufacturerAutomata?.personalMarket;
+                    } else if (actionParams.targetPlayerId === 'resale-automata') {
+                      targetMarket = gameState.resaleAutomata?.personalMarket;
+                    } else {
+                      const targetPlayer = gameState.players.find(p => p.id === actionParams.targetPlayerId);
+                      targetMarket = targetPlayer?.personalMarket;
+                    }
+                    
+                    if (targetMarket) {
+                      const parts = value.split('-');
+                      const price = Number(parts[0]);
+                      const popularity = Number(parts[1]);
+                      const productId = parts.slice(2).join('-');
+                      
+                      const product = targetMarket[price]?.[popularity];
+                      if (product && product.id === productId) {
+                        // Calculate expected resale price
+                        const resaleBonus = 5 + (player.resaleHistory <= 1 ? 0 : 
+                                            player.resaleHistory <= 4 ? 3 : 
+                                            player.resaleHistory <= 7 ? 6 : 10);
+                        let expectedResalePrice = price + resaleBonus;
+                        if (gameState.regulationLevel === 2) {
+                          expectedResalePrice = Math.min(expectedResalePrice, price + 3);
+                        } else if (gameState.regulationLevel === 3) {
+                          expectedResalePrice = Math.min(expectedResalePrice, price + 1);
+                        }
+                        expectedResalePrice = Math.min(expectedResalePrice, 20);
+                        
+                        setActionParams({
+                          ...actionParams, 
+                          price, 
+                          popularity, 
+                          productId, 
+                          selectedProductKey: value,
+                          expectedResalePrice
+                        });
+                      }
+                    }
+                  }}
+                  placeholder="商品を選択"
+                  options={(() => {
+                    let targetMarket = null;
+                    
+                    if (actionParams.targetPlayerId === 'manufacturer-automata') {
+                      targetMarket = gameState.manufacturerAutomata?.personalMarket;
+                    } else if (actionParams.targetPlayerId === 'resale-automata') {
+                      targetMarket = gameState.resaleAutomata?.personalMarket;
+                    } else {
+                      const targetPlayer = gameState.players.find(p => p.id === actionParams.targetPlayerId);
+                      targetMarket = targetPlayer?.personalMarket;
+                    }
+                    
+                    if (!targetMarket) return [];
+                    
+                    const availableProducts: Array<{value: string; label: string}> = [];
+                    Object.entries(targetMarket).forEach(([price, priceRow]) => {
+                      Object.entries(priceRow || {}).forEach(([popularity, product]) => {
+                        if (product) {
+                          const categoryIcons = {
+                            'game-console': '🎮',
+                            'diy-gadget': '🔧',
+                            'figure': '🎭',
+                            'accessory': '💍',
+                            'toy': '🧸'
+                          } as const;
+                          
+                          const categoryNames = {
+                            'game-console': 'ゲーム機',
+                            'diy-gadget': '自作ガジェット',
+                            'figure': 'フィギュア', 
+                            'accessory': 'アクセサリー',
+                            'toy': 'おもちゃ'
+                          } as const;
+                          
+                          const categoryIcon = categoryIcons[product.category as keyof typeof categoryIcons] || '📦';
+                          const categoryName = categoryNames[product.category as keyof typeof categoryNames] || product.category;
+                          
+                          const isResale = product.previousOwner !== undefined;
+                          
+                          availableProducts.push({
+                            value: `${price}-${popularity}-${product.id}`,
+                            label: `${categoryIcon} ${categoryName} ${isResale ? '(転売品)' : ''} - ¥${price} (人気度${popularity})`
+                          });
+                        }
+                      });
+                    });
+                    return availableProducts;
+                  })()}
+                  emptyMessage="対象の商品がありません"
+                />
+              </div>
+            )}
+            {actionParams.expectedResalePrice && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <div className="text-sm">
+                  <div><strong>購入価格:</strong> ¥{actionParams.price}</div>
+                  <div><strong>予想転売価格:</strong> ¥{actionParams.expectedResalePrice}</div>
+                  <div><strong>予想利益:</strong> ¥{actionParams.expectedResalePrice - actionParams.price}</div>
+                  {gameState.regulationLevel >= 2 && (
+                    <div className="text-red-600 mt-1 text-xs">⚠️ 規制により価格制限あり</div>
+                  )}
+                </div>
+              </div>
+            )}
+            <div className="flex space-x-2">
+              <ModernButton
+                onClick={() => handleAction('resale', {
+                  sellerId: actionParams.targetPlayerId,
+                  productId: actionParams.productId,
+                  price: actionParams.price,
+                  popularity: actionParams.popularity
+                })}
+                disabled={!actionParams.targetPlayerId || !actionParams.price || !actionParams.productId || player.funds < actionParams.price}
+                variant="primary"
+                size="md"
+              >
+                転売実行
+              </ModernButton>
+              <ModernButton
+                onClick={() => setSelectedAction(null)}
+                variant="secondary"
+                size="md"
+              >
+                キャンセル
+              </ModernButton>
+            </div>
+          </div>
+        );
+
       case 'promote_regulation':
         return (
           <div className="space-y-3">
@@ -1342,6 +1520,25 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   <div style={{ fontWeight: '600', marginBottom: '2px' }}>購入</div>
                   <div style={{ fontSize: '12px', opacity: 0.8 }}>
                     他プレイヤーの商品を購入
+                  </div>
+                </div>
+              </ModernButton>
+              
+              <ModernButton
+                onClick={() => setSelectedAction('resale')}
+                disabled={!canPerformActions || player.actionPoints < 2}
+                variant="primary"
+                size="lg"
+                className="action-card-button bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 border-orange-200"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">🔄</span>
+                  <div className="text-left">
+                    <div className="font-medium text-orange-900">転売</div>
+                    <div className="text-xs text-orange-600">購入即転売で利益獲得</div>
+                    {player.actionPoints < 2 && 
+                      <div className="text-xs text-red-500">⚠️ 2AP必要</div>
+                    }
                   </div>
                 </div>
               </ModernButton>
