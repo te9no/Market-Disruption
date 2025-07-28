@@ -148,20 +148,16 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
 
   const handleDesignAction = (params: any) => {
     try {
-      // Simulate dice roll (3 dice)
-      const categories = ['game-console', 'diy-gadget', 'figure', 'accessory', 'toy'];
+      // Simulate dice roll (3 dice) - no categories, just values
       const dice1 = { 
-        category: categories[Math.floor(Math.random() * categories.length)],
         value: Math.floor(Math.random() * 6) + 1,
         cost: 0
       };
       const dice2 = { 
-        category: categories[Math.floor(Math.random() * categories.length)],
         value: Math.floor(Math.random() * 6) + 1,
         cost: 0
       };
       const dice3 = { 
-        category: categories[Math.floor(Math.random() * categories.length)],
         value: Math.floor(Math.random() * 6) + 1,
         cost: 0
       };
@@ -173,7 +169,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
       dice3.cost = costMap[dice3.value as keyof typeof costMap] || dice3.value;
 
       const diceResults = [dice1, dice2, dice3];
-      if (diceResults.some(dice => !dice.category || !dice.value || !dice.cost)) {
+      if (diceResults.some(dice => !dice.value || !dice.cost)) {
         throw new Error('ダイス生成に失敗しました');
       }
 
@@ -250,8 +246,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 <div className="text-4xl mb-2">🎲</div>
                 <div className="font-bold text-lg mb-1">ダイス {index + 1}</div>
                 <div className="text-sm space-y-1">
-                  <div><span className="font-medium">カテゴリー:</span> {dice.category}</div>
-                  <div><span className="font-medium">価値:</span> {dice.value}</div>
+                  <div><span className="font-medium">値:</span> {dice.value}</div>
                   <div><span className="font-medium">コスト:</span> {dice.cost}</div>
                 </div>
                 <ModernButton 
@@ -296,8 +291,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         <div className="bg-blue-100 p-4 rounded-lg">
           <h4 className="font-bold text-lg mb-2">選択されたダイス</h4>
           <div className="text-sm space-y-1">
-            <div><span className="font-medium">カテゴリー:</span> {selectedDice.category}</div>
-            <div><span className="font-medium">価値:</span> {selectedDice.value}</div>
+            <div><span className="font-medium">値:</span> {selectedDice.value}</div>
             <div><span className="font-medium">コスト:</span> {selectedDice.cost}</div>
           </div>
         </div>
@@ -375,26 +369,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         
         const designOptions = Object.entries(player.designs || {}).map(([slot, design]) => {
           console.log(`🔍 Processing slot ${slot}:`, design);
-          const categoryName = {
-            'game-console': 'ゲーム機',
-            'diy-gadget': '自作ガジェット', 
-            'figure': 'フィギュア',
-            'accessory': 'アクセサリー',
-            'toy': 'おもちゃ'
-          }[design?.category] || design?.category || 'unknown';
-          
-          const categoryIcon = {
-            'game-console': '🎮',
-            'diy-gadget': '🔧',
-            'figure': '🎭',
-            'accessory': '💍', 
-            'toy': '🧸'
-          }[design?.category] || '📦';
           
           return {
             value: slot,
-            label: `${categoryIcon} スロット${slot}: ${categoryName}`,
-            description: `価値${design?.value || 0} / コスト${design?.cost || 0} / 人気度1`
+            label: `🎲 スロット${slot}: 設計`,
+            description: `値${design?.value || 0} / コスト${design?.cost || 0} / 人気度1`
           };
         });
         console.log('🔍 Final design options for ModernButtonGroup:', designOptions);
@@ -458,28 +437,12 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
 
       case 'sell':
         const inventoryOptions = (player.inventory || []).map((product) => {
-          const categoryName = {
-            'game-console': 'ゲーム機',
-            'diy-gadget': '自作ガジェット', 
-            'figure': 'フィギュア',
-            'accessory': 'アクセサリー',
-            'toy': 'おもちゃ'
-          }[product.category] || product.category || '不明';
-          
-          const categoryIcon = {
-            'game-console': '🎮',
-            'diy-gadget': '🔧',
-            'figure': '🎭',
-            'accessory': '💍', 
-            'toy': '🧸'
-          }[product.category] || '📦';
-          
           const isResale = product.previousOwner !== undefined;
           
           return {
             value: product.id,
-            label: `${categoryIcon} ${categoryName} ${isResale ? '(転売品)' : ''}`,
-            description: `価値${product.value || 0} / コスト${product.cost || 0} / 人気度${product.popularity || 1}`
+            label: `🎲 商品 ${isResale ? '(転売品)' : ''}`,
+            description: `値${product.value || 0} / コスト${product.cost || 0} / 人気度${product.popularity || 1}`
           };
         });
         
@@ -626,17 +589,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           Object.entries(targetPlayer.personalMarket || {}).forEach(([price, popularityMap]) => {
             Object.entries(popularityMap).forEach(([popularity, product]) => {
               if (product) {
-                const categoryName = {
-                  'game-console': 'ゲーム機',
-                  'diy-gadget': '自作ガジェット', 
-                  'figure': 'フィギュア',
-                  'accessory': 'アクセサリー',
-                  'toy': 'おもちゃ'
-                }[product.category] || product.category;
-                
                 products.push({
                   value: `${price}-${popularity}`,
-                  label: `${categoryName} (価格${price}、人気度${popularity})`
+                  label: `商品(値${product.value}) (価格${price}、人気度${popularity})`
                 });
               }
             });
@@ -766,7 +721,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     if (product) {
                       return {
                         value: `${price}-${popularity}`,
-                        label: `${product.category} (価格${price}、人気度${popularity})`
+                        label: `商品(値${product.value}) (価格${price}、人気度${popularity})`
                       };
                     }
                     return null;
@@ -777,8 +732,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             {actionParams.productInfo && (
               <div className="bg-gray-100 p-3 rounded">
                 <div className="text-sm">
-                  <div><strong>カテゴリー:</strong> {actionParams.productInfo.category}</div>
-                  <div><strong>価値:</strong> {actionParams.productInfo.value}</div>
+                  <div><strong>値:</strong> {actionParams.productInfo.value}</div>
                   <div><strong>コスト:</strong> {actionParams.productInfo.cost}</div>
                   <div><strong>現在価格:</strong> {actionParams.price}</div>
                 </div>
@@ -953,30 +907,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   Object.entries(targetMarket).forEach(([price, priceRow]) => {
                     Object.entries(priceRow || {}).forEach(([popularity, product]) => {
                       if (product) {
-                        const categoryIcons = {
-                          'game-console': '🎮',
-                          'diy-gadget': '🔧',
-                          'figure': '🎭',
-                          'accessory': '💍',
-                          'toy': '🧸'
-                        } as const;
-                        
-                        const categoryNames = {
-                          'game-console': 'ゲーム機',
-                          'diy-gadget': '自作ガジェット',
-                          'figure': 'フィギュア', 
-                          'accessory': 'アクセサリー',
-                          'toy': 'おもちゃ'
-                        } as const;
-                        
-                        const categoryIcon = categoryIcons[product.category as keyof typeof categoryIcons] || '📦';
-                        const categoryName = categoryNames[product.category as keyof typeof categoryNames] || product.category;
-                        
                         const isResale = product.isResale === true;
                         
                         availableProducts.push({
                           value: `${price}-${popularity}-${product.id}`,
-                          label: `${categoryIcon} ${categoryName} ${isResale ? '(転売品)' : ''}`,
+                          label: `🎲 商品(値${product.value}) ${isResale ? '(転売品)' : ''}`,
                           description: `¥${price} / 人気度${popularity}`
                         });
                       }
@@ -1117,25 +1052,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   Object.entries(targetMarket).forEach(([price, priceRow]) => {
                     Object.entries(priceRow || {}).forEach(([popularity, product]) => {
                       if (product) {
-                        const categoryIcons = {
-                          'game-console': '🎮',
-                          'diy-gadget': '🔧',
-                          'figure': '🎭',
-                          'accessory': '💍',
-                          'toy': '🧸'
-                        } as const;
-                        
-                        const categoryNames = {
-                          'game-console': 'ゲーム機',
-                          'diy-gadget': '自作ガジェット',
-                          'figure': 'フィギュア', 
-                          'accessory': 'アクセサリー',
-                          'toy': 'おもちゃ'
-                        } as const;
-                        
-                        const categoryIcon = categoryIcons[product.category as keyof typeof categoryIcons] || '📦';
-                        const categoryName = categoryNames[product.category as keyof typeof categoryNames] || product.category;
-                        
                         const isResale = product.isResale === true;
                         
                         // Calculate potential profit for display
@@ -1153,7 +1069,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         
                         availableProducts.push({
                           value: `${price}-${popularity}-${product.id}`,
-                          label: `${categoryIcon} ${categoryName} ${isResale ? '(転売品)' : ''}`,
+                          label: `🎲 商品(値${product.value}) ${isResale ? '(転売品)' : ''}`,
                           description: `¥${price} → ¥${expectedResalePrice} (利益+${profit})`
                         });
                       }

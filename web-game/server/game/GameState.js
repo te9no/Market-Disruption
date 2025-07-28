@@ -35,14 +35,8 @@ export class GameState {
       pauseRounds: 0
     };
     
-    // Dice pools
-    this.categoryDice = {
-      'game-console': [1, 2, 3, 4, 5, 6],
-      'diy-gadget': [1, 2, 3, 4, 5, 6],
-      'figure': [1, 2, 3, 4, 5, 6],
-      'accessory': [1, 2, 3, 4, 5, 6],
-      'toy': [1, 2, 3, 4, 5, 6]
-    };
+    // Dice pool - no categories, just values
+    this.dicePool = [1, 2, 3, 4, 5, 6];
     
     // Trend effects that are currently active
     this.activeTrends = [];
@@ -156,8 +150,6 @@ export class GameState {
   }
   
   rollRandomDesign() {
-    const categories = Object.keys(this.categoryDice);
-    const category = categories[Math.floor(Math.random() * categories.length)];
     const value = Math.floor(Math.random() * 6) + 1;
     
     // Convert value to cost (as per rules)
@@ -165,10 +157,9 @@ export class GameState {
     const cost = costMap[value] || value;
     
     const design = {
-      category,
       value,
       cost,
-      id: `${category}-${value}-${Date.now()}`
+      id: `design-${value}-${Date.now()}`
     };
     
     console.log(`🎲 Rolled design:`, design);
@@ -372,7 +363,6 @@ export class GameState {
     // Create product
     const product = {
       id: `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      category: design.category,
       value: design.value,
       cost: design.cost,
       popularity: 1,
@@ -387,7 +377,7 @@ export class GameState {
     console.log(`🏭 Player inventory after:`, player.inventory.length);
     console.log(`📦 Full inventory:`, player.inventory);
     
-    this.addToPlayLog('action', `${design.category}を製造しました`, player.id, player.name);
+    this.addToPlayLog('action', `商品(値${design.value})を製造しました`, player.id, player.name);
     
     return { type: 'manufacture', product, designSlot };
   }
@@ -436,7 +426,7 @@ export class GameState {
     // Add to personal market (should not fail now)
     player.addProductToMarket(marketProduct, adjustedPrice);
     
-    this.addToPlayLog('action', `${marketProduct.category}を¥${adjustedPrice}で出品しました`, player.id, player.name);
+    this.addToPlayLog('action', `商品(値${marketProduct.value})を¥${adjustedPrice}で出品しました`, player.id, player.name);
     
     return { type: 'sell', product: marketProduct, originalPrice: price, adjustedPrice };
   }
@@ -721,17 +711,17 @@ export class GameState {
       throw new Error('Not enough action points');
     }
 
-    if (player.funds < 10) {
+    if (player.funds < 5) {
       throw new Error('Not enough funds to buy dignity');
     }
 
     player.spendActionPoints(1);
-    player.spendFunds(10);
+    player.spendFunds(5);
     player.modifyPrestige(1);
 
     return { 
       type: 'buy_dignity', 
-      cost: 10,
+      cost: 5,
       prestigeGained: 1,
       newPrestige: player.prestige,
       newFunds: player.funds
@@ -1127,13 +1117,13 @@ export class GameState {
       
       switch (manufacturerResult.action) {
         case 'high_cost_manufacture':
-          actionText = `高コスト商品製造: ${manufacturerResult.design.category}(コスト${manufacturerResult.design.cost})を¥${manufacturerResult.price}で出品`;
+          actionText = `高コスト商品製造: 商品(値${manufacturerResult.design.value},コスト${manufacturerResult.design.cost})を¥${manufacturerResult.price}で出品`;
           break;
         case 'medium_cost_manufacture':
-          actionText = `中コスト商品製造: ${manufacturerResult.design.category}(コスト${manufacturerResult.design.cost})を¥${manufacturerResult.price}で出品`;
+          actionText = `中コスト商品製造: 商品(値${manufacturerResult.design.value},コスト${manufacturerResult.design.cost})を¥${manufacturerResult.price}で出品`;
           break;
         case 'low_cost_manufacture':
-          actionText = `低コスト商品製造: ${manufacturerResult.design.category}(コスト${manufacturerResult.design.cost})を¥${manufacturerResult.price}で出品`;
+          actionText = `低コスト商品製造: 商品(値${manufacturerResult.design.value},コスト${manufacturerResult.design.cost})を¥${manufacturerResult.price}で出品`;
           break;
         case 'inventory_clearance':
           actionText = '在庫一掃セール: 全商品価格を2下げる';
@@ -1240,7 +1230,6 @@ export class GameState {
       // Create and place product
       product = {
         id: `automata-product-${Date.now()}`,
-        category: design.category,
         value: design.value,
         cost: design.cost,
         popularity: 1,
@@ -1302,7 +1291,6 @@ export class GameState {
         id: `resale-automata-${Date.now()}`,
         cost: product.cost,
         value: product.value,
-        category: product.category,
         price: resalePrice,
         popularity: product.popularity,
         isResale: true,
@@ -1312,7 +1300,7 @@ export class GameState {
       };
       
       // Add to resale automata market
-      console.log(`💰 Resale automata putting product on market: ${resaleProduct.category} at price ${resalePrice}`);
+      console.log(`💰 Resale automata putting product on market: 商品(値${resaleProduct.value}) at price ${resalePrice}`);
       if (!this.resaleAutomata.personalMarket[resalePrice]) {
         this.resaleAutomata.personalMarket[resalePrice] = {};
       }
@@ -1439,7 +1427,7 @@ export class GameState {
           
           // Log individual purchase
           const ownerName = owner.name || (product.ownerId === 'manufacturer-automata' ? 'メーカーオートマ' : product.ownerId);
-          console.log(`💰 Resale automata purchased: ${product.category} from ${ownerName} for ¥${product.price}`);
+          console.log(`💰 Resale automata purchased: 商品(値${product.value}) from ${ownerName} for ¥${product.price}`);
         }
       }
     }
@@ -1567,7 +1555,7 @@ export class GameState {
         const ownerName = this.players.find(player => player.id === p.ownerId)?.name || 
                          (p.ownerId === 'manufacturer-automata' ? 'メーカーオートマ' : 
                           p.ownerId === 'resale-automata' ? '転売オートマ' : p.ownerId);
-        return `${p.category}(¥${p.price}, ${ownerName})`;
+        return `商品(値${p.value})(¥${p.price}, ${ownerName})`;
       }).join(', ');
       this.addToPlayLog('phase', `市場で${purchasedProducts.length}個の商品が購入: ${purchaseDetails}`);
     } else {
@@ -1628,9 +1616,7 @@ export class GameState {
       throw new Error('Not enough action points (resale requires 2AP)');
     }
     
-    if (player.prestige < 1) {
-      throw new Error('Not enough prestige (resale requires 1 prestige)');
-    }
+    // No prestige requirement for resale action - prestige is reduced as consequence
 
     // Find seller (player or automata)
     let seller;
@@ -1714,7 +1700,6 @@ export class GameState {
       id: `resale-${player.id}-${Date.now()}`,
       cost: product.cost, // Keep original dice value
       value: product.value, // Keep original dice value for display
-      category: product.category,
       price: resalePrice,
       popularity: product.popularity,
       isResale: true,
@@ -1732,7 +1717,7 @@ export class GameState {
     // Add pollution marker (global pollution instead of category-based)
     this.globalPollution = (this.globalPollution || 0) + 1;
 
-    this.addToPlayLog('action', `${resaleProduct.category}を¥${price}で購入し¥${resalePrice}で転売しました`, player.id, player.name);
+    this.addToPlayLog('action', `商品(値${resaleProduct.value})を¥${price}で購入し¥${resalePrice}で転売しました`, player.id, player.name);
 
     return { 
       type: 'resale', 
