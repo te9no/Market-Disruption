@@ -13,6 +13,9 @@ export interface Product {
   price?: number;
   previousOwner?: string;
   purchasePrice?: number;
+  isResale?: boolean;
+  originalOwner?: string;
+  reseller?: string;
 }
 
 export interface Design {

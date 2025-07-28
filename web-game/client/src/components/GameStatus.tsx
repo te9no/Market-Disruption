@@ -140,37 +140,74 @@ const GameStatus: React.FC<GameStatusProps> = ({
           </div>
           
           <div className="space-y-3">
-            {Object.entries(pollution).map(([category, level]) => {
-              return (
-                <div key={category} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">{getCategoryIcon(category)}</span>
-                      <span className="font-medium">{getCategoryNameJa(category)}</span>
-                    </div>
-                    <div className={`font-bold px-2 py-1 rounded-full text-xs ${
-                      level === 0 ? 'bg-green-100 text-green-800' :
-                      level <= 2 ? 'bg-yellow-100 text-yellow-800' :
-                      level <= 4 ? 'bg-orange-100 text-orange-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {level >= 5 ? '💥 崩壊' : `${level}/5`}
-                    </div>
+            {globalPollution !== undefined ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">🌍</span>
+                    <span className="font-medium">全体汚染</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full transition-all duration-500 ${
-                        level === 0 ? 'bg-green-500' :
-                        level <= 2 ? 'bg-yellow-500' :
-                        level <= 4 ? 'bg-orange-500' :
-                        'bg-red-500'
-                      }`}
-                      style={{ width: `${Math.min(100, (level / 5) * 100)}%` }}
-                    ></div>
+                  <div className={`font-bold px-2 py-1 rounded-full text-xs ${
+                    globalPollution <= 2 ? 'bg-green-100 text-green-800' :
+                    globalPollution <= 5 ? 'bg-yellow-100 text-yellow-800' :
+                    globalPollution <= 8 ? 'bg-orange-100 text-orange-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {globalPollution}
                   </div>
                 </div>
-              );
-            })}
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      globalPollution <= 2 ? 'bg-green-500' :
+                      globalPollution <= 5 ? 'bg-yellow-500' :
+                      globalPollution <= 8 ? 'bg-orange-500' :
+                      'bg-red-500'
+                    }`}
+                    style={{ width: `${Math.min(globalPollution * 8, 100)}%` }}
+                  />
+                </div>
+                <div className="text-xs text-gray-600">
+                  {globalPollution <= 2 ? '正常' :
+                   globalPollution <= 5 ? '軽度汚染 (-1価格)' :
+                   globalPollution <= 8 ? '中度汚染 (-2価格)' :
+                   globalPollution <= 11 ? '重度汚染 (-3価格)' :
+                   '極度汚染 (-4価格)'}
+                </div>
+              </div>
+            ) : (
+              pollution && Object.entries(pollution).map(([category, level]) => {
+                return (
+                  <div key={category} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">{getCategoryIcon(category)}</span>
+                        <span className="font-medium">{getCategoryNameJa(category)}</span>
+                      </div>
+                      <div className={`font-bold px-2 py-1 rounded-full text-xs ${
+                        level === 0 ? 'bg-green-100 text-green-800' :
+                        level <= 2 ? 'bg-yellow-100 text-yellow-800' :
+                        level <= 4 ? 'bg-orange-100 text-orange-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {level >= 5 ? '💥 崩壊' : `${level}/5`}
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          level === 0 ? 'bg-green-500' :
+                          level <= 2 ? 'bg-yellow-500' :
+                          level <= 4 ? 'bg-orange-500' :
+                          'bg-red-500'
+                        }`}
+                        style={{ width: `${Math.min(100, (level / 5) * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
