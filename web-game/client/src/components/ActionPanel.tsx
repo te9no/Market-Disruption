@@ -895,12 +895,35 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <div>
                 <label className="block text-sm font-medium mb-1">商品 (価格-人気度):</label>
                 <SimpleSelect
-                  value={actionParams.productId ? `${actionParams.price}-${actionParams.popularity}-${actionParams.productId}` : ''}
+                  value={actionParams.selectedProductKey || ''}
                   onChange={(value) => {
-                    const [priceStr, popularityStr, productId] = value.split('-');
-                    const price = Number(priceStr);
-                    const popularity = Number(popularityStr);
-                    setActionParams({...actionParams, price, popularity, productId});
+                    if (!value) {
+                      setActionParams({...actionParams, price: undefined, popularity: undefined, productId: undefined, selectedProductKey: undefined});
+                      return;
+                    }
+                    
+                    // Find the actual product from the market
+                    let targetMarket = null;
+                    if (actionParams.targetPlayerId === 'manufacturer-automata') {
+                      targetMarket = gameState.manufacturerAutomata?.personalMarket;
+                    } else if (actionParams.targetPlayerId === 'resale-automata') {
+                      targetMarket = gameState.resaleAutomata?.personalMarket;
+                    } else {
+                      const targetPlayer = gameState.players.find(p => p.id === actionParams.targetPlayerId);
+                      targetMarket = targetPlayer?.personalMarket;
+                    }
+                    
+                    if (targetMarket) {
+                      const parts = value.split('-');
+                      const price = Number(parts[0]);
+                      const popularity = Number(parts[1]);
+                      const productId = parts.slice(2).join('-');
+                      
+                      const product = targetMarket[price]?.[popularity];
+                      if (product && product.id === productId) {
+                        setActionParams({...actionParams, price, popularity, productId, selectedProductKey: value});
+                      }
+                    }
                   }}
                   placeholder="商品を選択"
                   options={(() => {
