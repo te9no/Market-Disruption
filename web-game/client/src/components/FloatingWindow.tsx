@@ -75,7 +75,7 @@ const FloatingWindow: React.FC<FloatingWindowProps> = ({
   return (
     <div
       ref={windowRef}
-      className={`fixed bg-white rounded-lg shadow-2xl border border-gray-300 z-50 ${className}`}
+      className={`fixed bg-white rounded-lg shadow-2xl border border-gray-300 z-[60] ${className}`}
       style={{
         left: position.x,
         top: position.y,

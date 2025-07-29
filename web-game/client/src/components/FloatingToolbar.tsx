@@ -72,7 +72,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
   };
 
   return (
-    <div className={`fixed ${isMobile ? 'bottom-2 left-2 right-2' : 'bottom-4 left-1/2 transform -translate-x-1/2'} z-40`}>
+    <div className={`fixed ${isMobile ? 'bottom-2 left-2 right-2' : 'bottom-4 left-1/2 transform -translate-x-1/2'} z-[70]`}>
       <div className={`bg-white bg-opacity-95 backdrop-blur-sm ${isMobile ? 'rounded-lg' : 'rounded-full'} shadow-lg border border-gray-200 ${isMobile ? 'px-2 py-2' : 'px-3 py-1.5'}`}>
         <div className={`flex items-center ${isMobile ? 'flex-wrap gap-2 justify-center' : 'space-x-2 md:space-x-3'}`}>
           <button
