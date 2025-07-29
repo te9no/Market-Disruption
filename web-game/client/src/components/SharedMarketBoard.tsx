@@ -57,14 +57,21 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
   onPurchase,
   onReview 
 }) => {
+  // モバイル判定
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  
   const [showSection, setShowSection] = useState<'all' | 'low' | 'high'>('low');
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>(isMobile ? 'table' : 'grid');
 
   const renderProducts = (productsAtLocation: Product[] | null, price?: number, popularity?: number) => {
+    const cellSize = isMobile ? 'w-16 h-16' : 'w-24 h-24';
+    const fontSize = isMobile ? 'text-lg' : 'text-3xl';
+    const circleSize = isMobile ? 'w-8 h-8' : 'w-10 h-10';
+    
     if (!productsAtLocation || productsAtLocation.length === 0) {
       return (
-        <div className="w-24 h-24 border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 flex items-center justify-center rounded-lg transition-colors">
-          <span className="text-gray-400 text-sm">空き</span>
+        <div className={`${cellSize} border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 flex items-center justify-center rounded-lg transition-colors`}>
+          <span className={`text-gray-400 ${isMobile ? 'text-xs' : 'text-sm'}`}>空き</span>
         </div>
       );
     }
@@ -79,9 +86,9 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
       const playerName = getPlayerName(product.ownerId, players);
       
       return (
-        <div className={`w-24 h-24 border-2 border-gray-400 flex flex-col items-center justify-center text-white ${playerColor} hover:opacity-80 cursor-pointer rounded-lg shadow-sm relative transition-all group`}>
+        <div className={`${cellSize} border-2 border-gray-400 flex flex-col items-center justify-center text-white ${playerColor} hover:opacity-80 cursor-pointer rounded-lg shadow-sm relative transition-all group`}>
           {/* Product value displayed as dice face */}
-          <div className="text-3xl font-bold text-white bg-black bg-opacity-30 rounded-full w-10 h-10 flex items-center justify-center">
+          <div className={`${fontSize} font-bold text-white bg-black bg-opacity-30 rounded-full ${circleSize} flex items-center justify-center`}>
             {product.value}
           </div>
           
@@ -127,11 +134,11 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
     } else {
       // Multiple products at the same location - show stacked view
       return (
-        <div className="w-24 h-24 border-2 border-gray-400 bg-gray-100 rounded-lg overflow-hidden relative">
-          <div className="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded-bl font-bold">
+        <div className={`${cellSize} border-2 border-gray-400 bg-gray-100 rounded-lg overflow-hidden relative`}>
+          <div className={`absolute top-0 right-0 bg-red-500 text-white ${isMobile ? 'text-xs px-0.5' : 'text-xs px-1'} rounded-bl font-bold`}>
             {productsAtLocation.length}
           </div>
-          <div className="grid grid-cols-2 gap-0.5 p-1 h-full">
+          <div className={`grid grid-cols-2 ${isMobile ? 'gap-0.5 p-0.5' : 'gap-0.5 p-1'} h-full`}>
             {productsAtLocation.slice(0, 4).map((product) => {
               const playerColor = getPlayerColor(product.ownerId, players);
               const playerName = getPlayerName(product.ownerId, players);
@@ -424,7 +431,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
       {/* Main Content Area */}
       {viewMode === 'grid' ? (
         <div style={{
-          height: 'calc(100vh - 220px)',
+          height: isMobile ? 'calc(100vh - 300px)' : 'calc(100vh - 220px)',
           overflowY: 'auto',
           overflowX: 'auto',
           border: '2px solid #d1d5db',
@@ -435,7 +442,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
             display: 'grid',
             gridTemplateColumns: 'repeat(7, 1fr)',
             gap: '0',
-            minWidth: '584px'
+            minWidth: isMobile ? '420px' : '584px'
           }}>
             {/* Header Row */}
             <div style={{
@@ -480,11 +487,11 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
                 background: 'linear-gradient(to right, #dcfce7, #dbeafe)',
                 borderRight: '2px solid #9ca3af',
                 borderBottom: '1px solid #9ca3af',
-                height: '96px',
+                height: isMobile ? '64px' : '96px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '0.875rem',
+                fontSize: isMobile ? '0.75rem' : '0.875rem',
                 fontWeight: 'bold',
                 position: 'sticky',
                 left: '0',
@@ -498,11 +505,11 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
                   position: 'relative',
                   borderRight: '2px solid #9ca3af',
                   borderBottom: '1px solid #9ca3af',
-                  height: '96px',
+                  height: isMobile ? '64px' : '96px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '4px',
+                  padding: isMobile ? '2px' : '4px',
                   transition: 'background-color 0.2s'
                 }} className="group hover:bg-white hover:bg-opacity-50">
                   {renderProducts(sharedMarket[price]?.[popularity] || null, price, popularity)}
@@ -539,7 +546,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
           </div>
         </div>
       ) : (
-        <div className="border-2 border-gray-300 rounded-lg bg-white overflow-auto" style={{ height: 'calc(100vh - 220px)' }}>
+        <div className="border-2 border-gray-300 rounded-lg bg-white overflow-auto" style={{ height: isMobile ? 'calc(100vh - 300px)' : 'calc(100vh - 220px)' }}>
           {renderTableView()}
         </div>
       )}
