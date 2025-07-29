@@ -205,23 +205,71 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
     }
 
     return (
-      <div className="w-full overflow-x-auto" style={{ maxWidth: '100vw' }}>
-        <table className="min-w-full border-collapse" style={{ minWidth: isMobile ? '600px' : '800px' }}>
-          <thead>
+      <div style={{ overflowX: 'auto', width: '100%' }}>
+        <table 
+          style={{ 
+            maxWidth: '100vw',
+            overflowX: 'auto',
+            display: 'block',
+            borderCollapse: 'collapse',
+            width: '100%'
+          }}
+        >
+          <thead style={{ display: 'table-header-group' }}>
             <tr className="bg-gradient-to-r from-blue-100 to-purple-100 border-b-2 border-gray-300">
-              <th className={`text-left ${isMobile ? 'py-2 px-2 text-xs' : 'py-3 px-4 text-sm'} font-bold text-gray-700`}>所有者</th>
-              <th className={`text-left ${isMobile ? 'py-2 px-2 text-xs' : 'py-3 px-4 text-sm'} font-bold text-gray-700`}>商品</th>
-              <th className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-gray-700`}>値</th>
-              <th className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-gray-700`}>コスト</th>
-              <th className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-gray-700`}>💰価格</th>
-              <th className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-gray-700`}>⭐人気度</th>
-              <th className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-gray-700`}>状態</th>
+              <th 
+                className={`text-left ${isMobile ? 'py-2 text-xs' : 'py-3 text-sm'} font-bold text-gray-700`}
+                style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+              >
+                所有者
+              </th>
+              <th 
+                className={`text-left ${isMobile ? 'py-2 text-xs' : 'py-3 text-sm'} font-bold text-gray-700`}
+                style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+              >
+                商品
+              </th>
+              <th 
+                className={`text-center ${isMobile ? 'py-2 text-xs' : 'py-3 text-sm'} font-bold text-gray-700`}
+                style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+              >
+                値
+              </th>
+              <th 
+                className={`text-center ${isMobile ? 'py-2 text-xs' : 'py-3 text-sm'} font-bold text-gray-700`}
+                style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+              >
+                コスト
+              </th>
+              <th 
+                className={`text-center ${isMobile ? 'py-2 text-xs' : 'py-3 text-sm'} font-bold text-gray-700`}
+                style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+              >
+                💰価格
+              </th>
+              <th 
+                className={`text-center ${isMobile ? 'py-2 text-xs' : 'py-3 text-sm'} font-bold text-gray-700`}
+                style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+              >
+                ⭐人気
+              </th>
+              <th 
+                className={`text-center ${isMobile ? 'py-2 text-xs' : 'py-3 text-sm'} font-bold text-gray-700`}
+                style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+              >
+                状態
+              </th>
               {canInteract && (
-                <th className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-gray-700`}>アクション</th>
+                <th 
+                  className={`text-center ${isMobile ? 'py-2 text-xs' : 'py-3 text-sm'} font-bold text-gray-700`}
+                  style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+                >
+                  アクション
+                </th>
               )}
             </tr>
           </thead>
-          <tbody>
+          <tbody style={{ display: 'table-row-group' }}>
             {products.map((product, index) => {
               const playerColor = getPlayerColor(product.ownerId, players);
               const playerName = getPlayerName(product.ownerId, players);
@@ -232,70 +280,93 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
                 <tr 
                   key={`${product.price}-${product.popularity}-${index}`}
                   className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                  style={{ display: 'table-row' }}
                 >
-                  <td className={isMobile ? 'py-2 px-2' : 'py-3 px-4'}>
-                    <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
-                      <div className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} rounded-full ${playerColor}`}></div>
-                      <div className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{playerName.slice(0, isMobile ? 3 : 6)}</div>
+                  <td 
+                    className={`${isMobile ? 'text-xs' : 'text-sm'}`}
+                    style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                  >
+                    <div className="flex items-center justify-center">
+                      <div className={`${isMobile ? 'w-2 h-2' : 'w-3 h-3'} rounded-full ${playerColor}`}></div>
                     </div>
+                    <div className="text-center text-xs">{playerName.slice(0, 3)}</div>
                   </td>
-                  <td className={isMobile ? 'py-2 px-2' : 'py-3 px-4'}>
-                    <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
-                      <div className={isMobile ? 'text-lg' : 'text-2xl'}>
-                        {getCategoryEmoji(product.category)}
-                      </div>
-                      <div>
-                        <div className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>#{product.id.slice(-4)}</div>
-                      </div>
+                  <td 
+                    className={`text-center ${isMobile ? 'text-xs' : 'text-sm'}`}
+                    style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+                  >
+                    <div className={isMobile ? 'text-lg' : 'text-xl'}>
+                      {getCategoryEmoji(product.category)}
                     </div>
+                    <div className="text-xs">#{product.id.slice(-4)}</div>
                   </td>
-                  <td className={`text-center ${isMobile ? 'py-2 px-1' : 'py-3 px-2'} font-medium`}>
-                    <div className={`inline-flex items-center justify-center ${isMobile ? 'w-6 h-6 text-xs' : 'w-8 h-8 text-sm'} rounded-full text-white font-bold ${playerColor}`}>
+                  <td 
+                    className="text-center font-medium"
+                    style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+                  >
+                    <div className={`inline-flex items-center justify-center ${isMobile ? 'w-5 h-5 text-xs' : 'w-6 h-6 text-sm'} rounded-full text-white font-bold ${playerColor}`}>
                       {product.value}
                     </div>
                   </td>
-                  <td className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-medium`}>
-                    ⚒️{product.cost}
+                  <td 
+                    className={`text-center ${isMobile ? 'text-xs' : 'text-sm'} font-medium`}
+                    style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+                  >
+                    <div>⚒️</div>
+                    <div>{product.cost}</div>
                   </td>
-                  <td className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-green-600`}>
-                    💰{product.price}
+                  <td 
+                    className={`text-center ${isMobile ? 'text-xs' : 'text-sm'} font-bold text-green-600`}
+                    style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+                  >
+                    <div>💰</div>
+                    <div>{product.price}</div>
                   </td>
-                  <td className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-medium`}>
-                    {isMobile ? `⭐${product.popularity}` : '⭐'.repeat(product.popularity)}
+                  <td 
+                    className={`text-center ${isMobile ? 'text-xs' : 'text-sm'} font-medium`}
+                    style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+                  >
+                    ⭐{product.popularity}
                   </td>
-                  <td className={`text-center ${isMobile ? 'py-2 px-1' : 'py-3 px-2'}`}>
+                  <td 
+                    className="text-center"
+                    style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+                  >
                     {isResale ? (
-                      <span className={`bg-red-500 text-white ${isMobile ? 'px-1 py-0.5 text-xs' : 'px-2 py-1 text-xs'} rounded-full font-bold`}>
-                        {isMobile ? '🔄' : '🔄 転売'}
+                      <span className="bg-red-500 text-white px-1 py-0.5 text-xs rounded-full font-bold">
+                        🔄
                       </span>
                     ) : (
-                      <span className={`bg-green-500 text-white ${isMobile ? 'px-1 py-0.5 text-xs' : 'px-2 py-1 text-xs'} rounded-full font-bold`}>
-                        {isMobile ? '✨' : '✨ 正規'}
+                      <span className="bg-green-500 text-white px-1 py-0.5 text-xs rounded-full font-bold">
+                        ✨
                       </span>
                     )}
                   </td>
                   {canInteract && (
-                    <td className={`text-center ${isMobile ? 'py-2 px-1' : 'py-3 px-2'}`}>
+                    <td 
+                      className="text-center"
+                      style={{ minWidth: '60px', maxWidth: '60px', padding: '8px 4px' }}
+                    >
                       {canAct ? (
-                        <div className={`flex ${isMobile ? 'flex-col space-y-1' : 'space-x-1'} justify-center`}>
+                        <div className="flex flex-col space-y-1 justify-center">
                           <button
                             onClick={() => onPurchase?.(product.id, product.price, product.popularity)}
-                            className={`${isMobile ? 'px-1 py-0.5 text-xs' : 'px-2 py-1 text-xs'} bg-green-500 hover:bg-green-600 text-white rounded font-bold`}
+                            className="px-1 py-0.5 text-xs bg-green-500 hover:bg-green-600 text-white rounded font-bold"
                             title="購入する (1AP)"
                           >
                             🛒
                           </button>
                           <button
                             onClick={() => onReview?.(product.id)}
-                            className={`${isMobile ? 'px-1 py-0.5 text-xs' : 'px-2 py-1 text-xs'} bg-blue-500 hover:bg-blue-600 text-white rounded font-bold`}
+                            className="px-1 py-0.5 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded font-bold"
                             title="レビューする (1AP)"
                           >
                             ⭐
                           </button>
                         </div>
                       ) : (
-                        <span className={`text-gray-400 ${isMobile ? 'text-xs' : 'text-xs'}`}>
-                          {product.ownerId === currentPlayer?.id ? (isMobile ? '自分' : '自分の商品') : (isMobile ? '待機' : 'あなたのターンではありません')}
+                        <span className="text-gray-400 text-xs">
+                          {product.ownerId === currentPlayer?.id ? '自分' : '待機'}
                         </span>
                       )}
                     </td>
