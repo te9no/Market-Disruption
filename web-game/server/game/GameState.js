@@ -1601,7 +1601,7 @@ export class GameState {
   }
 
   // Enhanced resale system - direct purchase and resale
-  actionResale(player, { sellerId, productId, price, popularity }) {
+  actionResale(player, { sellerId, productId, price, popularity, resalePrice }) {
     console.log('🔄 Resale action debug:', {
       buyerId: player.id,
       buyerName: player.name,
@@ -1660,24 +1660,41 @@ export class GameState {
       throw new Error('Cannot afford product');
     }
 
-    // Calculate resale price with bonus
-    const resaleBonus = player.getResaleBonus();
-    let resalePrice = price + resaleBonus;
+    // Use provided resale price or calculate default
+    let finalResalePrice = resalePrice;
+    if (!resalePrice) {
+      // Calculate default resale price with bonus if not provided
+      const resaleBonus = player.getResaleBonus();
+      finalResalePrice = price + resaleBonus;
+    }
 
-    // Apply regulation limits
+    // Calculate maximum allowed price
+    const resaleBonus = player.getResaleBonus();
+    let maxResalePrice = price + resaleBonus;
+
+    // Apply regulation limits to maximum
     if (this.regulationLevel === 2) {
-      resalePrice = Math.min(resalePrice, price + 3);
+      maxResalePrice = Math.min(maxResalePrice, price + 3);
     } else if (this.regulationLevel === 3) {
-      resalePrice = Math.min(resalePrice, price + 1);
+      maxResalePrice = Math.min(maxResalePrice, price + 1);
     }
 
     // Cap at 20
-    resalePrice = Math.min(resalePrice, 20);
+    maxResalePrice = Math.min(maxResalePrice, 20);
+
+    // Validate provided resale price
+    if (finalResalePrice > maxResalePrice) {
+      throw new Error(`Resale price exceeds maximum allowed (max: ${maxResalePrice})`);
+    }
+    
+    if (finalResalePrice < price) {
+      throw new Error(`Resale price cannot be lower than purchase price (${price})`);
+    }
 
     // Verify resale market slot is available before proceeding
-    const existingProduct = player.personalMarket[resalePrice] && player.personalMarket[resalePrice][product.popularity];
+    const existingProduct = player.personalMarket[finalResalePrice] && player.personalMarket[finalResalePrice][product.popularity];
     if (existingProduct !== null) {
-      throw new Error(`Resale market slot already occupied at price ${resalePrice}, popularity ${product.popularity}`);
+      throw new Error(`Resale market slot already occupied at price ${finalResalePrice}, popularity ${product.popularity}`);
     }
 
     // Execute purchase and resale
@@ -1700,7 +1717,7 @@ export class GameState {
       id: `resale-${player.id}-${Date.now()}`,
       cost: product.cost, // Keep original dice value
       value: product.value, // Keep original dice value for display
-      price: resalePrice,
+      price: finalResalePrice,
       popularity: product.popularity,
       isResale: true,
       originalOwner: product.ownerId || sellerId,
@@ -1709,7 +1726,7 @@ export class GameState {
     };
 
     // Add to buyer's market immediately
-    player.addProductToMarket(resaleProduct, resalePrice);
+    player.addProductToMarket(resaleProduct, finalResalePrice);
 
     // Update buyer's resale history (no additional prestige penalty)
     player.incrementResaleHistory();
@@ -1717,13 +1734,13 @@ export class GameState {
     // Add pollution marker (global pollution instead of category-based)
     this.globalPollution = (this.globalPollution || 0) + 1;
 
-    this.addToPlayLog('action', `商品(値${resaleProduct.value})を¥${price}で購入し¥${resalePrice}で転売しました`, player.id, player.name);
+    this.addToPlayLog('action', `商品(値${resaleProduct.value})を¥${price}で購入し¥${finalResalePrice}で転売しました`, player.id, player.name);
 
     return { 
       type: 'resale', 
       product: resaleProduct, 
       purchasePrice: price,
-      resalePrice,
+      resalePrice: finalResalePrice,
       resaleBonus,
       sellerId,
       newResaleHistory: player.resaleHistory,

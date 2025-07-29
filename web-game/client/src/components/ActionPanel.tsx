@@ -1029,7 +1029,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         popularity, 
                         productId, 
                         selectedProductKey: value,
-                        expectedResalePrice
+                        maxResalePrice: expectedResalePrice,
+                        resalePrice: expectedResalePrice // Default to max
                       });
                     }
                   }
@@ -1081,14 +1082,72 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 columns={2}
               />
             )}
-            {actionParams.expectedResalePrice && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                <div className="text-sm">
-                  <div><strong>購入価格:</strong> ¥{actionParams.price}</div>
-                  <div><strong>予想転売価格:</strong> ¥{actionParams.expectedResalePrice}</div>
-                  <div><strong>予想利益:</strong> ¥{actionParams.expectedResalePrice - actionParams.price}</div>
-                  {gameState.regulationLevel >= 2 && (
-                    <div className="text-red-600 mt-1 text-xs">⚠️ 規制により価格制限あり</div>
+            {actionParams.maxResalePrice && (
+              <div className="space-y-3">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <div className="text-sm">
+                    <div><strong>購入価格:</strong> ¥{actionParams.price}</div>
+                    <div><strong>最大転売価格:</strong> ¥{actionParams.maxResalePrice}</div>
+                    {gameState.regulationLevel >= 2 && (
+                      <div className="text-red-600 mt-1 text-xs">⚠️ 規制により価格制限あり</div>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    転売価格を設定 (¥{actionParams.price} ～ ¥{actionParams.maxResalePrice}):
+                  </label>
+                  {actionParams.maxResalePrice <= 12 ? (
+                    <div className="grid grid-cols-4 gap-2 mt-2">
+                      {Array.from({length: actionParams.maxResalePrice - actionParams.price + 1}, (_, i) => actionParams.price + i).map(resalePrice => (
+                        <ModernButton
+                          key={resalePrice}
+                          onClick={() => setActionParams({...actionParams, resalePrice})}
+                          variant={actionParams.resalePrice === resalePrice ? "primary" : "ghost"}
+                          size="sm"
+                          className={`text-center ${actionParams.resalePrice === resalePrice ? 'ring-2 ring-blue-300' : ''}`}
+                        >
+                          ¥{resalePrice}
+                        </ModernButton>
+                      ))}
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="grid grid-cols-3 gap-2 mt-2 mb-3">
+                        {[actionParams.price, Math.ceil((actionParams.price + actionParams.maxResalePrice) / 2), actionParams.maxResalePrice].map(resalePrice => (
+                          <ModernButton
+                            key={resalePrice}
+                            onClick={() => setActionParams({...actionParams, resalePrice})}
+                            variant={actionParams.resalePrice === resalePrice ? "primary" : "secondary"}
+                            size="sm"
+                            className={`text-center ${actionParams.resalePrice === resalePrice ? 'ring-2 ring-blue-300' : ''}`}
+                          >
+                            ¥{resalePrice}
+                          </ModernButton>
+                        ))}
+                      </div>
+                      <div className="mt-2">
+                        <label className="block text-xs text-gray-600 mb-1">カスタム価格:</label>
+                        <input
+                          type="number"
+                          min={actionParams.price}
+                          max={actionParams.maxResalePrice}
+                          value={actionParams.resalePrice || ''}
+                          onChange={(e) => setActionParams({...actionParams, resalePrice: parseInt(e.target.value)})}
+                          className="w-full border rounded px-3 py-2 text-sm"
+                          placeholder={`${actionParams.price}〜${actionParams.maxResalePrice}`}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {actionParams.resalePrice && (
+                    <div className="mt-2 p-2 bg-blue-50 rounded">
+                      <div className="text-sm text-blue-800">
+                        <div>選択済み転売価格: ¥{actionParams.resalePrice}</div>
+                        <div>予想利益: ¥{actionParams.resalePrice - actionParams.price}</div>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1107,7 +1166,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     sellerId: actionParams.targetPlayerId,
                     productId: actionParams.productId,
                     price: actionParams.price,
-                    popularity: actionParams.popularity
+                    popularity: actionParams.popularity,
+                    resalePrice: actionParams.resalePrice
                   });
                 }}
                 disabled={!actionParams.targetPlayerId || !actionParams.price || !actionParams.productId || player.funds < actionParams.price}
@@ -1219,11 +1279,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           <div className="space-y-3">
             <h4 className="font-bold">威厳購入アクション (1AP)</h4>
             <div className="text-sm text-gray-600 mb-3">
-              10資金を支払って威厳を1ポイント購入します。
+              5資金を支払って威厳を1ポイント購入します。
             </div>
             <div className="bg-violet-50 p-3 rounded-lg">
               <div className="text-sm">
-                <div>💰 必要資金: 10</div>
+                <div>💰 必要資金: 5</div>
                 <div>💰 現在資金: {player.funds}</div>
                 <div>👑 現在威厳: {player.prestige}</div>
                 <div>👑 購入後威厳: {player.prestige + 1}</div>
@@ -1235,7 +1295,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   console.log('🔍 Buy dignity action - player funds:', player.funds);
                   handleAction('buy_dignity');
                 }}
-                disabled={player.funds < 10}
+                disabled={player.funds < 5}
                 variant="primary"
                 size="md"
               >
@@ -1525,7 +1585,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               
               <ModernButton
                 onClick={() => setSelectedAction('buy_dignity')}
-                disabled={!canPerformActions || player.actionPoints < 1 || player.funds < 10}
+                disabled={!canPerformActions || player.actionPoints < 1 || player.funds < 5}
                 variant="primary"
                 size="lg"
               className="action-card-button bg-gradient-to-r from-violet-50 to-violet-100 hover:from-violet-100 hover:to-violet-200 border-violet-200"
@@ -1534,8 +1594,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   <span className="text-2xl">👑</span>
                   <div className="text-left">
                     <div className="font-medium text-violet-900">威厳購入</div>
-                    <div className="text-xs text-violet-600">10資金で威厳+1</div>
-                    {player.funds < 10 && 
+                    <div className="text-xs text-violet-600">5資金で威厳+1</div>
+                    {player.funds < 5 && 
                       <div className="text-xs text-red-500">⚠️ 資金不足</div>
                     }
                   </div>
