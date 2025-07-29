@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import GameStatus from './GameStatus';
-import ActionPanel from './ActionPanel';
 import AutomataLog from './AutomataLog';
 import PlayerMarketView from './PlayerMarketView';
 import AutomataMarketView from './AutomataMarketView';
@@ -10,8 +9,10 @@ import PlayLog from './PlayLog';
 import TrendResultDialog from './TrendResultDialog';
 import VictoryDialog from './VictoryDialog';
 import SharedMarketBoard from './SharedMarketBoard';
-import Inventory from './Inventory';
 import DesignBoard from './DesignBoard';
+import FloatingToolbar from './FloatingToolbar';
+import FloatingWindowManager from './FloatingWindowManager';
+import { FloatingWindowsProvider } from '../hooks/useFloatingWindows';
 import { useSocket } from '../hooks/useSocket';
 
 const GameBoard: React.FC = () => {
@@ -183,27 +184,15 @@ const GameBoard: React.FC = () => {
   const renderMainContent = () => {
     if (activeView === 'game') {
       return (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-          {/* Main Game Area - Shared Market Board */}
-          <div className="lg:col-span-3">
-            <SharedMarketBoard 
-              sharedMarket={gameState.sharedMarket} 
-              players={gameState.players}
-              currentPlayer={currentPlayer}
-              canInteract={true}
-              isMyTurn={isCurrentPlayerTurn}
-            />
-          </div>
-          {/* Right Panel - Action + Inventory */}
-          <div className="lg:col-span-1 flex flex-col gap-6">
-            <ActionPanel 
-              player={currentPlayer}
-              isMyTurn={isCurrentPlayerTurn}
-              gamePhase={currentPhase}
-              gameState={gameState}
-            />
-            <Inventory inventory={currentPlayer.inventory} />
-          </div>
+        <div className="h-full w-full">
+          {/* Full-screen Shared Market Board */}
+          <SharedMarketBoard 
+            sharedMarket={gameState.sharedMarket} 
+            players={gameState.players}
+            currentPlayer={currentPlayer}
+            canInteract={true}
+            isMyTurn={isCurrentPlayerTurn}
+          />
         </div>
       );
     }
@@ -270,8 +259,22 @@ const GameBoard: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>
-      {/* Modern Header */}
+    <FloatingWindowsProvider>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>
+        {/* Floating Toolbar */}
+        {activeView === 'game' && (
+          <FloatingToolbar 
+            player={currentPlayer}
+            isMyTurn={isCurrentPlayerTurn}
+            gamePhase={currentPhase}
+            gameState={gameState}
+          />
+        )}
+        
+        {/* Floating Window Manager */}
+        <FloatingWindowManager />
+        
+        {/* Modern Header */}
       <div style={{
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         color: 'white',
@@ -673,7 +676,8 @@ const GameBoard: React.FC = () => {
           trendEffect={trendResult.trendEffect || { name: '', effect: '', cost: 0 }}
         />
       )}
-    </div>
+      </div>
+    </FloatingWindowsProvider>
   );
 };
 

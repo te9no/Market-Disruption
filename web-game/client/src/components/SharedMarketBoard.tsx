@@ -63,7 +63,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
   const renderProducts = (productsAtLocation: Product[] | null, price?: number, popularity?: number) => {
     if (!productsAtLocation || productsAtLocation.length === 0) {
       return (
-        <div className="w-16 h-16 border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 flex items-center justify-center rounded-lg transition-colors">
+        <div className="w-20 h-20 border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 flex items-center justify-center rounded-lg transition-colors">
           <span className="text-gray-400 text-sm">空き</span>
         </div>
       );
@@ -79,7 +79,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
       const playerName = getPlayerName(product.ownerId, players);
       
       return (
-        <div className={`w-16 h-16 border-2 border-gray-400 flex flex-col items-center justify-center text-white ${playerColor} hover:opacity-80 cursor-pointer rounded-lg shadow-sm relative transition-all group`}>
+        <div className={`w-20 h-20 border-2 border-gray-400 flex flex-col items-center justify-center text-white ${playerColor} hover:opacity-80 cursor-pointer rounded-lg shadow-sm relative transition-all group`}>
           {/* Product value displayed as dice face */}
           <div className="text-2xl font-bold text-white bg-black bg-opacity-30 rounded-full w-8 h-8 flex items-center justify-center">
             {product.value}
@@ -127,7 +127,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
     } else {
       // Multiple products at the same location - show stacked view
       return (
-        <div className="w-16 h-16 border-2 border-gray-400 bg-gray-100 rounded-lg overflow-hidden relative">
+        <div className="w-20 h-20 border-2 border-gray-400 bg-gray-100 rounded-lg overflow-hidden relative">
           <div className="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded-bl font-bold">
             {productsAtLocation.length}
           </div>
@@ -421,7 +421,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
       {/* Main Content Area */}
       {viewMode === 'grid' ? (
         <div style={{
-          maxHeight: '384px',
+          height: 'calc(100vh - 280px)',
           overflowY: 'auto',
           overflowX: 'auto',
           border: '2px solid #d1d5db',
@@ -477,7 +477,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
                 background: 'linear-gradient(to right, #dcfce7, #dbeafe)',
                 borderRight: '2px solid #9ca3af',
                 borderBottom: '1px solid #9ca3af',
-                height: '64px',
+                height: '80px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -495,7 +495,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
                   position: 'relative',
                   borderRight: '2px solid #9ca3af',
                   borderBottom: '1px solid #9ca3af',
-                  height: '64px',
+                  height: '80px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
