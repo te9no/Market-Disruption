@@ -261,7 +261,6 @@ const GameBoard: React.FC = () => {
           <PlayerMarketView
             player={targetPlayer}
             currentPlayerId={currentPlayer.id}
-            isMyTurn={isCurrentPlayerTurn}
           />
         );
       }

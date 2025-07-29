@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Player } from '../store/gameSlice';
-import PersonalMarket from './PersonalMarket';
 import DesignBoard from './DesignBoard';
 import Inventory from './Inventory';
 
