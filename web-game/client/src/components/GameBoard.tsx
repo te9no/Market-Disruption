@@ -42,6 +42,13 @@ const GameBoard: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Close sidebar when activeView changes to 'game'
+  useEffect(() => {
+    if (activeView === 'game') {
+      setShowSidebar(false);
+    }
+  }, [activeView]);
+
   // Listen for game update events to catch trend research results and victory conditions
   useEffect(() => {
     if (!socket) return;
@@ -365,25 +372,27 @@ const GameBoard: React.FC = () => {
               </div>
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setShowSidebar(!showSidebar)}
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  color: 'white',
-                  padding: '12px',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  fontWeight: '500',
-                  backdropFilter: 'blur(10px)',
-                  display: 'block'
-                }}
-                className="md:hidden"
-              >
-                {showSidebar ? '✕' : '☰'}
-              </button>
+              {/* Mobile Menu Button - Hide when activeView is 'game' */}
+              {activeView !== 'game' && (
+                <button
+                  onClick={() => setShowSidebar(!showSidebar)}
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    color: 'white',
+                    padding: '12px',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    fontWeight: '500',
+                    backdropFilter: 'blur(10px)',
+                    display: 'block'
+                  }}
+                  className="md:hidden"
+                >
+                  {showSidebar ? '✕' : '☰'}
+                </button>
+              )}
               
               <button
                 onClick={handleRefreshGameState}
@@ -464,22 +473,23 @@ const GameBoard: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)', position: 'relative' }}>
         {/* Upper Section: Sidebar + Main Content */}
         <div style={{ display: 'flex', flex: '1', minHeight: '0' }}>
-          {/* Left Sidebar Menu - Hidden on mobile unless toggled */}
-          <div style={{
-            width: isMobile ? (showSidebar ? '280px' : '0') : '280px',
-            background: 'rgba(255,255,255,0.95)',
-            backdropFilter: 'blur(10px)',
-            borderRight: '1px solid rgba(0,0,0,0.1)',
-            boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            position: isMobile ? 'fixed' : 'relative',
-            top: isMobile ? '0' : 'auto',
-            left: isMobile ? (showSidebar ? '0' : '-280px') : 'auto',
-            height: isMobile ? '100vh' : '100%',
-            zIndex: isMobile ? 10 : 5,
-            transition: 'all 0.3s ease'
-          }}
+          {/* Left Sidebar Menu - Hidden completely when activeView is 'game' */}
+          {activeView !== 'game' && (
+            <div style={{
+              width: isMobile ? (showSidebar ? '280px' : '0') : '280px',
+              background: 'rgba(255,255,255,0.95)',
+              backdropFilter: 'blur(10px)',
+              borderRight: '1px solid rgba(0,0,0,0.1)',
+              boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              position: isMobile ? 'fixed' : 'relative',
+              top: isMobile ? '0' : 'auto',
+              left: isMobile ? (showSidebar ? '0' : '-280px') : 'auto',
+              height: isMobile ? '100vh' : '100%',
+              zIndex: isMobile ? 10 : 5,
+              transition: 'all 0.3s ease'
+            }}
           >
             <div style={{ padding: '24px 16px' }}>
               <h3 style={{ 
@@ -533,9 +543,10 @@ const GameBoard: React.FC = () => {
               </div>
             </div>
           </div>
+          )}
 
           {/* Mobile Overlay */}
-          {isMobile && showSidebar && (
+          {activeView !== 'game' && isMobile && showSidebar && (
             <div
               style={{
                 position: 'fixed',
@@ -550,12 +561,12 @@ const GameBoard: React.FC = () => {
             />
           )}
 
-          {/* Main Content Area - Now takes full width */}
+          {/* Main Content Area - Full width when activeView is 'game' */}
           <div style={{ 
             flex: '1',
-            width: isMobile ? '100%' : 'auto',
-            minWidth: isMobile ? '100%' : 'auto',
-            padding: isMobile ? '12px' : '24px',
+            width: activeView === 'game' ? '100%' : (isMobile ? '100%' : 'auto'),
+            minWidth: activeView === 'game' ? '100%' : (isMobile ? '100%' : 'auto'),
+            padding: activeView === 'game' ? '0' : (isMobile ? '12px' : '24px'),
             overflowY: 'auto',
             height: '100%'
           }}>
