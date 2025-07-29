@@ -951,10 +951,10 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
       case 'resale':
         return (
           <div className="space-y-3">
-            <h4 className="font-bold">転売アクション (2AP + 1威厳)</h4>
+            <h4 className="font-bold">転売アクション (2AP, 威厳-1)</h4>
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
               <div className="text-sm text-orange-800">
-                他のプレイヤーやオートマから商品を購入し、即座に転売価格で自分のマーケットに出品します。
+                他のプレイヤーやオートマから商品を購入し、即座に転売価格で自分のマーケットに出品します。実行時に威厳が1減少します。
               </div>
             </div>
             <ModernButtonGroup
@@ -1471,7 +1471,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               
               <ModernButton
                 onClick={() => setSelectedAction('resale')}
-                disabled={!canPerformActions || player.actionPoints < 2 || player.prestige < 1}
+                disabled={!canPerformActions || player.actionPoints < 2}
                 variant="primary"
                 size="lg"
                 className="action-card-button bg-gradient-to-r from-orange-50 to-orange-100 hover:from-orange-100 hover:to-orange-200 border-orange-200"
@@ -1480,12 +1480,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   <span className="text-2xl">🔄</span>
                   <div className="text-left">
                     <div className="font-medium text-orange-900">転売</div>
-                    <div className="text-xs text-orange-600">購入即転売で利益獲得</div>
+                    <div className="text-xs text-orange-600">購入即転売で利益獲得（威厳-1）</div>
                     {player.actionPoints < 2 && 
                       <div className="text-xs text-red-500">⚠️ 2AP必要</div>
-                    }
-                    {player.prestige < 1 && 
-                      <div className="text-xs text-red-500">⚠️ 1威厳必要</div>
                     }
                   </div>
                 </div>
