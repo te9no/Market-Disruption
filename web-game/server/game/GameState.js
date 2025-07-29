@@ -107,7 +107,7 @@ export class GameState {
     for (let price = 1; price <= 20; price++) {
       market[price] = {};
       for (let popularity = 1; popularity <= 6; popularity++) {
-        market[price][popularity] = null; // null = empty slot
+        market[price][popularity] = []; // empty array to hold multiple products
       }
     }
     return market;
@@ -116,24 +116,31 @@ export class GameState {
   // Add product to shared market
   addProductToSharedMarket(product, price) {
     const slot = this.sharedMarket[price][product.popularity];
-    if (slot !== null) {
-      console.log(`🚫 Shared market slot occupied at price ${price}, popularity ${product.popularity}:`, slot);
-      throw new Error(`Market slot already occupied at price ${price}, popularity ${product.popularity}`);
+    
+    // Check if same player already has a product at this coordinate
+    const existingFromSamePlayer = slot.find(p => p.ownerId === product.ownerId);
+    if (existingFromSamePlayer) {
+      console.log(`🚫 Player ${product.ownerId} already has a product at price ${price}, popularity ${product.popularity}:`, existingFromSamePlayer);
+      throw new Error(`Player already has a product at price ${price}, popularity ${product.popularity}`);
     }
     
     console.log(`✅ Adding product to shared market at price ${price}, popularity ${product.popularity}`, product);
-    this.sharedMarket[price][product.popularity] = product;
+    slot.push(product);
     return true;
   }
 
-  // Remove product from shared market
-  removeProductFromSharedMarket(price, popularity) {
-    const product = this.sharedMarket[price][popularity];
-    if (!product) {
-      throw new Error('No product at specified location in shared market');
+  // Remove product from shared market by product ID
+  removeProductFromSharedMarket(price, popularity, productId) {
+    const slot = this.sharedMarket[price][popularity];
+    const productIndex = slot.findIndex(p => p.id === productId);
+    
+    if (productIndex === -1) {
+      throw new Error(`No product with ID ${productId} at price ${price}, popularity ${popularity}`);
     }
     
-    this.sharedMarket[price][popularity] = null;
+    const product = slot[productIndex];
+    console.log(`🗑️ Removing product from shared market at price ${price}, popularity ${popularity}`, product);
+    slot.splice(productIndex, 1);
     return product;
   }
 
@@ -142,12 +149,14 @@ export class GameState {
     const products = [];
     for (let price = 1; price <= 20; price++) {
       for (let popularity = 1; popularity <= 6; popularity++) {
-        const product = this.sharedMarket[price][popularity];
-        if (product) {
-          products.push({
-            ...product,
-            price,
-            popularity
+        const productsAtLocation = this.sharedMarket[price][popularity];
+        if (productsAtLocation && productsAtLocation.length > 0) {
+          productsAtLocation.forEach(product => {
+            products.push({
+              ...product,
+              price,
+              popularity
+            });
           });
         }
       }
@@ -455,11 +464,14 @@ export class GameState {
     const marketProduct = { ...product };
     marketProduct.price = adjustedPrice;
     
-    // Verify shared market slot is available before proceeding
-    const existingProduct = this.sharedMarket[adjustedPrice] && this.sharedMarket[adjustedPrice][marketProduct.popularity];
-    if (existingProduct !== null) {
-      console.log(`🚫 Shared market slot occupied at price ${adjustedPrice}, popularity ${marketProduct.popularity}:`, existingProduct);
-      throw new Error(`Market slot already occupied at price ${adjustedPrice}, popularity ${marketProduct.popularity}`);
+    // Verify player doesn't already have a product at this coordinate
+    const slot = this.sharedMarket[adjustedPrice] && this.sharedMarket[adjustedPrice][marketProduct.popularity];
+    if (slot) {
+      const existingFromSamePlayer = slot.find(p => p.ownerId === player.id);
+      if (existingFromSamePlayer) {
+        console.log(`🚫 Player ${player.id} already has a product at price ${adjustedPrice}, popularity ${marketProduct.popularity}:`, existingFromSamePlayer);
+        throw new Error(`You already have a product at price ${adjustedPrice}, popularity ${marketProduct.popularity}`);
+      }
     }
     
     // Only spend action points and remove from inventory after all checks pass
@@ -491,13 +503,16 @@ export class GameState {
     console.log(`🔍 Checking shared market for product ${targetProductId}`);
     for (const priceKey in this.sharedMarket) {
       for (const popularityKey in this.sharedMarket[priceKey]) {
-        const prod = this.sharedMarket[priceKey][popularityKey];
-        if (prod && prod.id === targetProductId) {
-          console.log(`✅ Found product in shared market at price ${priceKey}, popularity ${popularityKey}`);
-          product = prod;
-          price = parseInt(priceKey);
-          popularity = parseInt(popularityKey);
-          break;
+        const productsAtLocation = this.sharedMarket[priceKey][popularityKey];
+        if (productsAtLocation && productsAtLocation.length > 0) {
+          const prod = productsAtLocation.find(p => p.id === targetProductId);
+          if (prod) {
+            console.log(`✅ Found product in shared market at price ${priceKey}, popularity ${popularityKey}`);
+            product = prod;
+            price = parseInt(priceKey);
+            popularity = parseInt(popularityKey);
+            break;
+          }
         }
       }
       if (product) break;
@@ -532,7 +547,7 @@ export class GameState {
       
       if (newPopularity !== product.popularity) {
         // Move product to new popularity slot in shared market
-        this.removeProductFromSharedMarket(price, popularity);
+        this.removeProductFromSharedMarket(price, popularity, product.id);
         product.popularity = newPopularity;
         this.addProductToSharedMarket(product, price);
       }
@@ -559,7 +574,7 @@ export class GameState {
       
       if (newPopularity !== product.popularity) {
         // Move product to new popularity slot in shared market
-        this.removeProductFromSharedMarket(price, popularity);
+        this.removeProductFromSharedMarket(price, popularity, product.id);
         product.popularity = newPopularity;
         this.addProductToSharedMarket(product, price);
       }
@@ -666,15 +681,16 @@ export class GameState {
       throw new Error('Not enough action points');
     }
 
-    const product = this.sharedMarket[price][popularity];
-    if (!product || product.ownerId !== player.id) {
+    const productsAtLocation = this.sharedMarket[price][popularity];
+    const product = productsAtLocation ? productsAtLocation.find(p => p.ownerId === player.id) : null;
+    if (!product) {
       throw new Error('No product owned by you at specified location');
     }
 
     player.spendActionPoints(1);
     
     // Remove from shared market and add to inventory
-    this.removeProductFromSharedMarket(price, popularity);
+    this.removeProductFromSharedMarket(price, popularity, product.id);
     player.inventory.push(product);
 
     return { type: 'buyback', product, price, popularity };
@@ -718,10 +734,13 @@ export class GameState {
     // Check shared market
     for (let price = 1; price <= 20; price++) {
       for (let popularity = 1; popularity <= 6; popularity++) {
-        const product = this.sharedMarket[price][popularity];
-        if (product && product.designSlot === designSlot && product.ownerId === player.id) {
-          productsExist = true;
-          break;
+        const productsAtLocation = this.sharedMarket[price][popularity];
+        if (productsAtLocation && productsAtLocation.length > 0) {
+          const product = productsAtLocation.find(p => p.designSlot === designSlot && p.ownerId === player.id);
+          if (product) {
+            productsExist = true;
+            break;
+          }
         }
       }
       if (productsExist) break;
@@ -772,9 +791,12 @@ export class GameState {
           // Remove resale products owned by this player from shared market
           for (let price = 1; price <= 20; price++) {
             for (let popularity = 1; popularity <= 6; popularity++) {
-              const product = this.sharedMarket[price][popularity];
-              if (product && product.isResale && product.ownerId === p.id) {
-                this.removeProductFromSharedMarket(price, popularity);
+              const productsAtLocation = this.sharedMarket[price][popularity];
+              if (productsAtLocation && productsAtLocation.length > 0) {
+                const resaleProducts = productsAtLocation.filter(product => product.isResale && product.ownerId === p.id);
+                resaleProducts.forEach(product => {
+                  this.removeProductFromSharedMarket(price, popularity, product.id);
+                });
               }
             }
           }
@@ -849,9 +871,9 @@ export class GameState {
     }
 
     // Find product in shared market
-    const product = this.sharedMarket[price]?.[popularity];
-    if (!product) {
-      console.log('🔍 Product not found in shared market at location:', {
+    const productsAtLocation = this.sharedMarket[price]?.[popularity];
+    if (!productsAtLocation || productsAtLocation.length === 0) {
+      console.log('🔍 No products found in shared market at location:', {
         sellerId,
         price,
         popularity,
@@ -860,19 +882,24 @@ export class GameState {
           products: Object.keys(this.sharedMarket[p] || {})
         }))
       });
-      throw new Error('Product not found at specified location');
+      throw new Error('No products found at specified location');
     }
     
-    // If productId is provided, verify it matches
-    if (productId && product.id !== productId) {
-      console.log('🔍 Product ID mismatch:', {
-        expectedId: productId,
-        actualId: product.id,
-        price,
-        popularity,
-        sellerId
-      });
-      throw new Error('Product ID mismatch');
+    // Find specific product by ID or seller
+    let product;
+    if (productId) {
+      product = productsAtLocation.find(p => p.id === productId);
+      if (!product) {
+        throw new Error(`Product with ID ${productId} not found at specified location`);
+      }
+    } else if (sellerId) {
+      product = productsAtLocation.find(p => p.ownerId === sellerId);
+      if (!product) {
+        throw new Error(`No product from seller ${sellerId} found at specified location`);
+      }
+    } else {
+      // If no specific product requested, take the first one
+      product = productsAtLocation[0];
     }
 
     // Check if player can afford
@@ -884,7 +911,7 @@ export class GameState {
     player.spendFunds(price);
 
     // Remove product from shared market
-    this.removeProductFromSharedMarket(price, popularity);
+    this.removeProductFromSharedMarket(price, popularity, product.id);
     
     // Transfer funds to seller
     if (sellerId === 'manufacturer-automata' || sellerId === 'resale-automata') {
@@ -1329,7 +1356,7 @@ export class GameState {
         
         // Move product in shared market
         if (newPopularity !== product.popularity) {
-          this.removeProductFromSharedMarket(product.price, product.popularity);
+          this.removeProductFromSharedMarket(product.price, product.popularity, product.id);
           const oldPopularity = product.popularity;
           product.popularity = newPopularity;
           this.addProductToSharedMarket(product, product.price);
@@ -1375,7 +1402,7 @@ export class GameState {
                       (product.ownerId === 'manufacturer-automata' ? this.manufacturerAutomata : null);
         
         // Remove from shared market
-        this.removeProductFromSharedMarket(product.price, product.popularity);
+        this.removeProductFromSharedMarket(product.price, product.popularity, product.id);
         
         // Pay owner
         if (owner.gainFunds) {
@@ -1414,7 +1441,7 @@ export class GameState {
           
           if (newPrice < oldPrice) {
             // Remove from old position
-            this.removeProductFromSharedMarket(oldPrice, parseInt(popularity));
+            this.removeProductFromSharedMarket(oldPrice, parseInt(popularity), product.id);
             // Update product price
             product.price = newPrice;
             // Add to new position
@@ -1474,7 +1501,7 @@ export class GameState {
         }
         
         // Remove from shared market
-        this.removeProductFromSharedMarket(product.price, product.popularity);
+        this.removeProductFromSharedMarket(product.price, product.popularity, product.id);
       }
     });
     
@@ -1564,22 +1591,24 @@ export class GameState {
     }
 
     // Find product in shared market
-    const product = this.sharedMarket[price]?.[popularity];
+    const productsAtLocation = this.sharedMarket[price]?.[popularity];
+    if (!productsAtLocation || productsAtLocation.length === 0) {
+      throw new Error(`No products found at price ${price}, popularity ${popularity}`);
+    }
+    
+    const product = productsAtLocation.find(p => p.id === productId);
+    if (!product) {
+      throw new Error(`Product with ID ${productId} not found at price ${price}, popularity ${popularity}`);
+    }
+    
     console.log('🔍 Product search debug in shared market:', {
       price,
       popularity,
       productId,
       foundProduct: product,
       foundProductId: product?.id,
-      marketAtPrice: this.sharedMarket[price]
+      totalProductsAtLocation: productsAtLocation.length
     });
-    
-    if (!product) {
-      throw new Error(`Product not found at price ${price}, popularity ${popularity}`);
-    }
-    if (product.id !== productId) {
-      throw new Error(`Product ID mismatch: expected ${productId}, found ${product.id}`);
-    }
 
     // Check if player can afford
     if (!player.canAfford(price)) {
@@ -1617,10 +1646,13 @@ export class GameState {
       throw new Error(`Resale price cannot be lower than purchase price (${price})`);
     }
 
-    // Verify resale market slot is available before proceeding
-    const existingProduct = this.sharedMarket[finalResalePrice] && this.sharedMarket[finalResalePrice][product.popularity];
-    if (existingProduct !== null) {
-      throw new Error(`Shared market slot already occupied at price ${finalResalePrice}, popularity ${product.popularity}`);
+    // Verify player doesn't already have a product at resale coordinate
+    const slot = this.sharedMarket[finalResalePrice] && this.sharedMarket[finalResalePrice][product.popularity];
+    if (slot) {
+      const existingFromSamePlayer = slot.find(p => p.ownerId === player.id);
+      if (existingFromSamePlayer) {
+        throw new Error(`You already have a product at price ${finalResalePrice}, popularity ${product.popularity}`);
+      }
     }
 
     // Execute purchase and resale
@@ -1629,7 +1661,7 @@ export class GameState {
     player.spendFunds(price);
 
     // Remove product from shared market
-    this.removeProductFromSharedMarket(price, popularity);
+    this.removeProductFromSharedMarket(price, popularity, product.id);
     
     // Transfer funds to seller
     if (sellerId === 'manufacturer-automata' || sellerId === 'resale-automata') {

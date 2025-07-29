@@ -45,7 +45,7 @@ export interface GameState {
   currentPlayerIndex: number;
   currentRound: number;
   currentPhase: 'action' | 'automata' | 'market';
-  sharedMarket: { [price: number]: { [popularity: number]: Product | null } };
+  sharedMarket: { [price: number]: { [popularity: number]: Product[] } };
   pollution: {
     'game-console': number;
     'diy-gadget': number;

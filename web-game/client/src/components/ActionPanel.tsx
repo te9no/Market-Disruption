@@ -586,11 +586,13 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           const products: Array<{value: string, label: string}> = [];
           
           Object.entries(gameState.sharedMarket || {}).forEach(([price, popularityMap]) => {
-            Object.entries(popularityMap || {}).forEach(([popularity, product]) => {
-              if (product) {
-                products.push({
-                  value: `${price}-${popularity}`,
-                  label: `商品(値${product.value}) (価格${price}、人気度${popularity})`
+            Object.entries(popularityMap || {}).forEach(([popularity, productsAtLocation]) => {
+              if (productsAtLocation && productsAtLocation.length > 0) {
+                productsAtLocation.forEach((product, index) => {
+                  products.push({
+                    value: `${price}-${popularity}-${index}`,
+                    label: `商品(値${product.value}) (価格${price}、人気度${popularity}) - ${index + 1}番目`
+                  });
                 });
               }
             });
@@ -622,10 +624,10 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <>
                 <ModernButtonGroup
                   label="商品 (価格-人気度)"
-                  value={`${actionParams.price}-${actionParams.popularity}` || ''}
+                  value={`${actionParams.price}-${actionParams.popularity}-${actionParams.productIndex}` || ''}
                   onChange={(value) => {
-                    const [price, popularity] = value.split('-').map(Number);
-                    setActionParams({...actionParams, price, popularity});
+                    const [price, popularity, productIndex] = value.split('-');
+                    setActionParams({...actionParams, price: Number(price), popularity: Number(popularity), productIndex: Number(productIndex)});
                   }}
                   options={getPlayerProducts(actionParams.targetPlayerId)}
                   emptyMessage="対象プレイヤーの商品がありません"
@@ -659,7 +661,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <ModernButton
                 onClick={() => {
                   // Find the actual product from shared market
-                  const product = gameState.sharedMarket?.[actionParams.price]?.[actionParams.popularity];
+                  const productsAtLocation = gameState.sharedMarket?.[actionParams.price]?.[actionParams.popularity];
+                  const product = productsAtLocation?.[actionParams.productIndex || 0];
                   
                   const reviewParams = {
                     targetProductId: product?.id,
@@ -703,28 +706,37 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </div>
             <ModernButtonGroup
               label="買い戻しする商品 (価格-人気度)"
-              value={`${actionParams.price}-${actionParams.popularity}` || ''}
+              value={`${actionParams.price}-${actionParams.popularity}-${actionParams.productIndex}` || ''}
               onChange={(value) => {
-                const [price, popularity] = value.split('-').map(Number);
-                const product = gameState.sharedMarket?.[price]?.[popularity];
+                const [price, popularity, productIndex] = value.split('-');
+                const productsAtLocation = gameState.sharedMarket?.[Number(price)]?.[Number(popularity)];
+                const product = productsAtLocation?.[Number(productIndex) || 0];
                 setActionParams({
                   ...actionParams, 
-                  price, 
-                  popularity,
+                  price: Number(price), 
+                  popularity: Number(popularity),
+                  productIndex: Number(productIndex),
                   productInfo: product
                 });
               }}
               options={Object.entries(gameState.sharedMarket || {}).flatMap(([price, popularityMap]) =>
-                Object.entries(popularityMap || {}).map(([popularity, product]) => {
-                  if (product && product.ownerId === player.id) {
-                    return {
-                      value: `${price}-${popularity}`,
-                      label: `🎲 商品(値${product.value})`,
-                      description: `価格¥${price} / 人気度${popularity}`
-                    };
+                Object.entries(popularityMap || {}).flatMap(([popularity, productsAtLocation]) => {
+                  if (productsAtLocation && productsAtLocation.length > 0) {
+                    return productsAtLocation.map((product, index) => {
+                      if (product.ownerId === player.id) {
+                        return {
+                          value: `${price}-${popularity}-${index}`,
+                          label: `🎲 商品(値${product.value})`,
+                          description: `価格¥${price} / 人気度${popularity}`
+                        };
+                      } else {
+                        return null;
+                      }
+                    }).filter((item): item is {value: string, label: string, description: string} => item !== null);
+                  } else {
+                    return [];
                   }
-                  return null;
-                }).filter((item): item is {value: string, label: string, description: string} => item !== null)
+                })
               )}
               emptyMessage="買い戻し可能な商品がありません"
               columns={2}
@@ -871,8 +883,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   const popularity = Number(parts[1]);
                   const productId = parts.slice(2).join('-');
                   
-                  const product = gameState.sharedMarket?.[price]?.[popularity];
-                  if (product && product.id === productId) {
+                  const productsAtLocation = gameState.sharedMarket?.[price]?.[popularity];
+                  const product = productsAtLocation?.find(p => p.id === productId);
+                  if (product) {
                     setActionParams({...actionParams, price, popularity, productId, selectedProductKey: value});
                   }
                 }}
@@ -882,14 +895,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   
                   const availableProducts: Array<{value: string; label: string; description?: string}> = [];
                   Object.entries(gameState.sharedMarket).forEach(([price, priceRow]) => {
-                    Object.entries(priceRow || {}).forEach(([popularity, product]) => {
-                      if (product && product.ownerId === actionParams.targetPlayerId) {
-                        const isResale = product.isResale === true;
-                        
-                        availableProducts.push({
-                          value: `${price}-${popularity}-${product.id}`,
-                          label: `🎲 商品(値${product.value}) ${isResale ? '(転売品)' : ''}`,
-                          description: `¥${price} / 人気度${popularity}`
+                    Object.entries(priceRow || {}).forEach(([popularity, productsAtLocation]) => {
+                      if (productsAtLocation && productsAtLocation.length > 0) {
+                        productsAtLocation.forEach(product => {
+                          if (product.ownerId === actionParams.targetPlayerId) {
+                            const isResale = product.isResale === true;
+                            
+                            availableProducts.push({
+                              value: `${price}-${popularity}-${product.id}`,
+                              label: `🎲 商品(値${product.value}) ${isResale ? '(転売品)' : ''}`,
+                              description: `¥${price} / 人気度${popularity}`
+                            });
+                          }
                         });
                       }
                     });
@@ -975,8 +992,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   const popularity = Number(parts[1]);
                   const productId = parts.slice(2).join('-');
                   
-                  const product = gameState.sharedMarket?.[price]?.[popularity];
-                  if (product && product.id === productId) {
+                  const productsAtLocation = gameState.sharedMarket?.[price]?.[popularity];
+                  const product = productsAtLocation?.find(p => p.id === productId);
+                  if (product) {
                     // Calculate expected resale price
                     const resaleBonus = 5 + (player.resaleHistory <= 1 ? 0 : 
                                         player.resaleHistory <= 4 ? 3 : 
@@ -1005,9 +1023,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   
                   const availableProducts: Array<{value: string; label: string; description?: string}> = [];
                   Object.entries(gameState.sharedMarket).forEach(([price, priceRow]) => {
-                    Object.entries(priceRow || {}).forEach(([popularity, product]) => {
-                      if (product && product.ownerId === actionParams.targetPlayerId) {
-                        const isResale = product.isResale === true;
+                    Object.entries(priceRow || {}).forEach(([popularity, productsAtLocation]) => {
+                      if (productsAtLocation && productsAtLocation.length > 0) {
+                        productsAtLocation.forEach(product => {
+                          if (product.ownerId === actionParams.targetPlayerId) {
+                            const isResale = product.isResale === true;
                         
                         // Calculate potential profit for display
                         const resaleBonus = 5 + (player.resaleHistory <= 1 ? 0 : 
@@ -1026,6 +1046,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                           value: `${price}-${popularity}-${product.id}`,
                           label: `🎲 商品(値${product.value}) ${isResale ? '(転売品)' : ''}`,
                           description: `¥${price} → ¥${expectedResalePrice} (利益+${profit})`
+                        });
+                          }
                         });
                       }
                     });
@@ -1522,7 +1544,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <ModernButton
                 onClick={() => setSelectedAction('buyback')}
                 disabled={!canPerformActions || !gameState.sharedMarket || Object.values(gameState.sharedMarket).every(priceRow => 
-                  Object.values(priceRow || {}).every(product => !product || product.ownerId !== player.id)
+                  Object.values(priceRow || {}).every(productsAtLocation => !productsAtLocation || productsAtLocation.length === 0 || !productsAtLocation.some(p => p.ownerId === player.id))
                 ) || player.actionPoints < 1}
                 variant="primary"
                 size="lg"

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { Product, Player } from '../store/gameSlice';
 
 interface SharedMarketBoardProps {
-  sharedMarket: { [price: number]: { [popularity: number]: Product | null } };
+  sharedMarket: { [price: number]: { [popularity: number]: Product[] } };
   players: Player[];
   currentPlayer?: Player;
   canInteract?: boolean;
@@ -60,8 +60,8 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
   const [showSection, setShowSection] = useState<'all' | 'low' | 'high'>('low');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
-  const renderProduct = (product: Product | null, price?: number, popularity?: number) => {
-    if (!product) {
+  const renderProducts = (productsAtLocation: Product[] | null, price?: number, popularity?: number) => {
+    if (!productsAtLocation || productsAtLocation.length === 0) {
       return (
         <div className="w-16 h-16 border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 flex items-center justify-center rounded-lg transition-colors">
           <span className="text-gray-400 text-sm">空き</span>
@@ -69,33 +69,36 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
       );
     }
 
-    const isResale = product.isResale === true;
-    const isOtherPlayer = canInteract && product.ownerId !== currentPlayer?.id;
-    const canPurchaseOrReview = isOtherPlayer && isMyTurn;
-    const playerColor = getPlayerColor(product.ownerId, players);
-    const playerName = getPlayerName(product.ownerId, players);
-    
-    return (
-      <div className={`w-16 h-16 border-2 border-gray-400 flex flex-col items-center justify-center text-white ${playerColor} hover:opacity-80 cursor-pointer rounded-lg shadow-sm relative transition-all group`}>
-        {/* Product value displayed as dice face */}
-        <div className="text-2xl font-bold text-white bg-black bg-opacity-30 rounded-full w-8 h-8 flex items-center justify-center">
-          {product.value}
-        </div>
-        
-        {/* Player name indicator */}
-        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white text-xs px-1 rounded text-center min-w-12">
-          {playerName.slice(0, 3)}
-        </div>
-        
-        {/* Resale indicator */}
-        {isResale && (
-          <div className="absolute -top-1 -right-1 bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold border-2 border-white">
-            🥤
+    // Display multiple products in the same cell
+    if (productsAtLocation.length === 1) {
+      const product = productsAtLocation[0];
+      const isResale = product.isResale === true;
+      const isOtherPlayer = canInteract && product.ownerId !== currentPlayer?.id;
+      const canPurchaseOrReview = isOtherPlayer && isMyTurn;
+      const playerColor = getPlayerColor(product.ownerId, players);
+      const playerName = getPlayerName(product.ownerId, players);
+      
+      return (
+        <div className={`w-16 h-16 border-2 border-gray-400 flex flex-col items-center justify-center text-white ${playerColor} hover:opacity-80 cursor-pointer rounded-lg shadow-sm relative transition-all group`}>
+          {/* Product value displayed as dice face */}
+          <div className="text-2xl font-bold text-white bg-black bg-opacity-30 rounded-full w-8 h-8 flex items-center justify-center">
+            {product.value}
           </div>
-        )}
-        
-        {/* Interaction buttons for other players' products */}
-        {canPurchaseOrReview && price && popularity && (
+          
+          {/* Player name indicator */}
+          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white text-xs px-1 rounded text-center min-w-12">
+            {playerName.slice(0, 3)}
+          </div>
+          
+          {/* Resale indicator */}
+          {isResale && (
+            <div className="absolute -top-1 -right-1 bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold border-2 border-white">
+              🥤
+            </div>
+          )}
+          
+          {/* Interaction buttons for other players' products */}
+          {canPurchaseOrReview && price && popularity && (
           <div className="absolute inset-0 bg-black bg-opacity-70 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center space-y-1">
             <button
               onClick={(e) => {
@@ -121,6 +124,28 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
         )}
       </div>
     );
+    } else {
+      // Multiple products at the same location - show stacked view
+      return (
+        <div className="w-16 h-16 border-2 border-gray-400 bg-gray-100 rounded-lg overflow-hidden relative">
+          <div className="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded-bl font-bold">
+            {productsAtLocation.length}
+          </div>
+          <div className="grid grid-cols-2 gap-0.5 p-1 h-full">
+            {productsAtLocation.slice(0, 4).map((product) => {
+              const playerColor = getPlayerColor(product.ownerId, players);
+              const playerName = getPlayerName(product.ownerId, players);
+              return (
+                <div key={product.id} className={`${playerColor} text-white text-xs flex flex-col items-center justify-center rounded`}>
+                  <div className="text-xs font-bold">{product.value}</div>
+                  <div className="text-xs">{playerName.slice(0, 2)}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
   };
 
   const getPriceRange = () => {
@@ -136,13 +161,15 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
     
     Object.entries(sharedMarket).forEach(([priceStr, popularityMap]) => {
       const price = parseInt(priceStr);
-      Object.entries(popularityMap || {}).forEach(([popularityStr, product]) => {
+      Object.entries(popularityMap || {}).forEach(([popularityStr, productsAtLocation]) => {
         const popularity = parseInt(popularityStr);
-        if (product) {
-          products.push({
-            ...product,
-            price,
-            popularity
+        if (productsAtLocation && Array.isArray(productsAtLocation)) {
+          productsAtLocation.forEach(product => {
+            products.push({
+              ...product,
+              price,
+              popularity
+            });
           });
         }
       });
@@ -475,16 +502,32 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
                   padding: '4px',
                   transition: 'background-color 0.2s'
                 }} className="group hover:bg-white hover:bg-opacity-50">
-                  {renderProduct(sharedMarket[price]?.[popularity] || null, price, popularity)}
+                  {renderProducts(sharedMarket[price]?.[popularity] || null, price, popularity)}
                   
                   {/* Hover tooltip */}
-                  {sharedMarket[price]?.[popularity] && (
+                  {sharedMarket[price]?.[popularity] && sharedMarket[price][popularity].length > 0 && (
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap pointer-events-none shadow-lg">
-                      <div className="font-bold text-yellow-300">
-                        {getPlayerName(sharedMarket[price][popularity]!.ownerId, players)}の商品
-                      </div>
-                      <div>値: {sharedMarket[price][popularity]!.value} | コスト: {sharedMarket[price][popularity]!.cost}</div>
-                      {sharedMarket[price][popularity]!.isResale && <div className="text-red-300">🔄 転売品</div>}
+                      {sharedMarket[price][popularity].length === 1 ? (
+                        <>
+                          <div className="font-bold text-yellow-300">
+                            {getPlayerName(sharedMarket[price][popularity][0].ownerId, players)}の商品
+                          </div>
+                          <div>値: {sharedMarket[price][popularity][0].value} | コスト: {sharedMarket[price][popularity][0].cost}</div>
+                          {sharedMarket[price][popularity][0].isResale && <div className="text-red-300">🔄 転売品</div>}
+                        </>
+                      ) : (
+                        <>
+                          <div className="font-bold text-yellow-300">
+                            {sharedMarket[price][popularity].length}個の商品
+                          </div>
+                          {sharedMarket[price][popularity].map((product, idx) => (
+                            <div key={idx} className="text-xs">
+                              {getPlayerName(product.ownerId, players)}: 値{product.value} コスト{product.cost}
+                              {product.isResale && ' 🔄'}
+                            </div>
+                          ))}
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
