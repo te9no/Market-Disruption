@@ -477,7 +477,7 @@ const GameBoard: React.FC = () => {
             top: isMobile ? '0' : 'auto',
             left: isMobile ? (showSidebar ? '0' : '-280px') : 'auto',
             height: isMobile ? '100vh' : '100%',
-            zIndex: isMobile ? 40 : 'auto',
+            zIndex: isMobile ? 10 : 5,
             transition: 'all 0.3s ease'
           }}
           >
@@ -544,7 +544,7 @@ const GameBoard: React.FC = () => {
                 right: 0,
                 bottom: 0,
                 background: 'rgba(0,0,0,0.5)',
-                zIndex: 30
+                zIndex: 9
               }}
               onClick={() => setShowSidebar(false)}
             />
