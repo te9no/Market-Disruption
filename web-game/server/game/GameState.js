@@ -22,16 +22,17 @@ export class GameState {
     // Regulation progress (0-3: no regulation, public comment, consideration, active)
     this.regulationLevel = 0;
     
-    // Automata state
+    // Shared market board (20x6 grid: price 1-20, popularity 1-6)
+    this.sharedMarket = this.initializeSharedMarket();
+    
+    // Automata state (no personal markets)
     this.manufacturerAutomata = {
-      inventory: [],
-      personalMarket: this.initializeAutomataMarket()
+      inventory: []
     };
     
     this.resaleAutomata = {
       funds: 20,
       inventory: [],
-      personalMarket: this.initializeAutomataMarket(),
       pauseRounds: 0
     };
     
@@ -101,7 +102,7 @@ export class GameState {
     console.log(`📜 PlayLog: ${message}`);
   }
   
-  initializeAutomataMarket() {
+  initializeSharedMarket() {
     const market = {};
     for (let price = 1; price <= 20; price++) {
       market[price] = {};
@@ -110,6 +111,48 @@ export class GameState {
       }
     }
     return market;
+  }
+
+  // Add product to shared market
+  addProductToSharedMarket(product, price) {
+    const slot = this.sharedMarket[price][product.popularity];
+    if (slot !== null) {
+      console.log(`🚫 Shared market slot occupied at price ${price}, popularity ${product.popularity}:`, slot);
+      throw new Error(`Market slot already occupied at price ${price}, popularity ${product.popularity}`);
+    }
+    
+    console.log(`✅ Adding product to shared market at price ${price}, popularity ${product.popularity}`, product);
+    this.sharedMarket[price][product.popularity] = product;
+    return true;
+  }
+
+  // Remove product from shared market
+  removeProductFromSharedMarket(price, popularity) {
+    const product = this.sharedMarket[price][popularity];
+    if (!product) {
+      throw new Error('No product at specified location in shared market');
+    }
+    
+    this.sharedMarket[price][popularity] = null;
+    return product;
+  }
+
+  // Get all products in shared market
+  getAllSharedMarketProducts() {
+    const products = [];
+    for (let price = 1; price <= 20; price++) {
+      for (let popularity = 1; popularity <= 6; popularity++) {
+        const product = this.sharedMarket[price][popularity];
+        if (product) {
+          products.push({
+            ...product,
+            price,
+            popularity
+          });
+        }
+      }
+    }
+    return products;
   }
   
   removePlayer(playerId) {
@@ -412,10 +455,10 @@ export class GameState {
     const marketProduct = { ...product };
     marketProduct.price = adjustedPrice;
     
-    // Verify market slot is available before proceeding
-    const existingProduct = player.personalMarket[adjustedPrice] && player.personalMarket[adjustedPrice][marketProduct.popularity];
+    // Verify shared market slot is available before proceeding
+    const existingProduct = this.sharedMarket[adjustedPrice] && this.sharedMarket[adjustedPrice][marketProduct.popularity];
     if (existingProduct !== null) {
-      console.log(`🚫 Market slot occupied at price ${adjustedPrice}, popularity ${marketProduct.popularity}:`, existingProduct);
+      console.log(`🚫 Shared market slot occupied at price ${adjustedPrice}, popularity ${marketProduct.popularity}:`, existingProduct);
       throw new Error(`Market slot already occupied at price ${adjustedPrice}, popularity ${marketProduct.popularity}`);
     }
     
@@ -423,8 +466,8 @@ export class GameState {
     player.spendActionPoints(1);
     player.inventory.splice(productIndex, 1);
     
-    // Add to personal market (should not fail now)
-    player.addProductToMarket(marketProduct, adjustedPrice);
+    // Add to shared market (should not fail now)
+    this.addProductToSharedMarket(marketProduct, adjustedPrice);
     
     this.addToPlayLog('action', `商品(値${marketProduct.value})を¥${adjustedPrice}で出品しました`, player.id, player.name);
     
@@ -439,80 +482,27 @@ export class GameState {
       throw new Error('Not enough action points');
     }
 
-    // Find product by ID across all markets
-    let targetPlayer = null;
-    let targetMarket = null;
+    // Find product by ID in shared market
     let product = null;
     let price = null;
     let popularity = null;
 
-    // Check players' markets
-    console.log(`🔍 Checking ${this.players.length} players' markets`);
-    for (const p of this.players) {
-      for (const priceKey in p.personalMarket) {
-        for (const popularityKey in p.personalMarket[priceKey]) {
-          const prod = p.personalMarket[priceKey][popularityKey];
-          if (prod && prod.id === targetProductId) {
-            console.log(`✅ Found product in player ${p.name}'s market at price ${priceKey}, popularity ${popularityKey}`);
-            targetPlayer = p;
-            targetMarket = p.personalMarket;
-            product = prod;
-            price = parseInt(priceKey);
-            popularity = parseInt(popularityKey);
-            break;
-          }
+    // Check shared market
+    console.log(`🔍 Checking shared market for product ${targetProductId}`);
+    for (const priceKey in this.sharedMarket) {
+      for (const popularityKey in this.sharedMarket[priceKey]) {
+        const prod = this.sharedMarket[priceKey][popularityKey];
+        if (prod && prod.id === targetProductId) {
+          console.log(`✅ Found product in shared market at price ${priceKey}, popularity ${popularityKey}`);
+          product = prod;
+          price = parseInt(priceKey);
+          popularity = parseInt(popularityKey);
+          break;
         }
-        if (product) break;
       }
       if (product) break;
     }
 
-    // Check automata markets if not found in player markets
-    if (!product) {
-      console.log(`🔍 Checking manufacturer automata market`);
-      // Check manufacturer automata
-      for (const priceKey in this.manufacturerAutomata.personalMarket) {
-        for (const popularityKey in this.manufacturerAutomata.personalMarket[priceKey]) {
-          const prod = this.manufacturerAutomata.personalMarket[priceKey][popularityKey];
-          if (prod) {
-            console.log(`🔍 Found manufacturer product at ${priceKey}/${popularityKey}: id=${prod.id}`);
-          }
-          if (prod && prod.id === targetProductId) {
-            console.log(`✅ Found product in manufacturer automata market at price ${priceKey}, popularity ${popularityKey}`);
-            targetPlayer = this.manufacturerAutomata;
-            targetMarket = this.manufacturerAutomata.personalMarket;
-            product = prod;
-            price = parseInt(priceKey);
-            popularity = parseInt(popularityKey);
-            break;
-          }
-        }
-        if (product) break;
-      }
-    }
-
-    if (!product) {
-      console.log(`🔍 Checking resale automata market`);
-      // Check resale automata
-      for (const priceKey in this.resaleAutomata.personalMarket) {
-        for (const popularityKey in this.resaleAutomata.personalMarket[priceKey]) {
-          const prod = this.resaleAutomata.personalMarket[priceKey][popularityKey];
-          if (prod) {
-            console.log(`🔍 Found resale product at ${priceKey}/${popularityKey}: id=${prod.id}`);
-          }
-          if (prod && prod.id === targetProductId) {
-            console.log(`✅ Found product in resale automata market at price ${priceKey}, popularity ${popularityKey}`);
-            targetPlayer = this.resaleAutomata;
-            targetMarket = this.resaleAutomata.personalMarket;
-            product = prod;
-            price = parseInt(priceKey);
-            popularity = parseInt(popularityKey);
-            break;
-          }
-        }
-        if (product) break;
-      }
-    }
 
     if (!product) {
       console.log(`❌ Product ${targetProductId} not found in any market`);
@@ -541,18 +531,10 @@ export class GameState {
       const newPopularity = Math.max(1, Math.min(6, product.popularity + popularityChange));
       
       if (newPopularity !== product.popularity) {
-        // Move product to new popularity slot
-        if (targetPlayer.removeProductFromMarket) {
-          // Player has the method
-          targetPlayer.removeProductFromMarket(price, popularity);
-          product.popularity = newPopularity;
-          targetPlayer.addProductToMarket(product, price);
-        } else {
-          // Automata - handle manually
-          targetMarket[price][popularity] = null;
-          product.popularity = newPopularity;
-          targetMarket[price][newPopularity] = product;
-        }
+        // Move product to new popularity slot in shared market
+        this.removeProductFromSharedMarket(price, popularity);
+        product.popularity = newPopularity;
+        this.addProductToSharedMarket(product, price);
       }
 
       return { 
@@ -576,18 +558,10 @@ export class GameState {
       const newPopularity = Math.max(1, Math.min(6, product.popularity + popularityChange));
       
       if (newPopularity !== product.popularity) {
-        // Move product to new popularity slot
-        if (targetPlayer.removeProductFromMarket) {
-          // Player has the method
-          targetPlayer.removeProductFromMarket(price, popularity);
-          product.popularity = newPopularity;
-          targetPlayer.addProductToMarket(product, price);
-        } else {
-          // Automata - handle manually
-          targetMarket[price][popularity] = null;
-          product.popularity = newPopularity;
-          targetMarket[price][newPopularity] = product;
-        }
+        // Move product to new popularity slot in shared market
+        this.removeProductFromSharedMarket(price, popularity);
+        product.popularity = newPopularity;
+        this.addProductToSharedMarket(product, price);
       }
 
       return { 
@@ -692,15 +666,15 @@ export class GameState {
       throw new Error('Not enough action points');
     }
 
-    const product = player.personalMarket[price][popularity];
-    if (!product) {
-      throw new Error('No product at specified location');
+    const product = this.sharedMarket[price][popularity];
+    if (!product || product.ownerId !== player.id) {
+      throw new Error('No product owned by you at specified location');
     }
 
     player.spendActionPoints(1);
     
-    // Remove from market and add to inventory
-    player.removeProductFromMarket(price, popularity);
+    // Remove from shared market and add to inventory
+    this.removeProductFromSharedMarket(price, popularity);
     player.inventory.push(product);
 
     return { type: 'buyback', product, price, popularity };
@@ -741,17 +715,14 @@ export class GameState {
     // Check if any products of this design exist in any market
     let productsExist = false;
     
-    // Check all players' markets
-    for (const checkPlayer of this.players) {
-      for (let price = 1; price <= 20; price++) {
-        for (let popularity = 1; popularity <= 6; popularity++) {
-          const product = checkPlayer.personalMarket[price][popularity];
-          if (product && product.designSlot === designSlot && product.ownerId === player.id) {
-            productsExist = true;
-            break;
-          }
+    // Check shared market
+    for (let price = 1; price <= 20; price++) {
+      for (let popularity = 1; popularity <= 6; popularity++) {
+        const product = this.sharedMarket[price][popularity];
+        if (product && product.designSlot === designSlot && product.ownerId === player.id) {
+          productsExist = true;
+          break;
         }
-        if (productsExist) break;
       }
       if (productsExist) break;
     }
@@ -798,12 +769,12 @@ export class GameState {
           // Remove resale products from inventory
           p.inventory = p.inventory.filter(product => !product.previousOwner);
           
-          // Remove resale products from personal markets
+          // Remove resale products owned by this player from shared market
           for (let price = 1; price <= 20; price++) {
             for (let popularity = 1; popularity <= 6; popularity++) {
-              const product = p.personalMarket[price][popularity];
-              if (product && product.isResale) {
-                p.removeProductFromMarket(price, popularity);
+              const product = this.sharedMarket[price][popularity];
+              if (product && product.isResale && product.ownerId === p.id) {
+                this.removeProductFromSharedMarket(price, popularity);
               }
             }
           }
@@ -818,7 +789,6 @@ export class GameState {
 
         // Reset resale automata and pause for 2 rounds
         this.resaleAutomata.inventory = [];
-        this.resaleAutomata.personalMarket = this.initializeAutomataMarket();
         this.resaleAutomata.pauseRounds = 2;
       }
     }
@@ -864,34 +834,30 @@ export class GameState {
       throw new Error('Not enough action points');
     }
 
-    // Find seller (player or automata)
+    // Find seller (for funds transfer)
     let seller;
-    let sellerMarket;
     
     if (sellerId === 'manufacturer-automata') {
       seller = this.manufacturerAutomata;
-      sellerMarket = this.manufacturerAutomata.personalMarket;
     } else if (sellerId === 'resale-automata') {
       seller = this.resaleAutomata;
-      sellerMarket = this.resaleAutomata.personalMarket;
     } else {
       seller = this.players.find(p => p.id === sellerId);
       if (!seller) {
         throw new Error('Seller not found');
       }
-      sellerMarket = seller.personalMarket;
     }
 
-    // Find product
-    const product = sellerMarket[price]?.[popularity];
+    // Find product in shared market
+    const product = this.sharedMarket[price]?.[popularity];
     if (!product) {
-      console.log('🔍 Product not found at location:', {
+      console.log('🔍 Product not found in shared market at location:', {
         sellerId,
         price,
         popularity,
-        availableMarket: Object.keys(sellerMarket).map(p => ({
+        availableMarket: Object.keys(this.sharedMarket).map(p => ({
           price: p,
-          products: Object.keys(sellerMarket[p] || {})
+          products: Object.keys(this.sharedMarket[p] || {})
         }))
       });
       throw new Error('Product not found at specified location');
@@ -917,12 +883,13 @@ export class GameState {
     player.spendActionPoints(1);
     player.spendFunds(price);
 
-    // Remove product from seller's market
+    // Remove product from shared market
+    this.removeProductFromSharedMarket(price, popularity);
+    
+    // Transfer funds to seller
     if (sellerId === 'manufacturer-automata' || sellerId === 'resale-automata') {
-      delete sellerMarket[price][popularity];
       seller.funds += price;
     } else {
-      seller.removeProductFromMarket(price, popularity);
       seller.gainFunds(price);
     }
 
@@ -1238,10 +1205,8 @@ export class GameState {
       };
       
       this.manufacturerAutomata.inventory.push(product);
-      if (!this.manufacturerAutomata.personalMarket[price]) {
-        this.manufacturerAutomata.personalMarket[price] = {};
-      }
-      this.manufacturerAutomata.personalMarket[price][1] = product;
+      // Add product directly to shared market with popularity 1
+      this.addProductToSharedMarket(product, price);
     }
     
     console.log(`Manufacturer automata: ${action}, dice: ${dice1}+${dice2}=${total}`);
@@ -1299,19 +1264,16 @@ export class GameState {
         ownerId: 'resale-automata'
       };
       
-      // Add to resale automata market
+      // Add to shared market
       console.log(`💰 Resale automata putting product on market: 商品(値${resaleProduct.value}) at price ${resalePrice}`);
-      if (!this.resaleAutomata.personalMarket[resalePrice]) {
-        this.resaleAutomata.personalMarket[resalePrice] = {};
-      }
-      this.resaleAutomata.personalMarket[resalePrice][resaleProduct.popularity] = resaleProduct;
+      this.addProductToSharedMarket(resaleProduct, resalePrice);
       
       // Add global pollution (new rule system)
       this.globalPollution = (this.globalPollution || 0) + 1;
     });
     
     console.log(`Resale automata: ${action}, purchased ${purchasedProducts.length} products`);
-    console.log(`💰 Resale automata market after action:`, Object.keys(this.resaleAutomata.personalMarket).length, 'price points');
+    console.log(`💰 Resale automata action completed`);
     
     return { 
       action, 
@@ -1365,19 +1327,17 @@ export class GameState {
         const popularityChange = type === 'positive' ? 1 : -1;
         const newPopularity = Math.max(1, Math.min(6, product.popularity + popularityChange));
         
-        // Move product in market
-        if (owner.personalMarket && owner.personalMarket[product.price]) {
-          delete owner.personalMarket[product.price][product.popularity];
+        // Move product in shared market
+        if (newPopularity !== product.popularity) {
+          this.removeProductFromSharedMarket(product.price, product.popularity);
           const oldPopularity = product.popularity;
           product.popularity = newPopularity;
-          if (!owner.personalMarket[product.price][newPopularity]) {
-            owner.personalMarket[product.price][newPopularity] = product;
-          }
+          this.addProductToSharedMarket(product, product.price);
           
           // Log the review action
           const reviewType = type === 'positive' ? '高評価' : '低評価';
           const targetDesc = target === 'highest_price' ? '最高価格商品' : target === 'own_cheapest' ? '自社最安商品' : '商品';
-          this.addToPlayLog('automata', `メーカーオートマ: ${targetDesc}「${product.category}」に${reviewType}レビュー (人気度${oldPopularity}→${newPopularity})`, 'manufacturer-automata', 'メーカーオートマ');
+          this.addToPlayLog('automata', `メーカーオートマ: ${targetDesc}「商品(値${product.value})」に${reviewType}レビュー (人気度${oldPopularity}→${newPopularity})`, 'manufacturer-automata', 'メーカーオートマ');
         }
       }
     }
@@ -1414,21 +1374,22 @@ export class GameState {
         const owner = this.players.find(p => p.id === product.ownerId) || 
                       (product.ownerId === 'manufacturer-automata' ? this.manufacturerAutomata : null);
         
-        if (owner && owner.personalMarket && owner.personalMarket[product.price]) {
-          delete owner.personalMarket[product.price][product.popularity];
-          
-          // Pay owner
-          if (owner.gainFunds) {
-            owner.gainFunds(product.price);
-          }
-          
-          remainingFunds -= product.price;
-          purchased.push(product);
-          
-          // Log individual purchase
-          const ownerName = owner.name || (product.ownerId === 'manufacturer-automata' ? 'メーカーオートマ' : product.ownerId);
-          console.log(`💰 Resale automata purchased: 商品(値${product.value}) from ${ownerName} for ¥${product.price}`);
+        // Remove from shared market
+        this.removeProductFromSharedMarket(product.price, product.popularity);
+        
+        // Pay owner
+        if (owner.gainFunds) {
+          owner.gainFunds(product.price);
+        } else {
+          owner.funds = (owner.funds || 0) + product.price;
         }
+        
+        remainingFunds -= product.price;
+        purchased.push(product);
+        
+        // Log individual purchase
+        const ownerName = owner.name || (product.ownerId === 'manufacturer-automata' ? 'メーカーオートマ' : product.ownerId);
+        console.log(`💰 Resale automata purchased: 商品(値${product.value}) from ${ownerName} for ¥${product.price}`);
       }
     }
     
@@ -1437,58 +1398,32 @@ export class GameState {
   }
 
   getAllMarketProducts() {
-    const products = [];
-    
-    // Player products
-    this.players.forEach(player => {
-      products.push(...player.getAllMarketProducts());
-    });
-    
-    // Automata products
-    for (const [price, popularityMap] of Object.entries(this.manufacturerAutomata.personalMarket)) {
-      for (const [popularity, product] of Object.entries(popularityMap)) {
-        if (product) {
-          products.push({ ...product, price: parseInt(price), popularity: parseInt(popularity) });
-        }
-      }
-    }
-    
-    for (const [price, popularityMap] of Object.entries(this.resaleAutomata.personalMarket)) {
-      for (const [popularity, product] of Object.entries(popularityMap)) {
-        if (product) {
-          products.push({ ...product, price: parseInt(price), popularity: parseInt(popularity) });
-        }
-      }
-    }
-    
-    return products;
+    // Return all products from shared market
+    return this.getAllSharedMarketProducts();
   }
 
   reduceAutomataProductPrices(reduction) {
-    // Reduce manufacturer automata product prices
-    const newMarket = {};
+    // Reduce manufacturer automata product prices in shared market
     let reducedCount = 0;
     
-    for (const [price, popularityMap] of Object.entries(this.manufacturerAutomata.personalMarket)) {
+    for (const [price, popularityMap] of Object.entries(this.sharedMarket)) {
       for (const [popularity, product] of Object.entries(popularityMap)) {
-        if (product) {
+        if (product && product.ownerId === 'manufacturer-automata') {
           const oldPrice = parseInt(price);
           const newPrice = Math.max(1, oldPrice - reduction);
-          product.price = newPrice;
-          
-          if (!newMarket[newPrice]) {
-            newMarket[newPrice] = {};
-          }
-          newMarket[newPrice][popularity] = product;
           
           if (newPrice < oldPrice) {
+            // Remove from old position
+            this.removeProductFromSharedMarket(oldPrice, parseInt(popularity));
+            // Update product price
+            product.price = newPrice;
+            // Add to new position
+            this.addProductToSharedMarket(product, newPrice);
             reducedCount++;
           }
         }
       }
     }
-    
-    this.manufacturerAutomata.personalMarket = newMarket;
     
     // Log the price reduction action
     if (reducedCount > 0) {
@@ -1538,12 +1473,8 @@ export class GameState {
           owner.gainFunds(product.price);
         }
         
-        // Remove from market
-        if (owner.removeProductFromMarket) {
-          owner.removeProductFromMarket(product.price, product.popularity);
-        } else if (owner.personalMarket && owner.personalMarket[product.price]) {
-          delete owner.personalMarket[product.price][product.popularity];
-        }
+        // Remove from shared market
+        this.removeProductFromSharedMarket(product.price, product.popularity);
       }
     });
     
@@ -1618,34 +1549,29 @@ export class GameState {
     
     // No prestige requirement for resale action - prestige is reduced as consequence
 
-    // Find seller (player or automata)
+    // Find seller (for funds transfer)
     let seller;
-    let sellerMarket;
     
     if (sellerId === 'manufacturer-automata') {
       seller = this.manufacturerAutomata;
-      sellerMarket = this.manufacturerAutomata.personalMarket;
     } else if (sellerId === 'resale-automata') {
       seller = this.resaleAutomata;
-      sellerMarket = this.resaleAutomata.personalMarket;
     } else {
       seller = this.players.find(p => p.id === sellerId);
       if (!seller) {
         throw new Error('Seller not found');
       }
-      sellerMarket = seller.personalMarket;
     }
 
-    // Find product
-    const product = sellerMarket[price]?.[popularity];
-    console.log('🔍 Product search debug:', {
+    // Find product in shared market
+    const product = this.sharedMarket[price]?.[popularity];
+    console.log('🔍 Product search debug in shared market:', {
       price,
       popularity,
       productId,
       foundProduct: product,
       foundProductId: product?.id,
-      marketAtPrice: sellerMarket[price],
-      sellerMarketKeys: Object.keys(sellerMarket)
+      marketAtPrice: this.sharedMarket[price]
     });
     
     if (!product) {
@@ -1692,9 +1618,9 @@ export class GameState {
     }
 
     // Verify resale market slot is available before proceeding
-    const existingProduct = player.personalMarket[finalResalePrice] && player.personalMarket[finalResalePrice][product.popularity];
+    const existingProduct = this.sharedMarket[finalResalePrice] && this.sharedMarket[finalResalePrice][product.popularity];
     if (existingProduct !== null) {
-      throw new Error(`Resale market slot already occupied at price ${finalResalePrice}, popularity ${product.popularity}`);
+      throw new Error(`Shared market slot already occupied at price ${finalResalePrice}, popularity ${product.popularity}`);
     }
 
     // Execute purchase and resale
@@ -1702,12 +1628,13 @@ export class GameState {
     player.modifyPrestige(-1); // Spend 1 prestige for resale action
     player.spendFunds(price);
 
-    // Remove product from seller's market
+    // Remove product from shared market
+    this.removeProductFromSharedMarket(price, popularity);
+    
+    // Transfer funds to seller
     if (sellerId === 'manufacturer-automata' || sellerId === 'resale-automata') {
-      delete sellerMarket[price][popularity];
       seller.funds += price;
     } else {
-      seller.removeProductFromMarket(price, popularity);
       seller.gainFunds(price);
     }
 
@@ -1725,8 +1652,8 @@ export class GameState {
       ownerId: player.id // New owner is the reseller
     };
 
-    // Add to buyer's market immediately
-    player.addProductToMarket(resaleProduct, finalResalePrice);
+    // Add to shared market immediately
+    this.addProductToSharedMarket(resaleProduct, finalResalePrice);
 
     // Update buyer's resale history (no additional prestige penalty)
     player.incrementResaleHistory();
@@ -1766,7 +1693,9 @@ export class GameState {
       currentRound: this.currentRound,
       currentPhase: this.currentPhase,
       pollution: this.pollution,
+      globalPollution: this.globalPollution,
       regulationLevel: this.regulationLevel,
+      sharedMarket: this.sharedMarket,
       manufacturerAutomata: this.manufacturerAutomata,
       resaleAutomata: this.resaleAutomata,
       activeTrends: this.activeTrends,

@@ -10,8 +10,7 @@ export class Player {
     this.resaleHistory = 0;
     this.actionPoints = 3;
     
-    // Personal market grid (20x6: price 1-20, popularity 1-6)
-    this.personalMarket = this.initializeMarket();
+    // No personal market - using shared market board
     
     // Design board (up to 6 designs)
     this.designs = new Map(); // slot -> design
@@ -23,40 +22,7 @@ export class Player {
     this.openSourceDesigns = new Set();
   }
   
-  initializeMarket() {
-    const market = {};
-    for (let price = 1; price <= 20; price++) {
-      market[price] = {};
-      for (let popularity = 1; popularity <= 6; popularity++) {
-        market[price][popularity] = null; // null = empty slot
-      }
-    }
-    return market;
-  }
-  
-  // Add product to personal market
-  addProductToMarket(product, price) {
-    const slot = this.personalMarket[price][product.popularity];
-    if (slot !== null) {
-      console.log(`🚫 Player.addProductToMarket: slot occupied at price ${price}, popularity ${product.popularity}:`, slot);
-      throw new Error(`Market slot already occupied at price ${price}, popularity ${product.popularity}`);
-    }
-    
-    console.log(`✅ Player.addProductToMarket: adding product at price ${price}, popularity ${product.popularity}`);
-    this.personalMarket[price][product.popularity] = product;
-    return true;
-  }
-  
-  // Remove product from personal market
-  removeProductFromMarket(price, popularity) {
-    const product = this.personalMarket[price][popularity];
-    if (!product) {
-      throw new Error('No product at specified location');
-    }
-    
-    this.personalMarket[price][popularity] = null;
-    return product;
-  }
+  // Personal market methods removed - using shared market board
   
   // Check if can afford action
   canAfford(cost) {
@@ -140,24 +106,7 @@ export class Player {
     return this.prestige >= -2;
   }
 
-  // Get all products in personal market
-  getAllMarketProducts() {
-    const products = [];
-    for (let price = 1; price <= 20; price++) {
-      for (let popularity = 1; popularity <= 6; popularity++) {
-        const product = this.personalMarket[price][popularity];
-        if (product) {
-          products.push({
-            ...product,
-            price,
-            popularity,
-            owner: this.id
-          });
-        }
-      }
-    }
-    return products;
-  }
+  // getAllMarketProducts removed - using shared market board
   
   // Convert to JSON for client
   toJSON() {
@@ -169,7 +118,7 @@ export class Player {
       prestige: this.prestige,
       resaleHistory: this.resaleHistory,
       actionPoints: this.actionPoints,
-      personalMarket: this.personalMarket,
+      // personalMarket removed - using shared market board
       designs: Object.fromEntries(this.designs),
       inventory: this.inventory,
       openSourceDesigns: Array.from(this.openSourceDesigns)

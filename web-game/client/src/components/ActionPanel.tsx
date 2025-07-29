@@ -586,7 +586,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           
           const products: Array<{value: string, label: string}> = [];
           
-          Object.entries(targetPlayer.personalMarket || {}).forEach(([price, popularityMap]) => {
+          Object.entries(gameState.sharedMarket || {}).forEach(([price, popularityMap]) => {
             Object.entries(popularityMap).forEach(([popularity, product]) => {
               if (product) {
                 products.push({
