@@ -430,7 +430,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-2">
+    <div className="bg-white rounded-lg shadow-lg p-2" style={{ zIndex: 1, position: 'relative' }}>
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-bold">🏪 共有マーケットボード (価格×人気度)</h3>
         <div className="flex items-center space-x-3">
@@ -528,7 +528,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
               justifyContent: 'center',
               fontSize: '0.875rem',
               fontWeight: 'bold',
-              zIndex: 10
+              zIndex: 5
             }}>
               価格＼人気
             </div>
@@ -545,7 +545,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
                 justifyContent: 'center',
                 fontSize: '0.875rem',
                 fontWeight: 'bold',
-                zIndex: 10
+                zIndex: 5
               }}>
                 ⭐{popularity}
               </div>
@@ -566,7 +566,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
                 fontWeight: 'bold',
                 position: 'sticky',
                 left: '0',
-                zIndex: 5
+                zIndex: 3
               }}>
                 💰{price}
               </div>,

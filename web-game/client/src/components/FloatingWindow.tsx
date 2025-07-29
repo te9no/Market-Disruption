@@ -75,7 +75,7 @@ const FloatingWindow: React.FC<FloatingWindowProps> = ({
   return (
     <div
       ref={windowRef}
-      className={`fixed bg-white rounded-lg shadow-2xl border border-gray-300 z-[60] ${className}`}
+      className={`fixed bg-white rounded-lg shadow-2xl border border-gray-300 ${className}`}
       style={{
         left: position.x,
         top: position.y,
@@ -83,6 +83,7 @@ const FloatingWindow: React.FC<FloatingWindowProps> = ({
         height: isMinimized ? 'auto' : size.height,
         minWidth: 300,
         minHeight: isMinimized ? 'auto' : 200,
+        zIndex: 1000
       }}
     >
       {/* Title Bar */}
