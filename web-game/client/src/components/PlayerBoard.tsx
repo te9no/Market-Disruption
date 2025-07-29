@@ -17,11 +17,12 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ player }) => {
       {/* Enhanced Inventory */}
       <Inventory inventory={player.inventory} />
 
-      {/* Enhanced Personal Market */}
-      <PersonalMarket 
-        personalMarket={player.personalMarket} 
-        playerId={player.id}
-      />
+      {/* Personal Market廃止につき代替メッセージ */}
+      <div className="text-center text-gray-500 py-8 bg-white rounded-lg shadow">
+        <div className="text-4xl mb-4">🏪</div>
+        <p className="text-lg font-bold">共有マーケットボードに移行しました</p>
+        <p className="text-sm mt-2">メインゲーム画面で全プレイヤーの商品を確認できます</p>
+      </div>
     </div>
   );
 };

@@ -146,15 +146,18 @@ const AllPlayersMarkets: React.FC<AllPlayersMarketsProps> = ({
                 <span>⚡ AP: {selectedPlayer.actionPoints}</span>
               </div>
             </div>
+            {/* Personal Market廃止につきコメントアウト
             <PersonalMarket 
               personalMarket={selectedPlayer.personalMarket || {}} 
               playerId={selectedPlayer.id}
               canInteract={true}
               currentPlayerId={currentPlayerId}
-              isMyTurn={isMyTurn}
-              onPurchase={handlePurchase}
-              onReview={handleReview}
-            />
+              isMyTurn={isMyTurn} */}
+            <div className="text-center text-gray-500 py-8">
+              <div className="text-4xl mb-4">🏪</div>
+              <p className="text-lg font-bold">共有マーケットボードに移行しました</p>
+              <p className="text-sm mt-2">メインゲーム画面で全プレイヤーの商品を確認できます</p>
+            </div>
           </div>
         ) : (
           <div className="p-8 text-center text-gray-500">

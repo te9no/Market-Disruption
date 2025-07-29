@@ -119,16 +119,18 @@ const PlayerMarketView: React.FC<PlayerMarketViewProps> = ({
         </div>
       </div>
 
-      {/* Personal Market */}
-      <PersonalMarket 
-        personalMarket={player.personalMarket}
-        playerId={player.id}
-        currentPlayerId={currentPlayerId}
-        isMyTurn={isMyTurn}
-        canInteract={isMyTurn && !isCurrentPlayer}
-        onPurchase={handlePurchase}
-        onReview={handleReview}
-      />
+      {/* Personal Market廃止につき代替メッセージ */}
+      <div className="text-center text-gray-500 py-12 bg-white rounded-lg shadow">
+        <div className="text-6xl mb-6">🏪</div>
+        <p className="text-xl font-bold mb-2">共有マーケットボードに移行しました</p>
+        <p className="text-sm">メインゲーム画面で全プレイヤーの商品を確認できます</p>
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg max-w-md mx-auto">
+          <p className="text-sm text-blue-800">
+            <strong>{player.name}</strong>の商品も共有マーケットボードに表示されています。<br/>
+            プレイヤー色で識別できます。
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

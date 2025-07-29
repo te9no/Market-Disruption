@@ -724,7 +724,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     };
                   }
                   return null;
-                }).filter((item): item is {value: string, label: string, description?: string} => item !== null)
+                }).filter((item): item is {value: string, label: string, description: string} => item !== null)
               )}
               emptyMessage="買い戻し可能な商品がありません"
               columns={2}
