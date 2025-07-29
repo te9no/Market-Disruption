@@ -63,7 +63,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
   const renderProducts = (productsAtLocation: Product[] | null, price?: number, popularity?: number) => {
     if (!productsAtLocation || productsAtLocation.length === 0) {
       return (
-        <div className="w-20 h-20 border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 flex items-center justify-center rounded-lg transition-colors">
+        <div className="w-24 h-24 border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 flex items-center justify-center rounded-lg transition-colors">
           <span className="text-gray-400 text-sm">空き</span>
         </div>
       );
@@ -79,9 +79,9 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
       const playerName = getPlayerName(product.ownerId, players);
       
       return (
-        <div className={`w-20 h-20 border-2 border-gray-400 flex flex-col items-center justify-center text-white ${playerColor} hover:opacity-80 cursor-pointer rounded-lg shadow-sm relative transition-all group`}>
+        <div className={`w-24 h-24 border-2 border-gray-400 flex flex-col items-center justify-center text-white ${playerColor} hover:opacity-80 cursor-pointer rounded-lg shadow-sm relative transition-all group`}>
           {/* Product value displayed as dice face */}
-          <div className="text-2xl font-bold text-white bg-black bg-opacity-30 rounded-full w-8 h-8 flex items-center justify-center">
+          <div className="text-3xl font-bold text-white bg-black bg-opacity-30 rounded-full w-10 h-10 flex items-center justify-center">
             {product.value}
           </div>
           
@@ -127,7 +127,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
     } else {
       // Multiple products at the same location - show stacked view
       return (
-        <div className="w-20 h-20 border-2 border-gray-400 bg-gray-100 rounded-lg overflow-hidden relative">
+        <div className="w-24 h-24 border-2 border-gray-400 bg-gray-100 rounded-lg overflow-hidden relative">
           <div className="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded-bl font-bold">
             {productsAtLocation.length}
           </div>
@@ -136,9 +136,12 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
               const playerColor = getPlayerColor(product.ownerId, players);
               const playerName = getPlayerName(product.ownerId, players);
               return (
-                <div key={product.id} className={`${playerColor} text-white text-xs flex flex-col items-center justify-center rounded`}>
-                  <div className="text-xs font-bold">{product.value}</div>
-                  <div className="text-xs">{playerName.slice(0, 2)}</div>
+                <div key={product.id} className={`${playerColor} text-white text-xs flex flex-col items-center justify-center rounded relative`}>
+                  <div className="text-sm font-bold">{product.value}</div>
+                  <div className="text-xs truncate w-full text-center">{playerName.slice(0, 3)}</div>
+                  {product.isResale && (
+                    <div className="absolute -top-0.5 -right-0.5 bg-orange-500 rounded-full w-2 h-2"></div>
+                  )}
                 </div>
               );
             })}
@@ -349,8 +352,8 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white rounded-lg shadow-lg p-2">
+      <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-bold">🏪 共有マーケットボード (価格×人気度)</h3>
         <div className="flex items-center space-x-3">
           {/* View Mode Toggle */}
@@ -398,8 +401,8 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
       </div>
       
       {/* Player Color Legend */}
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-        <h4 className="text-sm font-bold mb-2 text-gray-700">プレイヤー色分け</h4>
+      <div className="mb-2 p-2 bg-gray-50 rounded-lg">
+        <h4 className="text-xs font-bold mb-1 text-gray-700">プレイヤー色分け</h4>
         <div className="flex flex-wrap gap-2 text-sm">
           {players.map(player => (
             <div key={player.id} className="flex items-center space-x-2">
@@ -421,7 +424,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
       {/* Main Content Area */}
       {viewMode === 'grid' ? (
         <div style={{
-          height: 'calc(100vh - 280px)',
+          height: 'calc(100vh - 220px)',
           overflowY: 'auto',
           overflowX: 'auto',
           border: '2px solid #d1d5db',
@@ -477,7 +480,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
                 background: 'linear-gradient(to right, #dcfce7, #dbeafe)',
                 borderRight: '2px solid #9ca3af',
                 borderBottom: '1px solid #9ca3af',
-                height: '80px',
+                height: '96px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -495,7 +498,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
                   position: 'relative',
                   borderRight: '2px solid #9ca3af',
                   borderBottom: '1px solid #9ca3af',
-                  height: '80px',
+                  height: '96px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -536,7 +539,7 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
           </div>
         </div>
       ) : (
-        <div className="border-2 border-gray-300 rounded-lg bg-white">
+        <div className="border-2 border-gray-300 rounded-lg bg-white overflow-auto" style={{ height: 'calc(100vh - 220px)' }}>
           {renderTableView()}
         </div>
       )}

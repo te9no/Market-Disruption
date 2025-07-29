@@ -24,7 +24,7 @@ const FloatingWindow: React.FC<FloatingWindowProps> = ({
   className = ''
 }) => {
   const [position, setPosition] = useState(defaultPosition);
-  const [size] = useState(defaultSize);
+  const [size, setSize] = useState(defaultSize);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -37,6 +37,10 @@ const FloatingWindow: React.FC<FloatingWindowProps> = ({
           x: e.clientX - dragStart.x,
           y: e.clientY - dragStart.y
         });
+      } else if (isResizing) {
+        const newWidth = Math.max(300, e.clientX - position.x);
+        const newHeight = Math.max(200, e.clientY - position.y);
+        setSize({ width: newWidth, height: newHeight });
       }
     };
 
@@ -117,13 +121,13 @@ const FloatingWindow: React.FC<FloatingWindowProps> = ({
       {/* Resize Handle */}
       {!isMinimized && (
         <div
-          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize opacity-50 hover:opacity-100 transition-opacity"
           style={{
-            background: 'linear-gradient(-45deg, transparent 30%, #ccc 30%, #ccc 70%, transparent 70%)'
+            background: 'linear-gradient(-45deg, transparent 30%, #666 30%, #666 50%, transparent 50%, transparent 70%, #666 70%)'
           }}
           onMouseDown={(e) => {
+            e.preventDefault();
             setIsResizing(true);
-            setDragStart({ x: e.clientX, y: e.clientY });
           }}
         />
       )}

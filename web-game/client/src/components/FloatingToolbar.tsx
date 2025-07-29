@@ -33,8 +33,8 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
           gameState={gameState}
         />,
         {
-          position: { x: 50, y: 100 },
-          size: { width: 450, height: 600 }
+          position: { x: Math.min(20, window.innerWidth * 0.02), y: 80 },
+          size: { width: Math.min(380, window.innerWidth * 0.4), height: Math.min(500, window.innerHeight * 0.6) }
         }
       );
     }
@@ -49,20 +49,20 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
         '📦 在庫',
         <Inventory inventory={player.inventory} />,
         {
-          position: { x: window.innerWidth - 350, y: 100 },
-          size: { width: 300, height: 400 }
+          position: { x: Math.max(window.innerWidth - 320, window.innerWidth * 0.6), y: 80 },
+          size: { width: Math.min(280, window.innerWidth * 0.35), height: Math.min(350, window.innerHeight * 0.5) }
         }
       );
     }
   };
 
   return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40">
-      <div className="bg-white bg-opacity-95 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 px-4 py-2">
-        <div className="flex items-center space-x-3">
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-40">
+      <div className="bg-white bg-opacity-95 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 px-3 py-1.5">
+        <div className="flex items-center space-x-2 md:space-x-3">
           <button
             onClick={toggleActionPanel}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
               isWindowOpen('action-panel')
                 ? 'bg-blue-500 text-white shadow-md'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -77,7 +77,7 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
 
           <button
             onClick={toggleInventory}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
               isWindowOpen('inventory')
                 ? 'bg-green-500 text-white shadow-md'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -90,19 +90,19 @@ const FloatingToolbar: React.FC<FloatingToolbarProps> = ({
 
           <div className="w-px h-6 bg-gray-300" />
 
-          <div className="flex items-center space-x-2 px-3 py-2 bg-gray-50 rounded-full">
-            <span className="text-sm text-gray-600">💰</span>
-            <span className="text-sm font-bold text-green-600">¥{player.funds.toLocaleString()}</span>
+          <div className="flex items-center space-x-1 px-2 py-1 bg-gray-50 rounded-full">
+            <span className="text-xs text-gray-600">💰</span>
+            <span className="text-xs font-bold text-green-600">¥{player.funds.toLocaleString()}</span>
           </div>
 
-          <div className="flex items-center space-x-2 px-3 py-2 bg-gray-50 rounded-full">
-            <span className="text-sm text-gray-600">👑</span>
-            <span className="text-sm font-bold text-purple-600">{player.prestige}</span>
+          <div className="flex items-center space-x-1 px-2 py-1 bg-gray-50 rounded-full">
+            <span className="text-xs text-gray-600">👑</span>
+            <span className="text-xs font-bold text-purple-600">{player.prestige}</span>
           </div>
 
-          <div className="flex items-center space-x-2 px-3 py-2 bg-gray-50 rounded-full">
-            <span className="text-sm text-gray-600">⚡</span>
-            <span className="text-sm font-bold text-blue-600">{player.actionPoints}/3</span>
+          <div className="flex items-center space-x-1 px-2 py-1 bg-gray-50 rounded-full">
+            <span className="text-xs text-gray-600">⚡</span>
+            <span className="text-xs font-bold text-blue-600">{player.actionPoints}/3</span>
           </div>
         </div>
       </div>
