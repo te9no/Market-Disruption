@@ -658,9 +658,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <div className="flex space-x-2">
               <ModernButton
                 onClick={() => {
-                  // Find the actual product from the market position
-                  const targetPlayer = gameState.players.find(p => p.id === actionParams.targetPlayerId);
-                  const product = targetPlayer?.personalMarket?.[actionParams.price]?.[actionParams.popularity];
+                  // Find the actual product from shared market
+                  const product = gameState.sharedMarket?.[actionParams.price]?.[actionParams.popularity];
                   
                   const reviewParams = {
                     targetProductId: product?.id,
@@ -706,8 +705,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 value={`${actionParams.price}-${actionParams.popularity}` || ''}
                 onChange={(value) => {
                   const [price, popularity] = value.split('-').map(Number);
-                  const product = Object.values(player.personalMarket[price] || {})
-                    .find(p => p && p.popularity === popularity);
+                  const product = gameState.sharedMarket?.[price]?.[popularity];
                   setActionParams({
                     ...actionParams, 
                     price, 
@@ -716,9 +714,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   });
                 }}
                 placeholder="買い戻しする商品を選択"
-                options={Object.entries(player.personalMarket).flatMap(([price, popularityMap]) =>
+                options={Object.entries(gameState.sharedMarket || {}).flatMap(([price, popularityMap]) =>
                   Object.entries(popularityMap).map(([popularity, product]) => {
-                    if (product) {
+                    if (product && product.ownerId === player.id) {
                       return {
                         value: `${price}-${popularity}`,
                         label: `商品(値${product.value}) (価格${price}、人気度${popularity})`
@@ -865,48 +863,27 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     return;
                   }
                   
-                  // Find the actual product from the market
-                  let targetMarket = null;
-                  if (actionParams.targetPlayerId === 'manufacturer-automata') {
-                    targetMarket = gameState.manufacturerAutomata?.personalMarket;
-                  } else if (actionParams.targetPlayerId === 'resale-automata') {
-                    targetMarket = gameState.resaleAutomata?.personalMarket;
-                  } else {
-                    const targetPlayer = gameState.players.find(p => p.id === actionParams.targetPlayerId);
-                    targetMarket = targetPlayer?.personalMarket;
-                  }
+                  // Find the actual product from shared market
+                  const parts = value.split('-');
+                  const price = Number(parts[0]);
+                  const popularity = Number(parts[1]);
+                  const productId = parts.slice(2).join('-');
                   
-                  if (targetMarket) {
-                    const parts = value.split('-');
-                    const price = Number(parts[0]);
-                    const popularity = Number(parts[1]);
-                    const productId = parts.slice(2).join('-');
-                    
-                    const product = targetMarket[price]?.[popularity];
-                    if (product && product.id === productId) {
-                      setActionParams({...actionParams, price, popularity, productId, selectedProductKey: value});
-                    }
+                  const product = gameState.sharedMarket?.[price]?.[popularity];
+                  if (product && product.id === productId) {
+                    setActionParams({...actionParams, price, popularity, productId, selectedProductKey: value});
                   }
                 }}
                 options={(() => {
                   let targetMarket = null;
                   
-                  // プレイヤーかオートマかを判定
-                  if (actionParams.targetPlayerId === 'manufacturer-automata') {
-                    targetMarket = gameState.manufacturerAutomata?.personalMarket;
-                  } else if (actionParams.targetPlayerId === 'resale-automata') {
-                    targetMarket = gameState.resaleAutomata?.personalMarket;
-                  } else {
-                    const targetPlayer = gameState.players.find(p => p.id === actionParams.targetPlayerId);
-                    targetMarket = targetPlayer?.personalMarket;
-                  }
-                  
-                  if (!targetMarket) return [];
+                  // 共有マーケットから対象プレイヤーの商品を取得
+                  if (!gameState.sharedMarket) return [];
                   
                   const availableProducts: Array<{value: string; label: string; description?: string}> = [];
-                  Object.entries(targetMarket).forEach(([price, priceRow]) => {
+                  Object.entries(gameState.sharedMarket).forEach(([price, priceRow]) => {
                     Object.entries(priceRow || {}).forEach(([popularity, product]) => {
-                      if (product) {
+                      if (product && product.ownerId === actionParams.targetPlayerId) {
                         const isResale = product.isResale === true;
                         
                         availableProducts.push({
@@ -992,67 +969,44 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     return;
                   }
                   
-                  // Find the actual product from the market
-                  let targetMarket = null;
-                  if (actionParams.targetPlayerId === 'manufacturer-automata') {
-                    targetMarket = gameState.manufacturerAutomata?.personalMarket;
-                  } else if (actionParams.targetPlayerId === 'resale-automata') {
-                    targetMarket = gameState.resaleAutomata?.personalMarket;
-                  } else {
-                    const targetPlayer = gameState.players.find(p => p.id === actionParams.targetPlayerId);
-                    targetMarket = targetPlayer?.personalMarket;
-                  }
+                  // Find the actual product from shared market
+                  const parts = value.split('-');
+                  const price = Number(parts[0]);
+                  const popularity = Number(parts[1]);
+                  const productId = parts.slice(2).join('-');
                   
-                  if (targetMarket) {
-                    const parts = value.split('-');
-                    const price = Number(parts[0]);
-                    const popularity = Number(parts[1]);
-                    const productId = parts.slice(2).join('-');
-                    
-                    const product = targetMarket[price]?.[popularity];
-                    if (product && product.id === productId) {
-                      // Calculate expected resale price
-                      const resaleBonus = 5 + (player.resaleHistory <= 1 ? 0 : 
-                                          player.resaleHistory <= 4 ? 3 : 
-                                          player.resaleHistory <= 7 ? 6 : 10);
-                      let expectedResalePrice = price + resaleBonus;
-                      if (gameState.regulationLevel === 2) {
-                        expectedResalePrice = Math.min(expectedResalePrice, price + 3);
-                      } else if (gameState.regulationLevel === 3) {
-                        expectedResalePrice = Math.min(expectedResalePrice, price + 1);
-                      }
-                      expectedResalePrice = Math.min(expectedResalePrice, 20);
-                      
-                      setActionParams({
-                        ...actionParams, 
-                        price, 
-                        popularity, 
-                        productId, 
-                        selectedProductKey: value,
-                        maxResalePrice: expectedResalePrice,
-                        resalePrice: expectedResalePrice // Default to max
-                      });
+                  const product = gameState.sharedMarket?.[price]?.[popularity];
+                  if (product && product.id === productId) {
+                    // Calculate expected resale price
+                    const resaleBonus = 5 + (player.resaleHistory <= 1 ? 0 : 
+                                        player.resaleHistory <= 4 ? 3 : 
+                                        player.resaleHistory <= 7 ? 6 : 10);
+                    let expectedResalePrice = price + resaleBonus;
+                    if (gameState.regulationLevel === 2) {
+                      expectedResalePrice = Math.min(expectedResalePrice, price + 3);
+                    } else if (gameState.regulationLevel === 3) {
+                      expectedResalePrice = Math.min(expectedResalePrice, price + 1);
                     }
+                    expectedResalePrice = Math.min(expectedResalePrice, 20);
+                    
+                    setActionParams({
+                      ...actionParams, 
+                      price, 
+                      popularity, 
+                      productId, 
+                      selectedProductKey: value,
+                      maxResalePrice: expectedResalePrice,
+                      resalePrice: expectedResalePrice // Default to max
+                    });
                   }
                 }}
                 options={(() => {
-                  let targetMarket = null;
-                  
-                  if (actionParams.targetPlayerId === 'manufacturer-automata') {
-                    targetMarket = gameState.manufacturerAutomata?.personalMarket;
-                  } else if (actionParams.targetPlayerId === 'resale-automata') {
-                    targetMarket = gameState.resaleAutomata?.personalMarket;
-                  } else {
-                    const targetPlayer = gameState.players.find(p => p.id === actionParams.targetPlayerId);
-                    targetMarket = targetPlayer?.personalMarket;
-                  }
-                  
-                  if (!targetMarket) return [];
+                  if (!gameState.sharedMarket || !actionParams.targetPlayerId) return [];
                   
                   const availableProducts: Array<{value: string; label: string; description?: string}> = [];
-                  Object.entries(targetMarket).forEach(([price, priceRow]) => {
+                  Object.entries(gameState.sharedMarket).forEach(([price, priceRow]) => {
                     Object.entries(priceRow || {}).forEach(([popularity, product]) => {
-                      if (product) {
+                      if (product && product.ownerId === actionParams.targetPlayerId) {
                         const isResale = product.isResale === true;
                         
                         // Calculate potential profit for display
@@ -1567,8 +1521,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               
               <ModernButton
                 onClick={() => setSelectedAction('buyback')}
-                disabled={!canPerformActions || Object.values(player.personalMarket).every(priceRow => 
-                  Object.values(priceRow).every(product => product === null)
+                disabled={!canPerformActions || !gameState.sharedMarket || Object.values(gameState.sharedMarket).every(priceRow => 
+                  Object.values(priceRow || {}).every(product => !product || product.ownerId !== player.id)
                 ) || player.actionPoints < 1}
                 variant="primary"
                 size="lg"
