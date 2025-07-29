@@ -1393,45 +1393,48 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     );
   }
 
+  // モバイル判定
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-xl p-6 border border-gray-100">
+    <div className={`bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-xl ${isMobile ? 'p-3' : 'p-6'} border border-gray-100`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
-            <span className="text-white text-xl">⚡</span>
+      <div className={`flex items-center ${isMobile ? 'flex-col space-y-2' : 'justify-between'} ${isMobile ? 'mb-4' : 'mb-6'}`}>
+        <div className={`flex items-center ${isMobile ? 'space-x-2' : 'space-x-3'}`}>
+          <div className={`${isMobile ? 'p-1.5' : 'p-2'} bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg`}>
+            <span className={`text-white ${isMobile ? 'text-lg' : 'text-xl'}`}>⚡</span>
           </div>
-          <h3 className="text-xl font-bold text-gray-800">アクション</h3>
+          <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-gray-800`}>アクション</h3>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className={`flex items-center ${isMobile ? 'space-x-2' : 'space-x-3'}`}>
           {isProcessingAction && (
-            <div className="flex items-center space-x-2 text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
-              <span className="text-sm font-medium">処理中...</span>
+            <div className={`flex items-center space-x-2 text-orange-600 bg-orange-50 ${isMobile ? 'px-2 py-1' : 'px-3 py-2'} rounded-lg`}>
+              <div className={`animate-spin rounded-full ${isMobile ? 'h-3 w-3' : 'h-4 w-4'} border-b-2 border-orange-600`}></div>
+              <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>処理中...</span>
             </div>
           )}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg shadow-md">
-            <div className="text-xs font-medium opacity-90">残りAP</div>
-            <div className="text-lg font-bold">{player.actionPoints}/3</div>
+          <div className={`bg-gradient-to-r from-blue-500 to-blue-600 text-white ${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-lg shadow-md`}>
+            <div className={`${isMobile ? 'text-xs' : 'text-xs'} font-medium opacity-90`}>残りAP</div>
+            <div className={`${isMobile ? 'text-base' : 'text-lg'} font-bold`}>{player.actionPoints}/3</div>
           </div>
         </div>
       </div>
 
       {/* Error and Success Messages */}
       {errorMessage && (
-        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-lg">
+        <div className={`${isMobile ? 'mb-3 p-3' : 'mb-4 p-4'} bg-red-50 border-l-4 border-red-400 text-red-700 rounded-lg`}>
           <div className="flex items-center">
-            <span className="text-xl mr-2">❌</span>
-            <span className="font-medium">{errorMessage}</span>
+            <span className={`${isMobile ? 'text-lg' : 'text-xl'} mr-2`}>❌</span>
+            <span className={`font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>{errorMessage}</span>
           </div>
         </div>
       )}
 
       {successMessage && (
-        <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-400 text-green-700 rounded-lg">
+        <div className={`${isMobile ? 'mb-3 p-3' : 'mb-4 p-4'} bg-green-50 border-l-4 border-green-400 text-green-700 rounded-lg`}>
           <div className="flex items-center">
-            <span className="text-xl mr-2">✅</span>
-            <span className="font-medium">{successMessage}</span>
+            <span className={`${isMobile ? 'text-lg' : 'text-xl'} mr-2`}>✅</span>
+            <span className={`font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>{successMessage}</span>
           </div>
         </div>
       )}

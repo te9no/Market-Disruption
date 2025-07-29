@@ -409,7 +409,14 @@ const GameBoard: React.FC = () => {
           </div>
           
           {/* Compact Stats Bar */}
-          <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ 
+            marginTop: '20px', 
+            display: isMobile ? 'grid' : 'flex', 
+            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'none',
+            flexWrap: isMobile ? 'nowrap' : 'wrap', 
+            gap: isMobile ? '8px' : '12px',
+            justifyItems: isMobile ? 'center' : 'normal'
+          }}>
             {[
               { icon: '👥', value: `${gameState.players.length}人`, label: 'プレイヤー', priority: 3 },
               { icon: '💰', value: `¥${currentPlayer.funds.toLocaleString()}`, label: '資金', priority: 1 },
@@ -419,28 +426,32 @@ const GameBoard: React.FC = () => {
               <div key={index} style={{
                 background: 'rgba(255,255,255,0.25)',
                 backdropFilter: 'blur(10px)',
-                borderRadius: '16px',
-                padding: isMobile ? '8px 12px' : '12px 16px',
+                borderRadius: isMobile ? '12px' : '16px',
+                padding: isMobile ? '6px 10px' : '12px 16px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: isMobile ? '6px' : '10px',
+                gap: isMobile ? '4px' : '10px',
                 border: '1px solid rgba(255,255,255,0.3)',
-                minWidth: isMobile ? '80px' : '120px',
+                minWidth: isMobile ? '70px' : '120px',
+                maxWidth: isMobile ? '120px' : 'none',
                 transition: 'all 0.3s ease',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                justifyContent: isMobile ? 'center' : 'flex-start'
               }}>
-                <span style={{ fontSize: isMobile ? '16px' : '20px' }}>{stat.icon}</span>
-                <div>
+                <span style={{ fontSize: isMobile ? '14px' : '20px' }}>{stat.icon}</span>
+                <div style={{ textAlign: isMobile ? 'center' : 'left' }}>
                   <div style={{ 
-                    fontSize: isMobile ? '12px' : '14px', 
+                    fontSize: isMobile ? '10px' : '14px', 
                     fontWeight: 'bold', 
                     color: 'white',
-                    textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+                    textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
+                    lineHeight: isMobile ? '1.2' : '1.4'
                   }}>{stat.value}</div>
                   <div style={{ 
-                    fontSize: isMobile ? '9px' : '11px', 
+                    fontSize: isMobile ? '8px' : '11px', 
                     color: 'rgba(255,255,255,0.9)',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    lineHeight: isMobile ? '1.1' : '1.2'
                   }}>{stat.label}</div>
                 </div>
               </div>

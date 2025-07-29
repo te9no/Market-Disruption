@@ -205,19 +205,19 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
     }
 
     return (
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+      <div className="w-full overflow-x-auto" style={{ maxWidth: '100vw' }}>
+        <table className="min-w-full border-collapse" style={{ minWidth: isMobile ? '600px' : '800px' }}>
           <thead>
             <tr className="bg-gradient-to-r from-blue-100 to-purple-100 border-b-2 border-gray-300">
-              <th className="text-left py-3 px-4 font-bold text-gray-700">所有者</th>
-              <th className="text-left py-3 px-4 font-bold text-gray-700">商品</th>
-              <th className="text-center py-3 px-2 font-bold text-gray-700">値</th>
-              <th className="text-center py-3 px-2 font-bold text-gray-700">コスト</th>
-              <th className="text-center py-3 px-2 font-bold text-gray-700">💰価格</th>
-              <th className="text-center py-3 px-2 font-bold text-gray-700">⭐人気度</th>
-              <th className="text-center py-3 px-2 font-bold text-gray-700">状態</th>
+              <th className={`text-left ${isMobile ? 'py-2 px-2 text-xs' : 'py-3 px-4 text-sm'} font-bold text-gray-700`}>所有者</th>
+              <th className={`text-left ${isMobile ? 'py-2 px-2 text-xs' : 'py-3 px-4 text-sm'} font-bold text-gray-700`}>商品</th>
+              <th className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-gray-700`}>値</th>
+              <th className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-gray-700`}>コスト</th>
+              <th className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-gray-700`}>💰価格</th>
+              <th className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-gray-700`}>⭐人気度</th>
+              <th className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-gray-700`}>状態</th>
               {canInteract && (
-                <th className="text-center py-3 px-2 font-bold text-gray-700">アクション</th>
+                <th className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-gray-700`}>アクション</th>
               )}
             </tr>
           </thead>
@@ -233,69 +233,69 @@ const SharedMarketBoard: React.FC<SharedMarketBoardProps> = ({
                   key={`${product.price}-${product.popularity}-${index}`}
                   className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                 >
-                  <td className="py-3 px-4">
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-4 h-4 rounded-full ${playerColor}`}></div>
-                      <div className="font-medium text-sm">{playerName}</div>
+                  <td className={isMobile ? 'py-2 px-2' : 'py-3 px-4'}>
+                    <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
+                      <div className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} rounded-full ${playerColor}`}></div>
+                      <div className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{playerName.slice(0, isMobile ? 3 : 6)}</div>
                     </div>
                   </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="text-2xl">
+                  <td className={isMobile ? 'py-2 px-2' : 'py-3 px-4'}>
+                    <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
+                      <div className={isMobile ? 'text-lg' : 'text-2xl'}>
                         {getCategoryEmoji(product.category)}
                       </div>
                       <div>
-                        <div className="font-medium text-sm">#{product.id.slice(-4)}</div>
+                        <div className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>#{product.id.slice(-4)}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="text-center py-3 px-2 font-medium">
-                    <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-white font-bold ${playerColor}`}>
+                  <td className={`text-center ${isMobile ? 'py-2 px-1' : 'py-3 px-2'} font-medium`}>
+                    <div className={`inline-flex items-center justify-center ${isMobile ? 'w-6 h-6 text-xs' : 'w-8 h-8 text-sm'} rounded-full text-white font-bold ${playerColor}`}>
                       {product.value}
                     </div>
                   </td>
-                  <td className="text-center py-3 px-2 font-medium">
+                  <td className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-medium`}>
                     ⚒️{product.cost}
                   </td>
-                  <td className="text-center py-3 px-2 font-bold text-green-600">
+                  <td className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-bold text-green-600`}>
                     💰{product.price}
                   </td>
-                  <td className="text-center py-3 px-2 font-medium">
-                    {'⭐'.repeat(product.popularity)}
+                  <td className={`text-center ${isMobile ? 'py-2 px-1 text-xs' : 'py-3 px-2 text-sm'} font-medium`}>
+                    {isMobile ? `⭐${product.popularity}` : '⭐'.repeat(product.popularity)}
                   </td>
-                  <td className="text-center py-3 px-2">
+                  <td className={`text-center ${isMobile ? 'py-2 px-1' : 'py-3 px-2'}`}>
                     {isResale ? (
-                      <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                        🔄 転売
+                      <span className={`bg-red-500 text-white ${isMobile ? 'px-1 py-0.5 text-xs' : 'px-2 py-1 text-xs'} rounded-full font-bold`}>
+                        {isMobile ? '🔄' : '🔄 転売'}
                       </span>
                     ) : (
-                      <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                        ✨ 正規
+                      <span className={`bg-green-500 text-white ${isMobile ? 'px-1 py-0.5 text-xs' : 'px-2 py-1 text-xs'} rounded-full font-bold`}>
+                        {isMobile ? '✨' : '✨ 正規'}
                       </span>
                     )}
                   </td>
                   {canInteract && (
-                    <td className="text-center py-3 px-2">
+                    <td className={`text-center ${isMobile ? 'py-2 px-1' : 'py-3 px-2'}`}>
                       {canAct ? (
-                        <div className="flex space-x-1 justify-center">
+                        <div className={`flex ${isMobile ? 'flex-col space-y-1' : 'space-x-1'} justify-center`}>
                           <button
                             onClick={() => onPurchase?.(product.id, product.price, product.popularity)}
-                            className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded font-bold"
+                            className={`${isMobile ? 'px-1 py-0.5 text-xs' : 'px-2 py-1 text-xs'} bg-green-500 hover:bg-green-600 text-white rounded font-bold`}
                             title="購入する (1AP)"
                           >
                             🛒
                           </button>
                           <button
                             onClick={() => onReview?.(product.id)}
-                            className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded font-bold"
+                            className={`${isMobile ? 'px-1 py-0.5 text-xs' : 'px-2 py-1 text-xs'} bg-blue-500 hover:bg-blue-600 text-white rounded font-bold`}
                             title="レビューする (1AP)"
                           >
                             ⭐
                           </button>
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-xs">
-                          {product.ownerId === currentPlayer?.id ? '自分の商品' : 'あなたのターンではありません'}
+                        <span className={`text-gray-400 ${isMobile ? 'text-xs' : 'text-xs'}`}>
+                          {product.ownerId === currentPlayer?.id ? (isMobile ? '自分' : '自分の商品') : (isMobile ? '待機' : 'あなたのターンではありません')}
                         </span>
                       )}
                     </td>
