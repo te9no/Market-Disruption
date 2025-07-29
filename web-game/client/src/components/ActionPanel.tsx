@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import type { Player, GameState } from '../store/gameSlice';
 import { useSocket } from '../hooks/useSocket';
 import ModernButton from './ModernButton';
-import SimpleSelect from './SimpleSelect';
 import ModernButtonGroup from './ModernButtonGroup';
 
 interface ActionPanelProps {
@@ -601,47 +600,48 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         };
 
         return (
-          <div className="space-y-3">
-            <h4 className="font-bold">レビューアクション (1AP)</h4>
-            <div>
-              <label className="block text-sm font-medium mb-1">対象プレイヤー:</label>
-              <SimpleSelect
-                value={actionParams.targetPlayerId || ''}
-                onChange={(value) => setActionParams({...actionParams, targetPlayerId: value, price: undefined, popularity: undefined, productId: undefined})}
-                placeholder="対象プレイヤーを選択"
-                options={gameState.players.map((p) => ({
-                  value: p.id,
-                  label: p.name + (p.id === player.id ? ' (自分)' : '')
-                }))}
-              />
+          <div className="space-y-4">
+            <h4 className="font-bold text-lg text-gray-800">⭐ レビューアクション (1AP)</h4>
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+              <div className="text-sm text-indigo-800">
+                他プレイヤーの商品の人気度を操作します
+              </div>
             </div>
+            <ModernButtonGroup
+              label="対象プレイヤー"
+              value={actionParams.targetPlayerId || ''}
+              onChange={(value) => setActionParams({...actionParams, targetPlayerId: value, price: undefined, popularity: undefined, productId: undefined})}
+              options={gameState.players.map((p) => ({
+                value: p.id,
+                label: p.name + (p.id === player.id ? ' (自分)' : '')
+              }))}
+              emptyMessage="対象プレイヤーがありません"
+              columns={2}
+            />
             {actionParams.targetPlayerId && (
               <>
-                <div>
-                  <label className="block text-sm font-medium mb-1">商品 (価格-人気度):</label>
-                  <SimpleSelect
-                    value={`${actionParams.price}-${actionParams.popularity}` || ''}
-                    onChange={(value) => {
-                      const [price, popularity] = value.split('-').map(Number);
-                      setActionParams({...actionParams, price, popularity});
-                    }}
-                    placeholder="商品を選択"
-                    options={getPlayerProducts(actionParams.targetPlayerId)}
-                    emptyMessage="対象プレイヤーの商品がありません"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">レビュータイプ:</label>
-                  <SimpleSelect
-                    value={actionParams.reviewType || ''}
-                    onChange={(value) => setActionParams({...actionParams, reviewType: value})}
-                    placeholder="レビュータイプを選択"
-                    options={[
-                      { value: 'positive', label: '高評価 (+1人気度)' },
-                      { value: 'negative', label: '低評価 (-1人気度)' }
-                    ]}
-                  />
-                </div>
+                <ModernButtonGroup
+                  label="商品 (価格-人気度)"
+                  value={`${actionParams.price}-${actionParams.popularity}` || ''}
+                  onChange={(value) => {
+                    const [price, popularity] = value.split('-').map(Number);
+                    setActionParams({...actionParams, price, popularity});
+                  }}
+                  options={getPlayerProducts(actionParams.targetPlayerId)}
+                  emptyMessage="対象プレイヤーの商品がありません"
+                  columns={2}
+                />
+                <ModernButtonGroup
+                  label="レビュータイプ"
+                  value={actionParams.reviewType || ''}
+                  onChange={(value) => setActionParams({...actionParams, reviewType: value})}
+                  options={[
+                    { value: 'positive', label: '⭐ 高評価 (+1人気度)' },
+                    { value: 'negative', label: '👎 低評価 (-1人気度)' }
+                  ]}
+                  emptyMessage="レビュータイプを選択"
+                  columns={2}
+                />
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     <input
@@ -694,39 +694,41 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
 
       case 'buyback':
         return (
-          <div className="space-y-3">
-            <h4 className="font-bold">買い戻しアクション (1AP)</h4>
-            <div className="text-sm text-gray-600 mb-3">
-              マーケットに出品中の商品を在庫に戻します。
+          <div className="space-y-4">
+            <h4 className="font-bold text-lg text-gray-800">📦 買い戻しアクション (1AP)</h4>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <div className="text-sm text-gray-700">
+                マーケットに出品中の商品を在庫に戻します
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">商品 (価格-人気度):</label>
-              <SimpleSelect
-                value={`${actionParams.price}-${actionParams.popularity}` || ''}
-                onChange={(value) => {
-                  const [price, popularity] = value.split('-').map(Number);
-                  const product = gameState.sharedMarket?.[price]?.[popularity];
-                  setActionParams({
-                    ...actionParams, 
-                    price, 
-                    popularity,
-                    productInfo: product
-                  });
-                }}
-                placeholder="買い戻しする商品を選択"
-                options={Object.entries(gameState.sharedMarket || {}).flatMap(([price, popularityMap]) =>
-                  Object.entries(popularityMap).map(([popularity, product]) => {
-                    if (product && product.ownerId === player.id) {
-                      return {
-                        value: `${price}-${popularity}`,
-                        label: `商品(値${product.value}) (価格${price}、人気度${popularity})`
-                      };
-                    }
-                    return null;
-                  }).filter((item): item is {value: string, label: string} => item !== null)
-                )}
-              />
-            </div>
+            <ModernButtonGroup
+              label="買い戻しする商品 (価格-人気度)"
+              value={`${actionParams.price}-${actionParams.popularity}` || ''}
+              onChange={(value) => {
+                const [price, popularity] = value.split('-').map(Number);
+                const product = gameState.sharedMarket?.[price]?.[popularity];
+                setActionParams({
+                  ...actionParams, 
+                  price, 
+                  popularity,
+                  productInfo: product
+                });
+              }}
+              options={Object.entries(gameState.sharedMarket || {}).flatMap(([price, popularityMap]) =>
+                Object.entries(popularityMap || {}).map(([popularity, product]) => {
+                  if (product && product.ownerId === player.id) {
+                    return {
+                      value: `${price}-${popularity}`,
+                      label: `🎲 商品(値${product.value})`,
+                      description: `価格¥${price} / 人気度${popularity}`
+                    };
+                  }
+                  return null;
+                }).filter((item): item is {value: string, label: string, description?: string} => item !== null)
+              )}
+              emptyMessage="買い戻し可能な商品がありません"
+              columns={2}
+            />
             {actionParams.productInfo && (
               <div className="bg-gray-100 p-3 rounded">
                 <div className="text-sm">

@@ -9,7 +9,7 @@ import AutomataMarketView from './AutomataMarketView';
 import PlayLog from './PlayLog';
 import TrendResultDialog from './TrendResultDialog';
 import VictoryDialog from './VictoryDialog';
-import PersonalMarket from './PersonalMarket';
+import SharedMarketBoard from './SharedMarketBoard';
 import Inventory from './Inventory';
 import DesignBoard from './DesignBoard';
 import { useSocket } from '../hooks/useSocket';
@@ -184,11 +184,14 @@ const GameBoard: React.FC = () => {
     if (activeView === 'game') {
       return (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-full">
-          {/* Main Game Area - Personal Market only */}
+          {/* Main Game Area - Shared Market Board */}
           <div className="lg:col-span-3">
-            <PersonalMarket 
-              personalMarket={currentPlayer.personalMarket} 
-              playerId={currentPlayer.id}
+            <SharedMarketBoard 
+              sharedMarket={gameState.sharedMarket} 
+              players={gameState.players}
+              currentPlayer={currentPlayer}
+              canInteract={true}
+              isMyTurn={isCurrentPlayerTurn}
             />
           </div>
           {/* Right Panel - Action + Inventory */}
