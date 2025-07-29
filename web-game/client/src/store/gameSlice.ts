@@ -33,7 +33,6 @@ export interface Player {
   prestige: number;
   resaleHistory: number;
   actionPoints: number;
-  personalMarket: { [price: number]: { [popularity: number]: Product | null } };
   designs: { [slot: number]: Design };
   inventory: Product[];
   openSourceDesigns: string[];
@@ -46,6 +45,7 @@ export interface GameState {
   currentPlayerIndex: number;
   currentRound: number;
   currentPhase: 'action' | 'automata' | 'market';
+  sharedMarket: { [price: number]: { [popularity: number]: Product | null } };
   pollution: {
     'game-console': number;
     'diy-gadget': number;

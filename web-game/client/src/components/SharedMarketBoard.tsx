@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Product, GameState, Player } from '../store/gameSlice';
+import type { Product, Player } from '../store/gameSlice';
 
 interface SharedMarketBoardProps {
   sharedMarket: { [price: number]: { [popularity: number]: Product | null } };

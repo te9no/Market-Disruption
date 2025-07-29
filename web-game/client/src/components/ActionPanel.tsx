@@ -586,7 +586,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           const products: Array<{value: string, label: string}> = [];
           
           Object.entries(gameState.sharedMarket || {}).forEach(([price, popularityMap]) => {
-            Object.entries(popularityMap).forEach(([popularity, product]) => {
+            Object.entries(popularityMap || {}).forEach(([popularity, product]) => {
               if (product) {
                 products.push({
                   value: `${price}-${popularity}`,
@@ -877,8 +877,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   }
                 }}
                 options={(() => {
-                  let targetMarket = null;
-                  
                   // 共有マーケットから対象プレイヤーの商品を取得
                   if (!gameState.sharedMarket) return [];
                   
