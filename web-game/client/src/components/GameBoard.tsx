@@ -260,17 +260,7 @@ const GameBoard: React.FC = () => {
 
   return (
     <FloatingWindowsProvider>
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>
-        {/* Floating Toolbar */}
-        {activeView === 'game' && (
-          <FloatingToolbar 
-            player={currentPlayer}
-            isMyTurn={isCurrentPlayerTurn}
-            gamePhase={currentPhase}
-            gameState={gameState}
-          />
-        )}
-        
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)' }}>        
         {/* Floating Window Manager */}
         <FloatingWindowManager />
         
@@ -674,6 +664,16 @@ const GameBoard: React.FC = () => {
           dice={trendResult.dice || []}
           total={trendResult.total || 0}
           trendEffect={trendResult.trendEffect || { name: '', effect: '', cost: 0 }}
+        />
+      )}
+      
+      {/* Floating Toolbar - Rendered last to ensure it's on top */}
+      {activeView === 'game' && (
+        <FloatingToolbar 
+          player={currentPlayer}
+          isMyTurn={isCurrentPlayerTurn}
+          gamePhase={currentPhase}
+          gameState={gameState}
         />
       )}
       </div>
