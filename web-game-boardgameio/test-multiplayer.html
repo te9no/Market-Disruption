@@ -60,7 +60,7 @@
     <div class="test-section">
         <h3>デプロイメント情報</h3>
         <ul>
-            <li><strong>Railway Backend:</strong> <a href="https://web-game-boardgameio-production.up.railway.app" target="_blank">サーバー確認</a></li>
+            <li><strong>Railway Backend:</strong> <a href="https://market-disruption-production.up.railway.app" target="_blank">サーバー確認</a></li>
             <li><strong>Netlify Frontend:</strong> このページ</li>
             <li><strong>GitHub Repository:</strong> <a href="https://github.com/te9no/Market-Disruption" target="_blank">ソースコード</a></li>
         </ul>
@@ -70,7 +70,7 @@
         // 環境変数からサーバーURLを取得
         const serverUrl = import.meta && import.meta.env ? 
             (import.meta.env.VITE_SERVER_URL || 'http://localhost:8000') : 
-            'https://web-game-boardgameio-production.up.railway.app';
+            'https://market-disruption-production.up.railway.app';
         
         document.getElementById('server-url').textContent = serverUrl;
 

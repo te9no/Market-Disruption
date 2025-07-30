@@ -23,7 +23,7 @@ PORT=$PORT (Railway自動設定)
 - 正常時レスポンス: `["MarketDisruption"]`
 
 ### 4. URL
-- 本番URL: `https://web-game-boardgameio-production.up.railway.app`
+- 本番URL: `https://market-disruption-production.up.railway.app`
 
 ## Netlify フロントエンドデプロイ
 
@@ -36,7 +36,7 @@ PORT=$PORT (Railway自動設定)
 
 ### 2. 環境変数（Netlify管理画面で設定）
 ```
-VITE_SERVER_URL=https://web-game-boardgameio-production.up.railway.app
+VITE_SERVER_URL=https://market-disruption-production.up.railway.app
 ```
 
 ### 3. SPA設定
