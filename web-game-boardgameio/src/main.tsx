@@ -29,12 +29,21 @@ const App: React.FC = () => {
   // サーバーURLを環境変数から取得（本番ではRailway URL）
   const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000';
   
+  console.log('Connecting to server:', serverUrl);
+  console.log('Environment:', import.meta.env.MODE);
+  
   // Create the client component with fallback
   const MarketDisruptionClient = Client({
     game: MarketDisruption,
     board: GameBoard,
-    multiplayer: SocketIO({ server: serverUrl }),
-    debug: process.env.NODE_ENV === 'development',
+    multiplayer: SocketIO({ 
+      server: serverUrl,
+      // Socket.IO 接続オプションを追加
+      transports: ['websocket', 'polling'],
+      upgrade: true,
+      rememberUpgrade: true
+    }),
+    debug: import.meta.env.MODE === 'development',
   });
 
   return (

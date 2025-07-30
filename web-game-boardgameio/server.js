@@ -150,12 +150,24 @@ const server = Server({
   origins: [
     Origins.LOCALHOST_IN_DEVELOPMENT, 
     Origins.LOCALHOST,
-    // Netlify本番URL (あとで更新)
+    // Netlify本番URL（具体的なドメイン）
+    'https://market-disruption.netlify.app',
+    // Netlifyのプレビュードメイン
+    /^https:\/\/.*--market-disruption\.netlify\.app$/,
+    // 一般的なNetlifyドメイン
     /^https:\/\/.*\.netlify\.app$/,
-    // Railway本番URL (あとで更新)  
+    // Railway本番URL  
     /^https:\/\/.*\.railway\.app$/
   ],
 });
+
+console.log('Server origins configured:', [
+  'Origins.LOCALHOST_IN_DEVELOPMENT', 
+  'Origins.LOCALHOST',
+  'https://market-disruption.netlify.app',
+  'https://*.netlify.app (regex)',
+  'https://*.railway.app (regex)'
+]);
 
 const port = process.env.PORT || 8000;
 
