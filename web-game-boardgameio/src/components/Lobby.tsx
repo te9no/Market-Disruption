@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 interface LobbyProps {
-  onJoinGame: (gameID: string, playerID: string, playerName: string) => void;
+  onJoinGame: (gameID: string, playerID: string, playerName: string, numPlayers?: number) => void;
 }
 
 export const Lobby: React.FC<LobbyProps> = ({ onJoinGame }) => {
@@ -9,9 +9,14 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame }) => {
   const [playerName, setPlayerName] = useState('');
   const [playerID, setPlayerID] = useState('0');
 
-  const createNewGame = () => {
-    const newGameID = `game-${Date.now()}`;
-    onJoinGame(newGameID, '0', playerName || 'プレイヤー1');
+  const createSinglePlayerGame = () => {
+    const newGameID = `solo-${Date.now()}`;
+    onJoinGame(newGameID, '0', playerName || 'プレイヤー1', 1);
+  };
+
+  const createMultiPlayerGame = () => {
+    const newGameID = `multi-${Date.now()}`;
+    onJoinGame(newGameID, '0', playerName || 'プレイヤー1', 4);
   };
 
   const joinExistingGame = () => {
@@ -55,21 +60,42 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame }) => {
             }}
           />
         </div>
-        <button
-          onClick={createNewGame}
-          disabled={!playerName}
-          style={{
-            padding: '12px 30px',
-            fontSize: '18px',
-            backgroundColor: playerName ? '#4CAF50' : '#ccc',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: playerName ? 'pointer' : 'not-allowed'
-          }}
-        >
-          新しいゲームを作成
-        </button>
+        
+        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button
+            onClick={createSinglePlayerGame}
+            disabled={!playerName}
+            style={{
+              padding: '12px 25px',
+              fontSize: '16px',
+              backgroundColor: playerName ? '#FF9800' : '#ccc',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: playerName ? 'pointer' : 'not-allowed'
+            }}
+          >
+            🤖 1人プレイ<br />
+            <small>(オートマ対戦)</small>
+          </button>
+          
+          <button
+            onClick={createMultiPlayerGame}
+            disabled={!playerName}
+            style={{
+              padding: '12px 25px',
+              fontSize: '16px',
+              backgroundColor: playerName ? '#4CAF50' : '#ccc',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: playerName ? 'pointer' : 'not-allowed'
+            }}
+          >
+            👥 複数人プレイ<br />
+            <small>(最大4人)</small>
+          </button>
+        </div>
       </div>
 
       <div style={{ 
@@ -155,7 +181,8 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame }) => {
       }}>
         <h3>📋 遊び方</h3>
         <ul style={{ textAlign: 'left', maxWidth: '500px', margin: '0 auto' }}>
-          <li>2-4人のプレイヤーで対戦</li>
+          <li><strong>1人プレイ:</strong> オートマとの戦略的対戦</li>
+          <li><strong>複数人プレイ:</strong> 2-4人のプレイヤーで対戦</li>
           <li>威厳17+資金75 または 資金150で勝利</li>
           <li>アクション→オートマ→市場の3フェーズを繰り返し</li>
           <li>製造・販売・転売・設計などのアクションを駆使</li>

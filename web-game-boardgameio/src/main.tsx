@@ -11,11 +11,12 @@ const App: React.FC = () => {
     gameID: string;
     playerID: string;
     playerName: string;
+    numPlayers: number;
   } | null>(null);
 
-  const handleJoinGame = (gameID: string, playerID: string, playerName: string) => {
+  const handleJoinGame = (gameID: string, playerID: string, playerName: string, numPlayers: number = 4) => {
     // boardgame.ioは自動的にゲームを作成するため、直接ゲーム状態を設定
-    setGameState({ gameID, playerID, playerName });
+    setGameState({ gameID, playerID, playerName, numPlayers });
   };
 
   const handleLeaveGame = () => {
@@ -36,6 +37,7 @@ const App: React.FC = () => {
   const MarketDisruptionClient = Client({
     game: MarketDisruption,
     board: GameBoard,
+    numPlayers: gameState.numPlayers,
     multiplayer: SocketIO({ 
       server: serverUrl
     }),
