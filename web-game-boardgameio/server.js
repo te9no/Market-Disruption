@@ -631,9 +631,10 @@ console.log('Server origins configured:', [
 
 const port = process.env.PORT || 8000;
 
-console.log('Starting server with configuration:');
+console.log('Starting Market Disruption server with configuration:');
 console.log('PORT:', port);
 console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('Server version: 2025-07-30-v2 (all moves included)');
 
 // boardgame.ioサーバー起動
 server.run(port, () => {
