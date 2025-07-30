@@ -58,5 +58,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Webアプリケーションについて
 ### 機能テスト
+- boardgame.ioを使用したWeb用ゲームを実装します。
+- Rule.mdに従った実装にします。
+- backendはrailway、frontendはnetlifyを使用します。
+- ゲームはPCブラウザ、スマホブラウザで使用できます。
 - game_feature_test_plan.mdに従ってテストを実施します。
+- ビルドが成功するまで、ローカルでビルドテストをして、完了したらコミット・同期してgithubに反映してください。
 - テスト結果はレポートとして、reportフォルダに保存してください。

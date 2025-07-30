@@ -27,7 +27,11 @@
       "Bash(curl:*)",
       "Bash(npm test)",
       "Bash(npm test:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(npm init:*)",
+      "Bash(npm run server:*)",
+      "Bash(start cmd /k \"npm run server\")",
+      "Bash(powershell:*)"
     ],
     "deny": []
   }

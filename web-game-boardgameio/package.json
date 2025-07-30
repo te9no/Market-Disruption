@@ -1,0 +1,33 @@
+{
+  "name": "web-game-boardgameio",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "jest",
+    "server": "node server.js",
+    "start": "concurrently \"npm run server\" \"npm run dev\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "boardgame.io": "^0.50.2",
+    "concurrently": "^9.1.0",
+    "jest": "^30.0.5",
+    "koa": "^2.15.5",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "socket.io": "^4.7.5",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.6"
+  }
+}

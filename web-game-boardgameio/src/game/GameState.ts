@@ -1,0 +1,83 @@
+export interface Product {
+  id: string;
+  cost: number;
+  price: number;
+  popularity: number;
+  playerId: string;
+  isResale: boolean;
+  originalCost?: number;
+  originalPlayerId?: string;
+}
+
+export interface Design {
+  id: string;
+  cost: number;
+  isOpenSource: boolean;
+}
+
+export interface Player {
+  id: string;
+  name: string;
+  money: number;
+  prestige: number;
+  resaleHistory: number;
+  actionPoints: number;
+  designs: Design[];
+  personalMarket: Product[];
+}
+
+export interface AutomataState {
+  manufacturerMoney: number;
+  resaleOrganizationMoney: number;
+  market: Product[];
+}
+
+export interface GameState {
+  players: { [key: string]: Player };
+  currentPlayer: string | null;
+  phase: 'setup' | 'action' | 'automata' | 'market' | 'victory';
+  round: number;
+  marketPollution: number;
+  regulationLevel: number;
+  automata: AutomataState;
+  trendEffects: TrendEffect[];
+  gameEnded: boolean;
+  winner: string | null;
+}
+
+export interface TrendEffect {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  activated: boolean;
+  permanent: boolean;
+}
+
+export const initialGameState: GameState = {
+  players: {},
+  currentPlayer: null,
+  phase: 'setup',
+  round: 1,
+  marketPollution: 0,
+  regulationLevel: 0,
+  automata: {
+    manufacturerMoney: Infinity,
+    resaleOrganizationMoney: 20,
+    market: []
+  },
+  trendEffects: [],
+  gameEnded: false,
+  winner: null
+};
+
+export const createInitialPlayer = (id: string, name: string): Player => ({
+  id,
+  name,
+  money: 30,
+  prestige: 5,
+  resaleHistory: 0,
+  actionPoints: 3,
+  designs: [],
+  personalMarket: []
+});
