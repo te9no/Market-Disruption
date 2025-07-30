@@ -642,6 +642,18 @@ server.run(port, () => {
   console.log(`🎮 Game available at: http://localhost:${port}/games`);
   console.log(`🔗 Health check: http://localhost:${port}/games`);
   console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // デバッグ: 利用可能なmovesをログ出力
+  const moveNames = Object.keys(MarketDisruption.moves);
+  console.log(`🎯 Available moves (${moveNames.length}):`, moveNames.join(', '));
+  
+  // 問題のあるmovesを個別チェック
+  const criticalMoves = ['partTimeWork', 'design', 'dayLabor', 'purchase'];
+  console.log('🔍 Critical moves check:');
+  criticalMoves.forEach(move => {
+    const exists = moveNames.includes(move);
+    console.log(`  - ${move}: ${exists ? '✅ FOUND' : '❌ MISSING'}`);
+  });
 }).catch(error => {
   console.error('❌ Failed to start server:', error);
   process.exit(1);
