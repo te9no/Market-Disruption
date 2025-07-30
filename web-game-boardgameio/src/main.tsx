@@ -27,7 +27,7 @@ const App: React.FC = () => {
   }
 
   // サーバーURLを環境変数から取得（本番ではRailway URL）
-  const serverUrl = import.meta.env.VITE_SERVER_URL || 'localhost:8000';
+  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000';
   
   // Create the client component with fallback
   const MarketDisruptionClient = Client({
