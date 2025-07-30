@@ -162,7 +162,8 @@ const MarketDisruption = {
   
   // フェーズ終了用のイベント
   events: {
-    endPhase: true
+    endPhase: true,
+    endTurn: true
   }
 };
 

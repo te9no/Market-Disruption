@@ -343,6 +343,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                     });
                     
                     try {
+                      // 1人プレイ時は先にターン終了してからフェーズ終了
+                      if (ctx.numPlayers === 1) {
+                        console.log('🎯 Single player mode - ending turn first');
+                        if (events && typeof events.endTurn === 'function') {
+                          console.log('✅ Calling events.endTurn');
+                          const turnResult = events.endTurn();
+                          console.log('📊 endTurn result:', turnResult);
+                        }
+                      }
+                      
                       if (events && typeof events.endPhase === 'function') {
                         console.log('✅ Using events.endPhase');
                         const result = events.endPhase();
