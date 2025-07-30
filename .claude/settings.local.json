@@ -33,7 +33,13 @@
       "Bash(start cmd /k \"npm run server\")",
       "Bash(powershell:*)",
       "Bash(git init:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(PORT=8001 timeout 10 npm run server)",
+      "Bash(npm uninstall:*)",
+      "Bash(PORT=8001 timeout 5 npm run server)",
+      "Bash(PORT=8002 timeout 5 npm run server)",
+      "Bash(PORT=8003 timeout 10 npm run server)",
+      "Bash(PORT=8004 timeout 5 npm run server)"
     ],
     "deny": []
   }

@@ -343,6 +343,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                     });
                     
                     try {
+                      console.log('🚀 Starting automata sequence...');
+                      
                       // 1人プレイ時は先にターン終了してからフェーズ終了
                       if (ctx.numPlayers === 1) {
                         console.log('🎯 Single player mode - ending turn first');
@@ -353,10 +355,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                         }
                       }
                       
+                      // オートマフェーズに移行
                       if (events && typeof events.endPhase === 'function') {
-                        console.log('✅ Using events.endPhase');
+                        console.log('✅ Transitioning to automata phase');
                         const result = events.endPhase();
                         console.log('📊 endPhase result:', result);
+                        
+                        // フェーズ遷移後、少し待ってオートマフェーズの処理状況を確認
+                        setTimeout(() => {
+                          console.log('⏱️ Checking game state after phase transition:', {
+                            currentPhase: ctx.phase,
+                            round: G.round,
+                            automataMarket: G.automata?.market?.length || 0
+                          });
+                        }, 500);
+                        
                       } else if (ctx.events && typeof ctx.events.endPhase === 'function') {
                         console.log('✅ Using ctx.events.endPhase');
                         const result = ctx.events.endPhase();
