@@ -71,7 +71,14 @@ const MarketDisruption: Game<GameState> = {
     action: {
       start: true,  // これが初期フェーズであることを明示
       next: 'automata',
+      turn: {
+        order: {
+          first: () => 0,
+          next: ({ ctx }) => (ctx.playOrderPos + 1) % ctx.numPlayers,
+        }
+      },
       onEnd: ({ G }) => {
+        // 全プレイヤーのAPをリセット
         for (const playerId in G.players) {
           G.players[playerId].actionPoints = 3;
         }
@@ -85,9 +92,14 @@ const MarketDisruption: Game<GameState> = {
           first: () => 0,
           next: () => undefined,
         },
-        onBegin: ({ G }) => {
+        onBegin: ({ G, events }) => {
+          console.log('Automata phase: executing automata actions');
           executeManufacturerAutomata(G);
           executeResaleAutomata(G);
+          // 自動的に次のフェーズに進む
+          if (events && events.endPhase) {
+            setTimeout(() => events.endPhase(), 1500);
+          }
         }
       },
       next: 'market'
@@ -100,14 +112,20 @@ const MarketDisruption: Game<GameState> = {
           first: () => 0,
           next: () => undefined,
         },
-        onBegin: ({ G }) => {
+        onBegin: ({ G, events }) => {
+          console.log('Market phase: executing market actions');
           executeMarketPhase(G);
+          // 自動的に次のフェーズに進む
+          if (events && events.endPhase) {
+            setTimeout(() => events.endPhase(), 1500);
+          }
         }
       },
       next: 'action',
       onEnd: ({ G }) => {
         G.round++;
         
+        // 勝利条件チェック
         for (const playerId in G.players) {
           if (checkVictoryConditions(G.players[playerId])) {
             G.gameEnded = true;
