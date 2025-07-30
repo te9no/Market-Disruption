@@ -240,7 +240,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
       <div style={{ marginBottom: '20px' }}>
         <h2>アクション</h2>
         <div style={{ marginBottom: '10px', fontSize: '12px', color: '#666' }}>
-          デバッグ情報: プレイヤーID={playerID}, 現在のプレイヤー={ctx.currentPlayer}, アクティブ={isActive ? 'Yes' : 'No'}
+          デバッグ情報: プレイヤーID={playerID}, 現在のプレイヤー={ctx.currentPlayer}, アクティブ={isActive ? 'Yes' : 'No'}<br/>
+          条件チェック: currentPlayer.id({currentPlayer.id}) === ctx.currentPlayer({ctx.currentPlayer}) = {currentPlayer.id === ctx.currentPlayer ? 'True' : 'False'}<br/>
+          最終条件: {currentPlayer.id === ctx.currentPlayer && isActive ? 'アクション可能' : 'アクション不可'}
         </div>
         {currentPlayer.id === ctx.currentPlayer && isActive ? (
           <div>
@@ -330,21 +332,34 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
               {ctx.phase === 'action' && (
                 <button 
                   onClick={() => {
-                    console.log('フェーズ終了ボタン押下:', { events, ctx, phase: ctx.phase });
+                    console.log('🔄 フェーズ終了ボタン押下:', { 
+                      events, 
+                      ctx, 
+                      phase: ctx.phase, 
+                      numPlayers: ctx.numPlayers,
+                      currentPlayer: ctx.currentPlayer,
+                      playerID,
+                      isActive
+                    });
+                    
                     try {
                       if (events && typeof events.endPhase === 'function') {
-                        console.log('Using events.endPhase');
-                        events.endPhase();
+                        console.log('✅ Using events.endPhase');
+                        const result = events.endPhase();
+                        console.log('📊 endPhase result:', result);
                       } else if (ctx.events && typeof ctx.events.endPhase === 'function') {
-                        console.log('Using ctx.events.endPhase');
-                        ctx.events.endPhase();
+                        console.log('✅ Using ctx.events.endPhase');
+                        const result = ctx.events.endPhase();
+                        console.log('📊 ctx.events.endPhase result:', result);
                       } else {
-                        console.error('endPhase function not found in events or ctx.events');
-                        console.log('Available events:', Object.keys(events || {}));
-                        console.log('Available ctx.events:', Object.keys(ctx.events || {}));
+                        console.error('❌ endPhase function not found in events or ctx.events');
+                        console.log('📋 Available events:', Object.keys(events || {}));
+                        console.log('📋 Available ctx.events:', Object.keys(ctx.events || {}));
+                        console.log('📋 events object:', events);
+                        console.log('📋 ctx.events object:', ctx.events);
                       }
                     } catch (error) {
-                      console.error('Error calling endPhase:', error);
+                      console.error('💥 Error calling endPhase:', error);
                     }
                   }}
                   style={{ 
