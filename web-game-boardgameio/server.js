@@ -40,6 +40,19 @@ const checkVictoryConditions = (player) => {
   return (player.prestige >= 17 && player.money >= 75) || player.money >= 150;
 };
 
+const getMaxPrice = (cost, prestige) => {
+  if (prestige >= 9) return cost * 4;
+  if (prestige >= 3) return cost * 3;
+  return cost * 2;
+};
+
+const getResaleBonus = (resaleHistory) => {
+  if (resaleHistory <= 1) return 5;
+  if (resaleHistory <= 4) return 8;
+  if (resaleHistory <= 7) return 11;
+  return 15;
+};
+
 // 本格的なゲーム定義
 const MarketDisruption = {
   name: 'MarketDisruption',
@@ -195,6 +208,122 @@ const MarketDisruption = {
       
       player.money += 18;
       player.actionPoints -= 3;
+    },
+    
+    review: ({ G, ctx }, targetPlayerId, productId, isPositive) => {
+      const player = G.players[ctx.currentPlayer];
+      if (player.actionPoints < 1) return 'INVALID_MOVE';
+      if (player.prestige < 1) return 'INVALID_MOVE';
+      
+      const targetPlayer = G.players[targetPlayerId];
+      if (!targetPlayer) return 'INVALID_MOVE';
+      
+      const product = targetPlayer.personalMarket.find(p => p.id === productId);
+      if (!product) return 'INVALID_MOVE';
+      
+      player.prestige -= 1;
+      player.actionPoints -= 1;
+      
+      if (isPositive) {
+        product.popularity = Math.min(6, product.popularity + 1);
+      } else {
+        product.popularity = Math.max(1, product.popularity - 1);
+      }
+    },
+    
+    research: ({ G, ctx }) => {
+      const player = G.players[ctx.currentPlayer];
+      if (player.actionPoints < 1) return 'INVALID_MOVE';
+      
+      player.actionPoints -= 1;
+      
+      // Research provides 3d6 dice roll result (implementation simplified)
+      rollMultipleDice(3);
+    },
+    
+    buyBack: ({ G, ctx }, productId) => {
+      const player = G.players[ctx.currentPlayer];
+      if (player.actionPoints < 1) return 'INVALID_MOVE';
+      
+      const productIndex = player.personalMarket.findIndex(p => p.id === productId);
+      if (productIndex === -1) return 'INVALID_MOVE';
+      
+      player.personalMarket.splice(productIndex, 1);
+      player.actionPoints -= 1;
+    },
+    
+    discontinue: ({ G, ctx }, designId) => {
+      const player = G.players[ctx.currentPlayer];
+      if (player.actionPoints < 1) return 'INVALID_MOVE';
+      
+      const designIndex = player.designs.findIndex(d => d.id === designId);
+      if (designIndex === -1) return 'INVALID_MOVE';
+      
+      player.designs.splice(designIndex, 1);
+      player.actionPoints -= 1;
+    },
+    
+    resale: ({ G, ctx }, targetPlayerId, productId, resalePrice) => {
+      const player = G.players[ctx.currentPlayer];
+      if (player.actionPoints < 2) return 'INVALID_MOVE';
+      if (player.prestige < 1) return 'INVALID_MOVE';
+      
+      const targetPlayer = G.players[targetPlayerId];
+      if (!targetPlayer) return 'INVALID_MOVE';
+      
+      const productIndex = targetPlayer.personalMarket.findIndex(p => p.id === productId);
+      if (productIndex === -1) return 'INVALID_MOVE';
+      
+      const product = targetPlayer.personalMarket[productIndex];
+      if (player.money < product.price) return 'INVALID_MOVE';
+      
+      const resaleBonus = getResaleBonus(player.resaleHistory);
+      const maxResalePrice = Math.min(24, product.price + resaleBonus);
+      
+      if (resalePrice > maxResalePrice) return 'INVALID_MOVE';
+      
+      player.money -= product.price;
+      targetPlayer.money += product.price;
+      player.actionPoints -= 2;
+      player.prestige -= 1;
+      player.resaleHistory += 1;
+      
+      targetPlayer.personalMarket.splice(productIndex, 1);
+      
+      const resaleProduct = {
+        ...product,
+        id: `resale-${ctx.currentPlayer}-${Date.now()}`,
+        price: resalePrice,
+        isResale: true,
+        originalCost: product.cost,
+        originalPlayerId: product.playerId,
+        playerId: ctx.currentPlayer
+      };
+      
+      player.personalMarket.push(resaleProduct);
+      G.marketPollution++;
+    },
+    
+    promoteRegulation: ({ G, ctx }) => {
+      const player = G.players[ctx.currentPlayer];
+      if (player.actionPoints < 2) return 'INVALID_MOVE';
+      
+      const regulationDice = rollDice() + rollDice();
+      if (regulationDice >= 9) {
+        G.regulationLevel++;
+        
+        if (G.regulationLevel >= 3) {
+          for (const playerId in G.players) {
+            const p = G.players[playerId];
+            p.personalMarket = p.personalMarket.filter(product => !product.isResale);
+            p.money -= p.resaleHistory * 2;
+          }
+          
+          G.automata.market = G.automata.market.filter(product => !product.isResale);
+        }
+      }
+      
+      player.actionPoints -= 2;
     }
   },
   
