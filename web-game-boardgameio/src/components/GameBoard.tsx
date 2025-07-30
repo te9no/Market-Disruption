@@ -224,6 +224,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
       
       <div style={{ marginBottom: '20px' }}>
         <h2>ゲーム情報</h2>
+        <div>ゲームモード: {ctx.numPlayers === 1 ? '🤖 オートマ対戦' : `👥 ${ctx.numPlayers}人プレイ`}</div>
         <div>ラウンド: {G.round}</div>
         <div>フェーズ: {G.phase}</div>
         <div>市場汚染レベル: {G.marketPollution}</div>
@@ -357,7 +358,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                     fontWeight: 'bold'
                   }}
                 >
-                  アクションフェーズ終了 (フェーズ: {ctx.phase})
+                  {ctx.numPlayers === 1 ? 'オートマフェーズへ' : 'アクションフェーズ終了'} (フェーズ: {ctx.phase})
                 </button>
               )}
             </div>

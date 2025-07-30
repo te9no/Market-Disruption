@@ -74,7 +74,14 @@ const MarketDisruption: Game<GameState> = {
       turn: {
         order: {
           first: () => 0,
-          next: ({ ctx }) => (ctx.playOrderPos + 1) % ctx.numPlayers,
+          next: ({ ctx }) => {
+            // 1人プレイの場合は常に同じプレイヤー（オートマとの対戦）
+            if (ctx.numPlayers === 1) {
+              return 0;
+            }
+            // 複数人プレイの場合は通常の順番
+            return (ctx.playOrderPos + 1) % ctx.numPlayers;
+          },
         }
       },
       onEnd: ({ G }) => {
