@@ -1,7 +1,7 @@
 {
   "name": "web-game-boardgameio",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

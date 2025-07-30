@@ -32,7 +32,8 @@
       "Bash(npm run server:*)",
       "Bash(start cmd /k \"npm run server\")",
       "Bash(powershell:*)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }
