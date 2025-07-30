@@ -37,11 +37,7 @@ const App: React.FC = () => {
     game: MarketDisruption,
     board: GameBoard,
     multiplayer: SocketIO({ 
-      server: serverUrl,
-      // Socket.IO 接続オプションを追加
-      transports: ['websocket', 'polling'],
-      upgrade: true,
-      rememberUpgrade: true
+      server: serverUrl
     }),
     debug: import.meta.env.MODE === 'development',
   });
