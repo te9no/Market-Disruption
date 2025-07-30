@@ -1,0 +1,14 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 環境変数（デプロイ時にNetlifyで設定）
+# VITE_SERVER_URL = "your-railway-app.railway.app"

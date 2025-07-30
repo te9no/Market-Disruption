@@ -26,12 +26,15 @@ const App: React.FC = () => {
     return <Lobby onJoinGame={handleJoinGame} />;
   }
 
+  // サーバーURLを環境変数から取得（本番ではRailway URL）
+  const serverUrl = import.meta.env.VITE_SERVER_URL || 'localhost:8000';
+  
   // Create the client component with fallback
   const MarketDisruptionClient = Client({
     game: MarketDisruption,
     board: GameBoard,
-    multiplayer: SocketIO({ server: 'localhost:8000' }),
-    debug: true,
+    multiplayer: SocketIO({ server: serverUrl }),
+    debug: process.env.NODE_ENV === 'development',
   });
 
   return (

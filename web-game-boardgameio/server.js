@@ -147,7 +147,14 @@ const MarketDisruption = {
 
 const server = Server({
   games: [MarketDisruption],
-  origins: [Origins.LOCALHOST_IN_DEVELOPMENT, Origins.LOCALHOST],
+  origins: [
+    Origins.LOCALHOST_IN_DEVELOPMENT, 
+    Origins.LOCALHOST,
+    // Netlify本番URL (あとで更新)
+    /^https:\/\/.*\.netlify\.app$/,
+    // Railway本番URL (あとで更新)  
+    /^https:\/\/.*\.railway\.app$/
+  ],
 });
 
 const port = process.env.PORT || 8000;
