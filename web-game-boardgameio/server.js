@@ -159,21 +159,9 @@ const server = Server({
 
 const port = process.env.PORT || 8000;
 
-// サーバー起動
-server.run(port, (app) => {
+// boardgame.ioサーバー起動
+server.run(port, () => {
   console.log(`Boardgame.io server running on port ${port}...`);
   console.log(`Visit http://localhost:3002 to play!`);
-  
-  // CORS設定を追加
-  app.use(async (ctx, next) => {
-    ctx.set('Access-Control-Allow-Origin', '*');
-    ctx.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    ctx.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    
-    if (ctx.method === 'OPTIONS') {
-      ctx.status = 200;
-    } else {
-      await next();
-    }
-  });
+  console.log(`Health endpoint: http://localhost:${port}/games`);
 });
