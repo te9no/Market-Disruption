@@ -1,5 +1,26 @@
 const { Server, Origins } = require('boardgame.io/server');
 
+// プロセス終了時のハンドリング
+process.on('SIGTERM', () => {
+  console.log('📡 Received SIGTERM, shutting down gracefully...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('📡 Received SIGINT, shutting down gracefully...');
+  process.exit(0);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('💥 Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 // 簡単なゲーム定義を直接作成
 const MarketDisruption = {
   name: 'MarketDisruption',
@@ -171,9 +192,17 @@ console.log('Server origins configured:', [
 
 const port = process.env.PORT || 8000;
 
+console.log('Starting server with configuration:');
+console.log('PORT:', port);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+
 // boardgame.ioサーバー起動
 server.run(port, () => {
-  console.log(`Boardgame.io server running on port ${port}...`);
-  console.log(`Visit http://localhost:3002 to play!`);
-  console.log(`Health endpoint: http://localhost:${port}/games`);
+  console.log(`✅ Boardgame.io server successfully running on port ${port}`);
+  console.log(`🎮 Game available at: http://localhost:${port}/games`);
+  console.log(`🔗 Health check: http://localhost:${port}/games`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+}).catch(error => {
+  console.error('❌ Failed to start server:', error);
+  process.exit(1);
 });
