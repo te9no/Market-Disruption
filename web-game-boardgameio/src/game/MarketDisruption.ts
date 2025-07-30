@@ -136,6 +136,11 @@ const MarketDisruption: Game<GameState> = {
       next: ({ ctx }) => (ctx.playOrderPos + 1) % ctx.numPlayers,
     }
   },
+  
+  // フェーズ終了用のイベント
+  events: {
+    endPhase: true
+  }
 };
 
 function manufacture(G: GameState, ctx: Ctx, designId: string) {
