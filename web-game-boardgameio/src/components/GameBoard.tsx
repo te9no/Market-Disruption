@@ -12,7 +12,6 @@ interface GameBoardProps {
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, playerID, isActive }) => {
-  const [isTransitioning, setIsTransitioning] = React.useState(false);
   
   if (!playerID) {
     return <div>プレイヤーIDが設定されていません</div>;
@@ -392,13 +391,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
               {ctx.numPlayers === 1 ? (
                 // 一人プレイ: オートマフェーズへ移行ボタン（ターン終了も含む）
                 <button 
-                  onClick={async () => {
-                    if (isTransitioning) {
-                      console.log('⚠️ 既にフェーズ遷移中です');
-                      return;
-                    }
+                  onClick={() => {
                     
-                    setIsTransitioning(true);
                     console.log('🎯 一人プレイ: オートマフェーズへ移行:', { events, ctx });
                     
                     try {
@@ -408,42 +402,35 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                         events.endTurn();
                       }
                       
-                      // 少し待ってからフェーズ終了
-                      setTimeout(() => {
-                        // オートマフェーズに移行
-                        if (events && typeof events.endPhase === 'function') {
-                          console.log('✅ Transitioning to automata phase');
-                          const result = events.endPhase();
-                          console.log('📊 endPhase result:', result);
-                        } else if (ctx.events && typeof ctx.events.endPhase === 'function') {
-                          console.log('✅ Using ctx.events.endPhase');
-                          ctx.events.endPhase();
-                        } else {
-                          console.error('❌ endPhase function not found');
-                        }
-                        
-                        // 遷移状態をリセット
-                        setTimeout(() => setIsTransitioning(false), 2000);
-                      }, 100);
+                      // オートマフェーズに即座に移行（setTimeoutを削除）
+                      if (events && typeof events.endPhase === 'function') {
+                        console.log('✅ Transitioning to automata phase');
+                        const result = events.endPhase();
+                        console.log('📊 endPhase result:', result);
+                      } else if (ctx.events && typeof ctx.events.endPhase === 'function') {
+                        console.log('✅ Using ctx.events.endPhase');
+                        ctx.events.endPhase();
+                      } else {
+                        console.error('❌ endPhase function not found');
+                      }
                       
                     } catch (error) {
                       console.error('💥 Error transitioning to automata phase:', error);
-                      setIsTransitioning(false);
                     }
                   }}
-                  disabled={isTransitioning}
+                  disabled={false}
                   style={{ 
                     margin: '5px', 
                     padding: '15px 30px',
-                    backgroundColor: isTransitioning ? '#ccc' : '#FF5722',
+                    backgroundColor: '#FF5722',
                     color: 'white',
                     border: 'none',
-                    cursor: isTransitioning ? 'not-allowed' : 'pointer',
+                    cursor: 'pointer',
                     fontSize: '16px',
                     fontWeight: 'bold'
                   }}
                 >
-                  {isTransitioning ? 'フェーズ遷移中...' : `オートマフェーズへ (残りAP: ${currentPlayer.actionPoints})`}
+                  オートマフェーズへ (残りAP: {currentPlayer.actionPoints})
                 </button>
               ) : (
                 // 複数人プレイ: 通常のターン終了ボタン
