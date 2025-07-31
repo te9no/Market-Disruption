@@ -734,6 +734,10 @@ const MarketDisruption = {
       
       player.personalMarket.push(resaleProduct);
       G.marketPollution++;
+      
+      console.log(`🔄 転売実行: ${player.name}が${targetPlayer.name}の商品を${product.price}資金で購入、${resalePrice}資金で転売出品`);
+      
+      addToPlayLog(G, ctx, ctx.currentPlayer, '転売', `${targetPlayer.name}の商品(コスト${product.cost})を${product.price}資金で購入、${resalePrice}資金で転売、威厳-1、転売履歴+1、市場汚染+1`);
     },
     
     promoteRegulation: ({ G, ctx }) => {

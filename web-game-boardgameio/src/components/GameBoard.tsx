@@ -109,14 +109,25 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                       margin: '1px',
                       padding: '2px',
                       backgroundColor: product.isResale ? '#ffcdd2' : '#c8e6c9',
-                      border: '1px solid #999',
-                      borderRadius: '2px',
+                      border: product.isResale ? '2px solid #d32f2f' : '1px solid #999',
+                      borderRadius: product.isResale ? '8px' : '2px',
                       fontSize: '6px',
                       textAlign: 'center',
-                      width: '46px'
+                      width: '46px',
+                      position: 'relative'
                     }}>
-                      {product.isResale ? '転売' : '通常'}
-                      <br/>C{product.cost}
+                      {product.isResale ? (
+                        <>
+                          <div style={{ fontSize: '4px', color: '#d32f2f', fontWeight: 'bold' }}>🥤転売</div>
+                          <div style={{ fontSize: '4px' }}>元:{G.players[product.originalPlayerId || '']?.name?.slice(0,2) || '?'}</div>
+                          <div>C{product.originalCost || product.cost}</div>
+                        </>
+                      ) : (
+                        <>
+                          通常
+                          <br/>C{product.cost}
+                        </>
+                      )}
                       {player.id !== currentPlayer.id && isActive && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginTop: '1px' }}>
                           {currentPlayer.money >= product.price && currentPlayer.actionPoints >= 1 && (
@@ -132,6 +143,31 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                               }}
                             >
                               購入
+                            </button>
+                          )}
+                          {currentPlayer.money >= product.price && currentPlayer.actionPoints >= 2 && currentPlayer.prestige >= 1 && (
+                            <button 
+                              onClick={() => {
+                                const resaleBonus = currentPlayer.resaleHistory <= 1 ? 5 : 
+                                                   currentPlayer.resaleHistory <= 4 ? 8 :
+                                                   currentPlayer.resaleHistory <= 7 ? 11 : 15;
+                                const maxPrice = Math.min(24, product.price + resaleBonus);
+                                const resalePrice = parseInt(prompt(`転売価格を入力 (${product.price + 1}-${maxPrice}):`) || '0', 10);
+                                if (resalePrice >= product.price + 1 && resalePrice <= maxPrice) {
+                                  moves.resale(player.id, product.id, resalePrice);
+                                }
+                              }}
+                              style={{ 
+                                fontSize: '4px', 
+                                padding: '1px 1px', 
+                                backgroundColor: '#FF5722',
+                                color: 'white',
+                                border: 'none',
+                                cursor: 'pointer',
+                                marginTop: '1px'
+                              }}
+                            >
+                              転売
                             </button>
                           )}
                           {currentPlayer.actionPoints >= 1 && currentPlayer.prestige >= 1 && (
@@ -269,8 +305,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
       <div>
         <h4>パーソナル・マーケット</h4>
         {player.personalMarket.map(product => (
-          <div key={product.id} style={{ margin: '5px', padding: '5px', border: '1px solid #ddd' }}>
-            {product.isResale ? '転売品' : '通常品'} - コスト: {product.cost}, 価格: {product.price || '未設定'}, 人気度: {product.popularity}
+          <div key={product.id} style={{ 
+            margin: '5px', 
+            padding: '5px', 
+            border: product.isResale ? '2px solid #d32f2f' : '1px solid #ddd',
+            borderRadius: product.isResale ? '8px' : '4px',
+            backgroundColor: product.isResale ? '#ffebee' : 'white'
+          }}>
+            {product.isResale ? (
+              <>
+                🥤<strong>転売品</strong> (元製造者: {G.players[product.originalPlayerId || '']?.name || '不明'}) - 
+                元コスト: {product.originalCost || product.cost}, 価格: {product.price || '未設定'}, 人気度: {product.popularity}
+              </>
+            ) : (
+              <>通常品 - コスト: {product.cost}, 価格: {product.price || '未設定'}, 人気度: {product.popularity}</>
+            )}
             {player.id === playerID && isActive && product.price === 0 && (
               <div>
                 <input 
@@ -599,8 +648,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
         
         <h3>オートマ商品</h3>
         {G.automata.market.map(product => (
-          <div key={product.id} style={{ margin: '5px', padding: '5px', border: '1px solid #eee' }}>
-            {product.isResale ? '転売品' : '通常品'} - コスト: {product.cost}, 価格: {product.price}, 人気度: {product.popularity}
+          <div key={product.id} style={{ 
+            margin: '5px', 
+            padding: '5px', 
+            border: product.isResale ? '2px solid #d32f2f' : '1px solid #eee',
+            borderRadius: product.isResale ? '8px' : '4px',
+            backgroundColor: product.isResale ? '#ffebee' : '#fafafa'
+          }}>
+            {product.isResale ? (
+              <>
+                🥤<strong>転売品</strong> (元製造者: {G.players[product.originalPlayerId || '']?.name || '不明'}) - 
+                元コスト: {product.originalCost || product.cost}, 価格: {product.price}, 人気度: {product.popularity}
+              </>
+            ) : (
+              <>通常品 - コスト: {product.cost}, 価格: {product.price}, 人気度: {product.popularity}</>
+            )}
             {currentPlayer.money >= product.price && isActive && currentPlayer.actionPoints >= 1 && (
               <button 
                 onClick={() => moves.purchase('automata', product.id)}
