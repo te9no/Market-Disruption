@@ -49,7 +49,8 @@
       "mcp__serena__onboarding",
       "mcp__serena__list_dir",
       "mcp__serena__replace_symbol_body",
-      "mcp__serena__replace_regex"
+      "mcp__serena__replace_regex",
+      "Bash(NODE_ENV=production node claude-test.js)"
     ],
     "deny": []
   }

@@ -957,7 +957,9 @@ server.app.use(async (ctx, next) => {
       },
       endpoints: [
         'GET /api/status - Server status',
-        'GET /api/moves - List all moves'
+        'GET /api/moves - List all moves',
+        'POST /api/test-game - Full game simulation test',
+        'POST /api/test-automata - Automata-only test'
       ]
     };
     return;
@@ -984,6 +986,246 @@ server.app.use(async (ctx, next) => {
         purchase: Object.keys(MarketDisruption.moves).includes('purchase') ? '✅ FOUND' : '❌ MISSING'
       }
     };
+    return;
+  }
+
+  // Claude単体テスト用のゲームシミュレーションAPI
+  if (ctx.path === '/api/test-game' && ctx.method === 'POST') {
+    ctx.type = 'application/json';
+    try {
+      console.log('🧪 Starting Claude API game test...');
+      
+      // 新しいゲーム状態を作成
+      const setupCtx = { numPlayers: 1 };
+      let G = MarketDisruption.setup({ ctx: setupCtx });
+      let ctx_game = {
+        currentPlayer: '0',
+        phase: 'action',
+        numPlayers: 1,
+        playOrderPos: 0
+      };
+      
+      console.log('📊 Initial game state created');
+      console.log(`Player 0 - Money: ${G.players['0'].money}, AP: ${G.players['0'].actionPoints}, Prestige: ${G.players['0'].prestige}`);
+      
+      const testResults = [];
+      
+      // テスト1: アルバイト
+      console.log('\n🎯 Test 1: Part-time work');
+      const initialMoney = G.players['0'].money;
+      const initialAP = G.players['0'].actionPoints;
+      
+      MarketDisruption.moves.partTimeWork({ G, ctx: ctx_game });
+      
+      const moneyGained = G.players['0'].money - initialMoney;
+      const apUsed = initialAP - G.players['0'].actionPoints;
+      
+      testResults.push({
+        test: 'partTimeWork',
+        success: moneyGained === 5 && apUsed === 2,
+        details: {
+          moneyGained,
+          apUsed,
+          expected: { moneyGained: 5, apUsed: 2 }
+        }
+      });
+      
+      console.log(`💰 Money gained: ${moneyGained} (expected: 5)`);
+      console.log(`⚡ AP used: ${apUsed} (expected: 2)`);
+      
+      // テスト2: 設計
+      console.log('\n🎯 Test 2: Design action');
+      const initialDesigns = G.players['0'].designs.length;
+      const initialPrestige = G.players['0'].prestige;
+      
+      MarketDisruption.moves.design({ G, ctx: ctx_game }, true); // オープンソース設計
+      
+      const designsAdded = G.players['0'].designs.length - initialDesigns;
+      const prestigeGained = G.players['0'].prestige - initialPrestige;
+      
+      testResults.push({
+        test: 'design',
+        success: designsAdded === 1 && prestigeGained === 2,
+        details: {
+          designsAdded,
+          prestigeGained,
+          newDesign: G.players['0'].designs[G.players['0'].designs.length - 1],
+          expected: { designsAdded: 1, prestigeGained: 2 }
+        }
+      });
+      
+      console.log(`📐 Designs added: ${designsAdded} (expected: 1)`);
+      console.log(`👑 Prestige gained: ${prestigeGained} (expected: 2)`);
+      
+      // テスト3: オートマフェーズシミュレーション
+      console.log('\n🤖 Test 3: Automata phase execution');
+      const initialAutomataMarket = G.automata.market.length;
+      const initialPollution = G.marketPollution;
+      
+      // メーカー・オートマ実行
+      executeManufacturerAutomata(G);
+      
+      // 転売ヤー・オートマ実行
+      executeResaleAutomata(G);
+      
+      const automataProductsAdded = G.automata.market.length - initialAutomataMarket;
+      const pollutionIncrease = G.marketPollution - initialPollution;
+      
+      testResults.push({
+        test: 'automataPhase',
+        success: automataProductsAdded > 0,
+        details: {
+          automataProductsAdded,
+          pollutionIncrease,
+          automataMarket: G.automata.market.map(p => ({
+            id: p.id,
+            cost: p.cost,
+            price: p.price,
+            playerId: p.playerId,
+            isResale: p.isResale
+          }))
+        }
+      });
+      
+      console.log(`🏭 Automata products added: ${automataProductsAdded}`);
+      console.log(`🌫️ Pollution increase: ${pollutionIncrease}`);
+      
+      // テスト4: マーケットフェーズシミュレーション
+      console.log('\n🏪 Test 4: Market phase execution');
+      const initialRound = G.round;
+      
+      executeMarketPhase(G);
+      
+      testResults.push({
+        test: 'marketPhase',
+        success: true,
+        details: {
+          roundBefore: initialRound,
+          playLog: G.playLog ? G.playLog.slice(-3) : []
+        }
+      });
+      
+      // 総合結果
+      const allTestsPassed = testResults.every(t => t.success);
+      
+      console.log('\n📊 Test Summary:');
+      testResults.forEach(test => {
+        console.log(`  ${test.test}: ${test.success ? '✅ PASS' : '❌ FAIL'}`);
+      });
+      
+      ctx.body = {
+        success: allTestsPassed,
+        message: `Game test completed. ${testResults.filter(t => t.success).length}/${testResults.length} tests passed.`,
+        timestamp: new Date().toISOString(),
+        testResults,
+        finalGameState: {
+          round: G.round,
+          phase: ctx_game.phase,
+          marketPollution: G.marketPollution,
+          player: {
+            money: G.players['0'].money,
+            prestige: G.players['0'].prestige,
+            actionPoints: G.players['0'].actionPoints,
+            designs: G.players['0'].designs.length,
+            personalMarket: G.players['0'].personalMarket.length
+          },
+          automataMarket: G.automata.market.length,
+          playLogEntries: G.playLog ? G.playLog.length : 0
+        }
+      };
+      
+    } catch (error) {
+      console.error('💥 API test error:', error);
+      ctx.body = {
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
+    return;
+  }
+
+  // オートマ単体テスト用API
+  if (ctx.path === '/api/test-automata' && ctx.method === 'POST') {
+    ctx.type = 'application/json';
+    try {
+      console.log('🤖 Starting Automata-only test...');
+      
+      // シンプルなゲーム状態を作成
+      const G = {
+        round: 1,
+        phase: 'automata',
+        marketPollution: 0,
+        players: {
+          '0': {
+            id: '0',
+            name: 'Test Player',
+            money: 30,
+            prestige: 5,
+            personalMarket: [
+              { id: 'test-product-1', cost: 2, price: 6, popularity: 2, playerId: '0', isResale: false }
+            ]
+          }
+        },
+        automata: {
+          manufacturerMoney: Infinity,
+          resaleOrganizationMoney: 20,
+          market: []
+        },
+        playLog: []
+      };
+      
+      const beforeState = {
+        automataMarket: G.automata.market.length,
+        resaleMoney: G.automata.resaleOrganizationMoney,
+        pollution: G.marketPollution,
+        playerMarket: G.players['0'].personalMarket.length
+      };
+      
+      // メーカー・オートマ実行
+      console.log('🏭 Executing Manufacturer Automata...');
+      executeManufacturerAutomata(G);
+      
+      // 転売ヤー・オートマ実行
+      console.log('🔄 Executing Resale Automata...');
+      executeResaleAutomata(G);
+      
+      const afterState = {
+        automataMarket: G.automata.market.length,
+        resaleMoney: G.automata.resaleOrganizationMoney,
+        pollution: G.marketPollution,
+        playerMarket: G.players['0'].personalMarket.length
+      };
+      
+      ctx.body = {
+        success: true,
+        message: 'Automata test completed successfully',
+        timestamp: new Date().toISOString(),
+        beforeState,
+        afterState,
+        changes: {
+          automataProductsAdded: afterState.automataMarket - beforeState.automataMarket,
+          pollutionIncrease: afterState.pollution - beforeState.pollution,
+          playerProductsRemoved: beforeState.playerMarket - afterState.playerMarket
+        },
+        automataMarket: G.automata.market.map(p => ({
+          id: p.id,
+          cost: p.cost,
+          price: p.price,
+          playerId: p.playerId,
+          isResale: p.isResale
+        })),
+        playLog: G.playLog || []
+      };
+      
+    } catch (error) {
+      console.error('💥 Automata test error:', error);
+      ctx.body = {
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
     return;
   }
   
