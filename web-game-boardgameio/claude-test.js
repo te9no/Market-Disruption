@@ -61,6 +61,20 @@ async function testAPI() {
       console.log(`   Player AP: ${gameTestData.finalGameState.player.actionPoints}`);
       console.log(`   Automata Market Size: ${gameTestData.finalGameState.automataMarket}`);
       console.log(`   Play Log Entries: ${gameTestData.finalGameState.playLogEntries}`);
+      
+      // 新しいムーブのテスト
+      console.log('\n🆕 Testing new executeAutomataAndMarket move...');
+      const newMoveTestResponse = await fetch(`${SERVER_URL}/api/test-new-move`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (newMoveTestResponse.ok) {
+        const newMoveData = await newMoveTestResponse.json();
+        console.log(`📊 New Move Test: ${newMoveData.success ? '✅ SUCCESS' : '❌ FAILED'}`);
+      } else {
+        console.log('⚠️ New move test endpoint not available (expected on old server)');
+      }
     }
     
     // Test 4: Automata-only Test

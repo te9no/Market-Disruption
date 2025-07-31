@@ -54,9 +54,45 @@ const MarketDisruption: Game<GameState> = {
     design: ({ G, ctx }, isOpenSource: boolean = false) => design(G, ctx, isOpenSource),
     promoteRegulation: ({ G, ctx }) => promoteRegulation(G, ctx),
     dayLabor: ({ G, ctx }) => dayLabor(G, ctx),
-    activateTrend: ({ G, ctx }) => activateTrend(G, ctx)
+    activateTrend: ({ G, ctx }) => activateTrend(G, ctx),
+    
+    // 新しい統合アクション: オートマフェーズ + マーケットフェーズ + 次ラウンド
+    executeAutomataAndMarket: ({ G }) => {
+      console.log('🤖 Starting Automata and Market execution...');
+      
+      // オートマフェーズ実行
+      console.log('🏭 Executing Manufacturer Automata...');
+      executeManufacturerAutomata(G);
+      
+      console.log('🔄 Executing Resale Automata...');
+      executeResaleAutomata(G);
+      
+      // マーケットフェーズ実行
+      console.log('🏪 Executing Market Phase...');
+      executeMarketPhase(G);
+      
+      // 次ラウンドの準備
+      G.round++;
+      console.log(`🎮 Starting round ${G.round}`);
+      
+      // 全プレイヤーのAPをリセット
+      for (const playerId in G.players) {
+        G.players[playerId].actionPoints = 3;
+      }
+      
+      // 勝利条件チェック
+      for (const playerId in G.players) {
+        if (checkVictoryConditions(G.players[playerId])) {
+          G.gameEnded = true;
+          G.winner = playerId;
+          console.log(`🏆 Game ended! Winner: ${G.players[playerId].name}`);
+          break;
+        }
+      }
+      
+      console.log('✅ Automata and Market execution completed');
+    }
   },
-
 
   endIf: ({ G }) => {
     if (G.gameEnded) {
@@ -67,16 +103,15 @@ const MarketDisruption: Game<GameState> = {
   minPlayers: 1,
   maxPlayers: 4,
   
-  // 初期フェーズをactionに設定
+  // シンプルなフェーズ設計: actionフェーズのみ
   phases: {
     action: {
-      start: true,  // これが初期フェーズであることを明示
-      next: 'automata',
+      start: true,
       turn: {
         order: {
           first: () => 0,
           next: ({ ctx }) => {
-            // 1人プレイの場合は常に同じプレイヤー（オートマとの対戦）
+            // 1人プレイの場合は常に同じプレイヤー
             if (ctx.numPlayers === 1) {
               return 0;
             }
@@ -85,73 +120,8 @@ const MarketDisruption: Game<GameState> = {
           },
         }
       },
-      // フェーズ終了は手動で制御（ボタンクリック時）
-      endIf: () => false,
-      onEnd: ({ G }) => {
-        console.log('Action phase ending - resetting AP for all players');
-        // 全プレイヤーのAPをリセット
-        for (const playerId in G.players) {
-          G.players[playerId].actionPoints = 3;
-        }
-      }
-    },
-
-    automata: {
-      moves: {},
-      onBegin: ({ G, events }) => {
-        console.log('🤖 Automata phase started: executing automata actions');
-        executeManufacturerAutomata(G);
-        executeResaleAutomata(G);
-        
-        console.log('🔄 Immediately transitioning to market phase');
-        if (events && events.endPhase) {
-          events.endPhase();
-        } else {
-          console.error('❌ events.endPhase not available in automata phase');
-        }
-      },
-      next: 'market'
-    },
-
-    market: {
-      moves: {},
-      onBegin: ({ G, events }) => {
-        console.log('🏪 Market phase started: executing market actions');
-        executeMarketPhase(G);
-        
-        console.log('🔄 Immediately transitioning to action phase');
-        if (events && events.endPhase) {
-          events.endPhase();
-        } else {
-          console.error('❌ events.endPhase not available in market phase');
-        }
-      },
-      next: 'action',
-      onEnd: ({ G }) => {
-        G.round++;
-        console.log(`🎮 Starting round ${G.round}`);
-        
-        // 勝利条件チェック
-        for (const playerId in G.players) {
-          if (checkVictoryConditions(G.players[playerId])) {
-            G.gameEnded = true;
-            G.winner = playerId;
-            G.phase = 'victory';
-            console.log(`🏆 Game ended! Winner: ${G.players[playerId].name}`);
-            break;
-          }
-        }
-      }
-    },
-
-    victory: {
-      moves: {},
-      turn: {
-        order: {
-          first: () => 0,
-          next: () => undefined,
-        }
-      }
+      // フェーズは終了しない（ゲーム終了まで継続）
+      endIf: () => false
     }
   },
   
@@ -162,9 +132,8 @@ const MarketDisruption: Game<GameState> = {
     }
   },
   
-  // フェーズ終了用のイベント
+  // 基本的なイベントのみ
   events: {
-    endPhase: true,
     endTurn: true
   }
 };

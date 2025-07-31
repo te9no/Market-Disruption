@@ -268,7 +268,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
         <h2>ゲーム情報</h2>
         <div>ゲームモード: {ctx.numPlayers === 1 ? '🤖 オートマ対戦' : `👥 ${ctx.numPlayers}人プレイ`}</div>
         <div>ラウンド: {G.round}</div>
-        <div>フェーズ: {G.phase}</div>
+        <div>フェーズ: {ctx.phase === 'action' ? 'アクション' : ctx.phase}</div>
         <div>市場汚染レベル: {G.marketPollution}</div>
         <div>規制レベル: {G.regulationLevel}</div>
         
@@ -389,36 +389,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             </button>
             <div style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
               {ctx.numPlayers === 1 ? (
-                // 一人プレイ: オートマフェーズへ移行ボタン（ターン終了も含む）
+                // 一人プレイ: オートマ＆マーケット実行ボタン
                 <button 
                   onClick={() => {
-                    
-                    console.log('🎯 一人プレイ: オートマフェーズへ移行:', { events, ctx });
+                    console.log('🎯 一人プレイ: オートマ＆マーケット実行:', { ctx, currentPlayer });
                     
                     try {
-                      // 1人プレイ時はターン終了してからフェーズ終了
-                      if (events && typeof events.endTurn === 'function') {
-                        console.log('✅ Calling events.endTurn');
-                        events.endTurn();
-                      }
-                      
-                      // オートマフェーズに即座に移行（setTimeoutを削除）
-                      if (events && typeof events.endPhase === 'function') {
-                        console.log('✅ Transitioning to automata phase');
-                        const result = events.endPhase();
-                        console.log('📊 endPhase result:', result);
-                      } else if (ctx.events && typeof ctx.events.endPhase === 'function') {
-                        console.log('✅ Using ctx.events.endPhase');
-                        ctx.events.endPhase();
+                      // 新しい統合ムーブを呼び出し
+                      if (moves && moves.executeAutomataAndMarket) {
+                        console.log('✅ Executing automata and market phases');
+                        moves.executeAutomataAndMarket();
                       } else {
-                        console.error('❌ endPhase function not found');
+                        console.error('❌ executeAutomataAndMarket move not found');
                       }
                       
                     } catch (error) {
-                      console.error('💥 Error transitioning to automata phase:', error);
+                      console.error('💥 Error executing automata and market:', error);
                     }
                   }}
-                  disabled={false}
                   style={{ 
                     margin: '5px', 
                     padding: '15px 30px',
@@ -430,7 +418,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                     fontWeight: 'bold'
                   }}
                 >
-                  オートマフェーズへ (残りAP: {currentPlayer.actionPoints})
+                  🤖 オートマ＆マーケット実行 → 次ラウンド (残りAP: {currentPlayer.actionPoints})
                 </button>
               ) : (
                 // 複数人プレイ: 通常のターン終了ボタン
