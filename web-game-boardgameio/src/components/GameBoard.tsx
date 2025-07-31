@@ -145,31 +145,45 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                               購入
                             </button>
                           )}
-                          {currentPlayer.money >= product.price && currentPlayer.actionPoints >= 2 && currentPlayer.prestige >= 1 && (
-                            <button 
-                              onClick={() => {
-                                const resaleBonus = currentPlayer.resaleHistory <= 1 ? 5 : 
-                                                   currentPlayer.resaleHistory <= 4 ? 8 :
-                                                   currentPlayer.resaleHistory <= 7 ? 11 : 15;
-                                const maxPrice = Math.min(24, product.price + resaleBonus);
-                                const resalePrice = parseInt(prompt(`転売価格を入力 (${product.price + 1}-${maxPrice}):`) || '0', 10);
-                                if (resalePrice >= product.price + 1 && resalePrice <= maxPrice) {
-                                  moves.resale(player.id, product.id, resalePrice);
-                                }
-                              }}
-                              style={{ 
-                                fontSize: '4px', 
-                                padding: '1px 1px', 
-                                backgroundColor: '#FF5722',
-                                color: 'white',
-                                border: 'none',
-                                cursor: 'pointer',
-                                marginTop: '1px'
-                              }}
-                            >
-                              転売
-                            </button>
-                          )}
+                          <button 
+                            onClick={() => {
+                              if (currentPlayer.money < product.price) {
+                                alert(`資金不足: ${product.price}資金が必要です（現在${currentPlayer.money}資金）`);
+                                return;
+                              }
+                              if (currentPlayer.actionPoints < 2) {
+                                alert(`AP不足: 2APが必要です（現在${currentPlayer.actionPoints}AP）`);
+                                return;
+                              }
+                              if (currentPlayer.prestige < 1) {
+                                alert(`威厳不足: 1威厳が必要です（現在${currentPlayer.prestige}威厳）`);
+                                return;
+                              }
+                              
+                              const resaleBonus = currentPlayer.resaleHistory <= 1 ? 5 : 
+                                                 currentPlayer.resaleHistory <= 4 ? 8 :
+                                                 currentPlayer.resaleHistory <= 7 ? 11 : 15;
+                              const maxPrice = Math.min(24, product.price + resaleBonus);
+                              const resalePrice = parseInt(prompt(`転売価格を入力 (${product.price + 1}-${maxPrice}):`) || '0', 10);
+                              if (resalePrice >= product.price + 1 && resalePrice <= maxPrice) {
+                                moves.resale(player.id, product.id, resalePrice);
+                              } else if (resalePrice > 0) {
+                                alert(`価格範囲外: ${product.price + 1}～${maxPrice}の間で入力してください`);
+                              }
+                            }}
+                            disabled={!isActive}
+                            style={{ 
+                              fontSize: '4px', 
+                              padding: '1px 1px', 
+                              backgroundColor: (currentPlayer.money >= product.price && currentPlayer.actionPoints >= 2 && currentPlayer.prestige >= 1 && isActive) ? '#FF5722' : '#999',
+                              color: 'white',
+                              border: 'none',
+                              cursor: isActive ? 'pointer' : 'not-allowed',
+                              marginTop: '1px'
+                            }}
+                          >
+                            転売 {currentPlayer.money < product.price ? '[資金不足]' : currentPlayer.actionPoints < 2 ? '[AP不足]' : currentPlayer.prestige < 1 ? '[威厳不足]' : ''}
+                          </button>
                           {currentPlayer.actionPoints >= 1 && currentPlayer.prestige >= 1 && (
                             <div style={{ display: 'flex', gap: '1px' }}>
                               <button 
