@@ -242,11 +242,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
       <div style={{ marginBottom: '20px' }}>
         <h2>アクション</h2>
         <div style={{ marginBottom: '10px', fontSize: '12px', color: '#666' }}>
-          デバッグ情報: プレイヤーID={playerID}, 現在のプレイヤー={ctx.currentPlayer}, アクティブ={isActive ? 'Yes' : 'No'}<br/>
+          デバッグ情報: プレイヤーID={playerID}, 現在のプレイヤー={ctx.currentPlayer}, アクティブ={isActive ? 'Yes' : 'No'}, フェーズ={ctx.phase}<br/>
           条件チェック: currentPlayer.id({currentPlayer.id}) === ctx.currentPlayer({ctx.currentPlayer}) = {currentPlayer.id === ctx.currentPlayer ? 'True' : 'False'}<br/>
-          最終条件: {currentPlayer.id === ctx.currentPlayer && isActive ? 'アクション可能' : 'アクション不可'}
+          フェーズチェック: ctx.phase({ctx.phase}) === 'action' = {ctx.phase === 'action' ? 'True' : 'False'}<br/>
+          最終条件: {currentPlayer.id === ctx.currentPlayer && isActive && ctx.phase === 'action' ? 'アクション可能' : 'アクション不可'}
         </div>
-        {currentPlayer.id === ctx.currentPlayer && isActive ? (
+        {currentPlayer.id === ctx.currentPlayer && isActive && ctx.phase === 'action' ? (
           <div>
             <button 
               onClick={handlePartTimeWork}
@@ -392,7 +393,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           </div>
         ) : (
           <div style={{ color: '#999' }}>
-            {currentPlayer.id !== ctx.currentPlayer ? 'あなたのターンではありません' : 'アクションを実行できません'}
+            {currentPlayer.id !== ctx.currentPlayer 
+              ? 'あなたのターンではありません' 
+              : ctx.phase !== 'action' 
+                ? `現在は${ctx.phase}フェーズです。アクションフェーズまでお待ちください。` 
+                : 'アクションを実行できません'}
           </div>
         )}
       </div>

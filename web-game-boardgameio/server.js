@@ -110,6 +110,9 @@ const MarketDisruption = {
       const player = G.players[ctx.currentPlayer];
       if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
       
+      // actionフェーズでのみ製造可能
+      if (ctx.phase !== 'action') return 'INVALID_MOVE';
+      
       const design = player.designs.find(d => d.id === designId);
       if (!design || player.money < design.cost) return 'INVALID_MOVE';
       
@@ -131,6 +134,9 @@ const MarketDisruption = {
     sell: ({ G, ctx }, productId, price) => {
       const player = G.players[ctx.currentPlayer];
       if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
+      
+      // actionフェーズでのみ販売可能
+      if (ctx.phase !== 'action') return 'INVALID_MOVE';
       
       if (!productId || typeof price !== 'number' || price <= 0 || !Number.isInteger(price)) {
         return 'INVALID_MOVE';
@@ -185,6 +191,9 @@ const MarketDisruption = {
       const player = G.players[ctx.currentPlayer];
       if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
       
+      // actionフェーズでのみ実行可能
+      if (ctx.phase !== 'action') return 'INVALID_MOVE';
+      
       player.money += 5;
       player.actionPoints -= 2;
     },
@@ -193,6 +202,9 @@ const MarketDisruption = {
       const player = G.players[ctx.currentPlayer];
       if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
       if (player.designs.length >= 6) return 'INVALID_MOVE';
+      
+      // actionフェーズでのみ実行可能
+      if (ctx.phase !== 'action') return 'INVALID_MOVE';
       
       const designDice = rollMultipleDice(3);
       const selectedCost = designDice[Math.floor(Math.random() * 3)];
@@ -215,6 +227,9 @@ const MarketDisruption = {
       const player = G.players[ctx.currentPlayer];
       if (!player || player.actionPoints < 3) return 'INVALID_MOVE';
       if (player.money > 100) return 'INVALID_MOVE';
+      
+      // actionフェーズでのみ実行可能
+      if (ctx.phase !== 'action') return 'INVALID_MOVE';
       
       player.money += 18;
       player.actionPoints -= 3;

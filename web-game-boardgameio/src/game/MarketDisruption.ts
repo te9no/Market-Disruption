@@ -176,6 +176,9 @@ function manufacture(G: GameState, ctx: Ctx, designId: string) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   
+  // actionフェーズでのみ製造可能
+  if (ctx.phase !== 'action') return 'INVALID_MOVE';
+  
   const design = player.designs.find(d => d.id === designId);
   if (!design) return 'INVALID_MOVE';
   
@@ -200,6 +203,9 @@ function sell(G: GameState, ctx: Ctx, productId: string, price: number) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   if (player.prestige <= -3) return 'INVALID_MOVE';
+  
+  // actionフェーズでのみ販売可能
+  if (ctx.phase !== 'action') return 'INVALID_MOVE';
   
   const productIndex = player.personalMarket.findIndex(p => p.id === productId && p.price === 0);
   if (productIndex === -1) return 'INVALID_MOVE';
@@ -436,6 +442,9 @@ function partTimeWork(G: GameState, ctx: Ctx) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
   
+  // actionフェーズでのみ実行可能
+  if (ctx.phase !== 'action') return 'INVALID_MOVE';
+  
   player.money += 5;
   player.actionPoints -= 2;
 }
@@ -515,6 +524,9 @@ function design(G: GameState, ctx: Ctx, isOpenSource: boolean = false) {
   if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
   if (player.designs.length >= 6) return 'INVALID_MOVE';
   
+  // actionフェーズでのみ実行可能
+  if (ctx.phase !== 'action') return 'INVALID_MOVE';
+  
   const designDice = rollMultipleDice(3);
   const selectedCost = designDice[Math.floor(Math.random() * 3)];
   
@@ -558,6 +570,9 @@ function dayLabor(G: GameState, ctx: Ctx) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 3) return 'INVALID_MOVE';
   if (player.money > 100) return 'INVALID_MOVE';
+  
+  // actionフェーズでのみ実行可能
+  if (ctx.phase !== 'action') return 'INVALID_MOVE';
   
   player.money += 18;
   player.actionPoints -= 3;
