@@ -53,43 +53,53 @@ const getResaleBonus = (resaleHistory) => {
   return 15;
 };
 
+// Initial game state functions
+const initialGameState = {
+  players: {},
+  currentPlayer: '0',
+  phase: 'action',
+  round: 1,
+  marketPollution: 0,
+  regulationLevel: 0,
+  automata: {
+    manufacturerMoney: Infinity,
+    resaleOrganizationMoney: 20,
+    market: []
+  },
+  trendEffects: [],
+  gameEnded: false,
+  winner: null
+};
+
+const createInitialPlayer = (id, name) => ({
+  id,
+  name,
+  money: 30,
+  prestige: 5,
+  resaleHistory: 0,
+  actionPoints: 3,
+  designs: [],
+  personalMarket: []
+});
+
 // 本格的なゲーム定義
 const MarketDisruption = {
   name: 'MarketDisruption',
   setup: ({ ctx }) => {
-    const G = {
-      players: {},
-      currentPlayer: '0',
-      phase: 'action',
-      round: 1,
-      marketPollution: 0,
-      regulationLevel: 0,
-      automata: {
-        manufacturerMoney: Infinity,
-        resaleOrganizationMoney: 20,
-        market: []
-      },
-      trendEffects: [],
-      gameEnded: false,
-      winner: null
-    };
+    const G = { ...initialGameState };
     
     // プレイヤー初期化
     for (let i = 0; i < ctx.numPlayers; i++) {
       const playerId = String(i);
-      G.players[playerId] = {
-        id: playerId,
-        name: `Player ${i + 1}`,
-        money: 30,
-        prestige: 5,
-        resaleHistory: 0,
-        actionPoints: 3,
-        designs: [
-          { id: `design-${playerId}-0`, cost: rollDice(), isOpenSource: false },
-          { id: `design-${playerId}-1`, cost: rollDice(), isOpenSource: false }
-        ],
-        personalMarket: []
-      };
+      G.players[playerId] = createInitialPlayer(playerId, `Player ${i + 1}`);
+      
+      // 設計図をランダムに生成（TypeScript版と同じロジック）
+      const designDice = rollMultipleDice(2);
+      G.players[playerId].designs = designDice.map((cost, index) => ({
+        id: `design-${playerId}-${index}`,
+        cost,
+        isOpenSource: false
+      }));
     }
     
     return G;
@@ -98,7 +108,7 @@ const MarketDisruption = {
   moves: {
     manufacture: ({ G, ctx }, designId) => {
       const player = G.players[ctx.currentPlayer];
-      if (player.actionPoints < 1) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
       
       const design = player.designs.find(d => d.id === designId);
       if (!design || player.money < design.cost) return 'INVALID_MOVE';
@@ -135,7 +145,7 @@ const MarketDisruption = {
     
     purchase: ({ G, ctx }, targetPlayerId, productId) => {
       const player = G.players[ctx.currentPlayer];
-      if (player.actionPoints < 1) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
       
       if (ctx.phase !== 'action') return 'INVALID_MOVE';
       
@@ -173,7 +183,7 @@ const MarketDisruption = {
     
     partTimeWork: ({ G, ctx }) => {
       const player = G.players[ctx.currentPlayer];
-      if (player.actionPoints < 2) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
       
       player.money += 5;
       player.actionPoints -= 2;
@@ -181,7 +191,7 @@ const MarketDisruption = {
     
     design: ({ G, ctx }, isOpenSource = false) => {
       const player = G.players[ctx.currentPlayer];
-      if (player.actionPoints < 2) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
       if (player.designs.length >= 6) return 'INVALID_MOVE';
       
       const designDice = rollMultipleDice(3);
@@ -203,7 +213,7 @@ const MarketDisruption = {
     
     dayLabor: ({ G, ctx }) => {
       const player = G.players[ctx.currentPlayer];
-      if (player.actionPoints < 3) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 3) return 'INVALID_MOVE';
       if (player.money > 100) return 'INVALID_MOVE';
       
       player.money += 18;
@@ -212,7 +222,7 @@ const MarketDisruption = {
     
     review: ({ G, ctx }, targetPlayerId, productId, isPositive) => {
       const player = G.players[ctx.currentPlayer];
-      if (player.actionPoints < 1) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
       if (player.prestige < 1) return 'INVALID_MOVE';
       
       const targetPlayer = G.players[targetPlayerId];
@@ -233,7 +243,7 @@ const MarketDisruption = {
     
     research: ({ G, ctx }) => {
       const player = G.players[ctx.currentPlayer];
-      if (player.actionPoints < 1) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
       
       player.actionPoints -= 1;
       
@@ -243,7 +253,7 @@ const MarketDisruption = {
     
     buyBack: ({ G, ctx }, productId) => {
       const player = G.players[ctx.currentPlayer];
-      if (player.actionPoints < 1) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
       
       const productIndex = player.personalMarket.findIndex(p => p.id === productId);
       if (productIndex === -1) return 'INVALID_MOVE';
@@ -254,7 +264,7 @@ const MarketDisruption = {
     
     discontinue: ({ G, ctx }, designId) => {
       const player = G.players[ctx.currentPlayer];
-      if (player.actionPoints < 1) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
       
       const designIndex = player.designs.findIndex(d => d.id === designId);
       if (designIndex === -1) return 'INVALID_MOVE';
@@ -265,7 +275,7 @@ const MarketDisruption = {
     
     resale: ({ G, ctx }, targetPlayerId, productId, resalePrice) => {
       const player = G.players[ctx.currentPlayer];
-      if (player.actionPoints < 2) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
       if (player.prestige < 1) return 'INVALID_MOVE';
       
       const targetPlayer = G.players[targetPlayerId];
@@ -306,7 +316,7 @@ const MarketDisruption = {
     
     promoteRegulation: ({ G, ctx }) => {
       const player = G.players[ctx.currentPlayer];
-      if (player.actionPoints < 2) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
       
       const regulationDice = rollDice() + rollDice();
       if (regulationDice >= 9) {
