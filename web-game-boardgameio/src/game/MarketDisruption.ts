@@ -55,6 +55,7 @@ const MarketDisruption: Game<GameState> = {
     promoteRegulation: ({ G, ctx }) => promoteRegulation(G, ctx),
     dayLabor: ({ G, ctx }) => dayLabor(G, ctx),
     activateTrend: ({ G, ctx }) => activateTrend(G, ctx),
+    purchasePrestige: ({ G, ctx }) => purchasePrestige(G, ctx),
     
     // 新しい統合アクション: オートマフェーズ + マーケットフェーズ + 次ラウンド
     executeAutomataAndMarket: ({ G }) => {
@@ -827,6 +828,48 @@ function activateTrend(G: GameState, ctx: Ctx) {
       actor: ctx.currentPlayer,
       action: 'トレンド発動',
       details: `${effect.name}を発動`,
+      timestamp: Date.now()
+    });
+  }
+}
+
+function purchasePrestige(G: GameState, ctx: Ctx) {
+  const player = G.players[ctx.currentPlayer];
+  if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
+  if (player.money < 5) return 'INVALID_MOVE';
+  
+  // actionフェーズでのみ実行可能
+  if (ctx.phase !== 'action') return 'INVALID_MOVE';
+  
+  // 1ラウンド中に1回のみ実行可能チェック
+  if (!G.prestigePurchasePerRound) {
+    G.prestigePurchasePerRound = {};
+  }
+  
+  const purchaseKey = `${G.round}-${ctx.currentPlayer}`;
+  if (G.prestigePurchasePerRound[purchaseKey]) {
+    return 'INVALID_MOVE'; // 既にこのラウンドで威厳購入済み
+  }
+  
+  // 威厳購入実行
+  player.money -= 5;
+  player.prestige += 1;
+  player.actionPoints -= 1;
+  
+  // このラウンドで威厳購入したことを記録
+  G.prestigePurchasePerRound[purchaseKey] = true;
+  
+  console.log(`💎 威厳購入: ${player.name}が5資金で威厳1ポイント購入 (威厳: ${player.prestige - 1} → ${player.prestige})`);
+  
+  // ログ記録
+  if (G.playLog) {
+    G.playLog.push({
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      round: G.round,
+      phase: ctx.phase || G.phase,
+      actor: ctx.currentPlayer,
+      action: '威厳購入',
+      details: `5資金で威厳1ポイント購入 (威厳: ${player.prestige - 1} → ${player.prestige})`,
       timestamp: Date.now()
     });
   }

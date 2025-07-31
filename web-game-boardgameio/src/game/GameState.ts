@@ -42,6 +42,7 @@ export interface GameState {
   automata: AutomataState;
   trendEffects: TrendEffect[];
   availableTrends?: { [playerId: string]: AvailableTrend };
+  prestigePurchasePerRound?: { [key: string]: boolean };
   playLog: PlayLogEntry[];
   gameEnded: boolean;
   winner: string | null;

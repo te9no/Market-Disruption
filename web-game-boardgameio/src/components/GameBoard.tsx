@@ -387,6 +387,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             >
               リサーチ (1AP → トレンド調査) {currentPlayer.actionPoints < 1 ? '[AP不足]' : ''}
             </button>
+            <button 
+              onClick={() => moves.purchasePrestige()}
+              disabled={currentPlayer.actionPoints < 1 || currentPlayer.money < 5 || (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`])}
+              style={{ 
+                margin: '5px', 
+                padding: '10px',
+                backgroundColor: (currentPlayer.actionPoints < 1 || currentPlayer.money < 5 || (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`])) ? '#ccc' : '#FFD700',
+                color: 'white',
+                border: 'none',
+                cursor: (currentPlayer.actionPoints < 1 || currentPlayer.money < 5 || (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`])) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              威厳購入 (1AP + 5資金 → 威厳+1) {currentPlayer.actionPoints < 1 ? '[AP不足]' : currentPlayer.money < 5 ? '[資金不足]' : (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`]) ? '[使用済み]' : ''}
+            </button>
             <div style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
               {ctx.numPlayers === 1 ? (
                 // 一人プレイ: オートマ＆マーケット実行ボタン
