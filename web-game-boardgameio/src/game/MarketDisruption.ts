@@ -103,16 +103,12 @@ const MarketDisruption: Game<GameState> = {
         executeManufacturerAutomata(G);
         executeResaleAutomata(G);
         
-        // 少し待ってから次のフェーズに進む
-        console.log('⏰ Scheduling transition to market phase in 2000ms');
-        setTimeout(() => {
-          console.log('🔄 Transitioning from automata to market phase');
-          if (events && events.endPhase) {
-            events.endPhase();
-          } else {
-            console.error('❌ events.endPhase not available in automata phase');
-          }
-        }, 2000);
+        console.log('🔄 Immediately transitioning to market phase');
+        if (events && events.endPhase) {
+          events.endPhase();
+        } else {
+          console.error('❌ events.endPhase not available in automata phase');
+        }
       },
       next: 'market'
     },
@@ -123,16 +119,12 @@ const MarketDisruption: Game<GameState> = {
         console.log('🏪 Market phase started: executing market actions');
         executeMarketPhase(G);
         
-        // 少し待ってから次のフェーズに進む
-        console.log('⏰ Scheduling transition to action phase in 2000ms');
-        setTimeout(() => {
-          console.log('🔄 Transitioning from market to action phase');
-          if (events && events.endPhase) {
-            events.endPhase();
-          } else {
-            console.error('❌ events.endPhase not available in market phase');
-          }
-        }, 2000);
+        console.log('🔄 Immediately transitioning to action phase');
+        if (events && events.endPhase) {
+          events.endPhase();
+        } else {
+          console.error('❌ events.endPhase not available in market phase');
+        }
       },
       next: 'action',
       onEnd: ({ G }) => {

@@ -42,7 +42,14 @@
       "Bash(PORT=8004 timeout 5 npm run server)",
       "Bash(PORT=8001 node server.js)",
       "Bash(findstr:*)",
-      "mcp__serena__find_file"
+      "mcp__serena__find_file",
+      "mcp__serena__search_for_pattern",
+      "mcp__serena__activate_project",
+      "mcp__serena__check_onboarding_performed",
+      "mcp__serena__onboarding",
+      "mcp__serena__list_dir",
+      "mcp__serena__replace_symbol_body",
+      "mcp__serena__replace_regex"
     ],
     "deny": []
   }
