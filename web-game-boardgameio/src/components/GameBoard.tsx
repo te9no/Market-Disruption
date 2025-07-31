@@ -68,7 +68,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
 
     return (
       <div style={{ margin: '10px 0' }}>
-        <h4>{player.name} のパーソナル・マーケット</h4>
+        <h4>{player.name} のパーソナル・マーケット {player.id === currentPlayer.id ? '(あなた - 転売ボタンなし)' : '(他プレイヤー - 🔴転売ボタンあり🔴)'}</h4>
+        <div style={{ fontSize: '10px', color: '#FF5722', marginBottom: '5px' }}>
+          {player.id === currentPlayer.id ? 
+            '⚠️自分の商品には転売ボタンは表示されません。他のプレイヤーの商品を確認してください。' : 
+            '✅このマーケットの商品には転売ボタンが表示されます（価格設定済みの商品のみ）'}
+        </div>
         <div style={{ display: 'inline-block', border: '2px solid #333' }}>
           {/* ヘッダー（価格） */}
           <div style={{ display: 'flex' }}>
@@ -128,9 +133,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                           <br/>C{product.cost}
                         </>
                       )}
-                      {player.id !== currentPlayer.id && isActive && (
+                      {player.id !== currentPlayer.id && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginTop: '1px' }}>
-                          {currentPlayer.money >= product.price && currentPlayer.actionPoints >= 1 && (
+                          <div style={{ fontSize: '3px', color: '#666', marginBottom: '1px' }}>
+                            デバッグ: プレイヤー={player.name} vs 現在={currentPlayer.name}, アクティブ={isActive ? 'Yes' : 'No'}, 価格={product.price}
+                          </div>
+                          {currentPlayer.money >= product.price && currentPlayer.actionPoints >= 1 && isActive && (
                             <button 
                               onClick={() => moves.purchase(player.id, product.id)}
                               style={{ 
@@ -147,6 +155,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                           )}
                           <button 
                             onClick={() => {
+                              if (product.price === 0) {
+                                alert('出品されていない商品は転売できません');
+                                return;
+                              }
+                              if (!isActive) {
+                                alert('あなたのターンではありません');
+                                return;
+                              }
+                              if (player.id === currentPlayer.id) {
+                                alert('自分の商品は転売できません');
+                                return;
+                              }
                               if (currentPlayer.money < product.price) {
                                 alert(`資金不足: ${product.price}資金が必要です（現在${currentPlayer.money}資金）`);
                                 return;
@@ -171,18 +191,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                                 alert(`価格範囲外: ${product.price + 1}～${maxPrice}の間で入力してください`);
                               }
                             }}
-                            disabled={!isActive}
                             style={{ 
-                              fontSize: '4px', 
-                              padding: '1px 1px', 
-                              backgroundColor: (currentPlayer.money >= product.price && currentPlayer.actionPoints >= 2 && currentPlayer.prestige >= 1 && isActive) ? '#FF5722' : '#999',
+                              fontSize: '8px', 
+                              padding: '3px 5px', 
+                              backgroundColor: (product.price > 0 && isActive && player.id !== currentPlayer.id) ? '#FF5722' : '#999',
                               color: 'white',
-                              border: 'none',
-                              cursor: isActive ? 'pointer' : 'not-allowed',
-                              marginTop: '1px'
+                              border: '2px solid #FF0000',
+                              cursor: 'pointer',
+                              marginTop: '2px',
+                              fontWeight: 'bold',
+                              borderRadius: '4px'
                             }}
                           >
-                            転売 {currentPlayer.money < product.price ? '[資金不足]' : currentPlayer.actionPoints < 2 ? '[AP不足]' : currentPlayer.prestige < 1 ? '[威厳不足]' : ''}
+                            🔴転売🔴 {product.price === 0 ? '[未出品]' : !isActive ? '[非ターン]' : player.id === currentPlayer.id ? '[自分商品]' : ''}
                           </button>
                           {currentPlayer.actionPoints >= 1 && currentPlayer.prestige >= 1 && (
                             <div style={{ display: 'flex', gap: '1px' }}>
@@ -650,6 +671,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
 
       <div style={{ marginTop: '30px' }}>
         <h2>🏪 マーケットボード</h2>
+        <div style={{ fontSize: '12px', color: '#FF5722', backgroundColor: '#ffebee', padding: '10px', marginBottom: '10px', border: '2px solid #FF5722', borderRadius: '8px' }}>
+          <strong>🔍 転売ボタン確認ガイド：</strong><br/>
+          ✅ <strong>他のプレイヤーのマーケット</strong>の商品には転売ボタン（🔴転売🔴）が表示されます<br/>
+          ❌ <strong>あなた自身のマーケット</strong>の商品には転売ボタンは表示されません<br/>
+          📋 現在のプレイヤー: <strong>{currentPlayer.name}</strong> | ターン: {isActive ? '✅アクティブ' : '❌待機中'} | AP: {currentPlayer.actionPoints} | 資金: {currentPlayer.money} | 威厳: {currentPlayer.prestige}
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', overflowX: 'auto' }}>
           {Object.values(G.players).map((player) => renderMarketGrid(player))}
         </div>
