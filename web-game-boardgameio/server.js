@@ -436,6 +436,48 @@ const MarketDisruption = {
       addToPlayLog(G, ctx, ctx.currentPlayer, '威厳購入', `5資金で威厳1ポイント購入 (威厳: ${player.prestige - 1} → ${player.prestige})`);
     },
     
+    outsourceReview: ({ G, ctx }, targetPlayerId, productId, isPositive) => {
+      const player = G.players[ctx.currentPlayer];
+      if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
+      
+      // actionフェーズでのみ実行可能
+      if (ctx.phase !== 'action') return 'INVALID_MOVE';
+      
+      // 資金チェック（高評価・低評価ともに3資金）
+      if (player.money < 3) return 'INVALID_MOVE';
+      
+      const targetPlayer = G.players[targetPlayerId];
+      if (!targetPlayer) return 'INVALID_MOVE';
+      
+      const product = targetPlayer.personalMarket.find(p => p.id === productId);
+      if (!product) return 'INVALID_MOVE';
+      
+      player.money -= 3;
+      player.actionPoints -= 1;
+      
+      const oldPopularity = product.popularity;
+      if (isPositive) {
+        product.popularity = Math.min(6, product.popularity + 1);
+      } else {
+        product.popularity = Math.max(1, product.popularity - 1);
+      }
+      
+      // 発覚判定（6面ダイスで1が出ると威厳-2）
+      const detectionRoll = rollDice();
+      let detected = false;
+      if (detectionRoll === 1) {
+        player.prestige -= 2;
+        detected = true;
+        console.log(`🎲 発覚判定: ${detectionRoll} → 外注レビューがバレました！威厳-2`);
+      } else {
+        console.log(`🎲 発覚判定: ${detectionRoll} → 外注レビューは発覚しませんでした`);
+      }
+      
+      console.log(`💰 レビュー外注: ${player.name}が3資金で${targetPlayer.name}の商品に${isPositive ? '高評価' : '低評価'}外注 (人気度 ${oldPopularity} → ${product.popularity})`);
+      
+      addToPlayLog(G, ctx, ctx.currentPlayer, 'レビュー外注', `${targetPlayer.name}の商品に${isPositive ? '高評価' : '低評価'}外注、人気度${oldPopularity}→${product.popularity}${detected ? '、発覚により威厳-2' : ''}`);
+    },
+    
     buyBack: ({ G, ctx }, productId) => {
       const player = G.players[ctx.currentPlayer];
       if (!player || player.actionPoints < 1) return 'INVALID_MOVE';

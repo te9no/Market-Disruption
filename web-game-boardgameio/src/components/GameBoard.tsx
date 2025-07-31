@@ -164,6 +164,36 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                               </button>
                             </div>
                           )}
+                          {currentPlayer.actionPoints >= 1 && currentPlayer.money >= 3 && (
+                            <div style={{ display: 'flex', gap: '1px', marginTop: '1px' }}>
+                              <button 
+                                onClick={() => moves.outsourceReview(player.id, product.id, true)}
+                                style={{ 
+                                  fontSize: '3px', 
+                                  padding: '1px 1px', 
+                                  backgroundColor: '#FF9800',
+                                  color: 'white',
+                                  border: 'none',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                💰👍
+                              </button>
+                              <button 
+                                onClick={() => moves.outsourceReview(player.id, product.id, false)}
+                                style={{ 
+                                  fontSize: '3px', 
+                                  padding: '1px 1px', 
+                                  backgroundColor: '#795548',
+                                  color: 'white',
+                                  border: 'none',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                💰👎
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
