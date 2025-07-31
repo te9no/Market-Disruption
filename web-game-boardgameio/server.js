@@ -382,42 +382,26 @@ const MarketDisruption = {
     
     automata: {
       moves: {},
-      onBegin: ({ G, events }) => {
+      onBegin: ({ G }) => {
         console.log('🤖 Automata phase started: executing automata actions');
         executeManufacturerAutomata(G);
         executeResaleAutomata(G);
-        
-        // 少し待ってから次のフェーズに進む
-        console.log('⏰ Scheduling transition to market phase in 2000ms');
-        setTimeout(() => {
-          console.log('🔄 Transitioning from automata to market phase');
-          if (events && events.endPhase) {
-            events.endPhase();
-          } else {
-            console.error('❌ events.endPhase not available in automata phase');
-          }
-        }, 2000);
+        console.log('✅ Automata actions completed');
       },
+      // automataフェーズは即座に終了する
+      endIf: () => true,
       next: 'market'
     },
     
     market: {
       moves: {},
-      onBegin: ({ G, events }) => {
+      onBegin: ({ G }) => {
         console.log('🏪 Market phase started: executing market actions');
         executeMarketPhase(G);
-        
-        // 少し待ってから次のフェーズに進む
-        console.log('⏰ Scheduling transition to action phase in 2000ms');
-        setTimeout(() => {
-          console.log('🔄 Transitioning from market to action phase');
-          if (events && events.endPhase) {
-            events.endPhase();
-          } else {
-            console.error('❌ events.endPhase not available in market phase');
-          }
-        }, 2000);
+        console.log('✅ Market actions completed');
       },
+      // marketフェーズも即座に終了する
+      endIf: () => true,
       next: 'action',
       onEnd: ({ G }) => {
         G.round++;
