@@ -41,6 +41,7 @@ export interface GameState {
   regulationLevel: number;
   automata: AutomataState;
   trendEffects: TrendEffect[];
+  availableTrends?: { [playerId: string]: AvailableTrend };
   gameEnded: boolean;
   winner: string | null;
 }
@@ -52,6 +53,16 @@ export interface TrendEffect {
   cost: number;
   activated: boolean;
   permanent: boolean;
+}
+
+export interface AvailableTrend {
+  sum: number;
+  effect: {
+    name: string;
+    description: string;
+    cost: { prestige?: number } | null;
+  };
+  playerId: string;
 }
 
 export const initialGameState: GameState = {

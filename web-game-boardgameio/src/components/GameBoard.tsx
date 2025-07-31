@@ -231,6 +231,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
         <div>フェーズ: {G.phase}</div>
         <div>市場汚染レベル: {G.marketPollution}</div>
         <div>規制レベル: {G.regulationLevel}</div>
+        
+        {G.availableTrends && G.availableTrends[playerID] && (
+          <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#e3f2fd', border: '1px solid #2196F3', borderRadius: '4px' }}>
+            <h4>🔬 リサーチ結果</h4>
+            <div><strong>{G.availableTrends[playerID].effect.name}</strong></div>
+            <div>{G.availableTrends[playerID].effect.description}</div>
+            {G.availableTrends[playerID].effect.cost && (
+              <div style={{ color: '#f44336' }}>
+                発動コスト: {G.availableTrends[playerID].effect.cost.prestige ? `威厳${G.availableTrends[playerID].effect.cost.prestige}` : ''}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {G.gameEnded && G.winner ? (
@@ -304,6 +317,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
               }}
             >
               日雇い労働 (3AP → 18資金) {currentPlayer.actionPoints < 3 ? '[AP不足]' : currentPlayer.money > 100 ? '[資金上限]' : ''}
+            </button>
+            <button 
+              onClick={() => moves.research()}
+              disabled={currentPlayer.actionPoints < 1}
+              style={{ 
+                margin: '5px', 
+                padding: '10px',
+                backgroundColor: currentPlayer.actionPoints < 1 ? '#ccc' : '#9C27B0',
+                color: 'white',
+                border: 'none',
+                cursor: currentPlayer.actionPoints < 1 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              リサーチ (1AP → トレンド調査) {currentPlayer.actionPoints < 1 ? '[AP不足]' : ''}
             </button>
             <div style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
               {ctx.numPlayers === 1 ? (

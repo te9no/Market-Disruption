@@ -108,13 +108,22 @@ const MarketDisruption = {
   moves: {
     manufacture: ({ G, ctx }, designId) => {
       const player = G.players[ctx.currentPlayer];
-      if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 1) {
+        console.error('Manufacture: Player not found or insufficient AP');
+        return;
+      }
       
       // actionフェーズでのみ製造可能
-      if (ctx.phase !== 'action') return 'INVALID_MOVE';
+      if (ctx.phase !== 'action') {
+        console.error('Manufacture: Not in action phase');
+        return;
+      }
       
       const design = player.designs.find(d => d.id === designId);
-      if (!design || player.money < design.cost) return 'INVALID_MOVE';
+      if (!design || player.money < design.cost) {
+        console.error('Manufacture: Design not found or insufficient money', { designId, playerMoney: player.money, designCost: design?.cost });
+        return;
+      }
       
       player.money -= design.cost;
       player.actionPoints -= 1;
@@ -129,24 +138,39 @@ const MarketDisruption = {
       };
       
       player.personalMarket.push(product);
+      console.log(`Manufacture: Successfully created product ${product.id} with cost ${design.cost}`);
     },
     
     sell: ({ G, ctx }, productId, price) => {
       const player = G.players[ctx.currentPlayer];
-      if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 1) {
+        console.error('Sell: Player not found or insufficient AP');
+        return;
+      }
       
       // actionフェーズでのみ販売可能
-      if (ctx.phase !== 'action') return 'INVALID_MOVE';
+      if (ctx.phase !== 'action') {
+        console.error('Sell: Not in action phase');
+        return;
+      }
       
       if (!productId || typeof price !== 'number' || price <= 0 || !Number.isInteger(price)) {
-        return 'INVALID_MOVE';
+        console.error('Sell: Invalid parameters', { productId, price, priceType: typeof price });
+        return;
       }
       
       const product = player.personalMarket.find(p => p.id === productId && p.price === 0);
-      if (!product) return 'INVALID_MOVE';
+      if (!product) {
+        console.error('Sell: Product not found or already priced', { 
+          productId, 
+          personalMarket: player.personalMarket.map(p => ({ id: p.id, price: p.price }))
+        });
+        return;
+      }
       
       product.price = price;
       player.actionPoints -= 1;
+      console.log(`Sell: Successfully set price ${price} for product ${productId}`);
     },
     
     purchase: ({ G, ctx }, targetPlayerId, productId) => {
@@ -189,22 +213,38 @@ const MarketDisruption = {
     
     partTimeWork: ({ G, ctx }) => {
       const player = G.players[ctx.currentPlayer];
-      if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 2) {
+        console.error('PartTimeWork: Player not found or insufficient AP');
+        return;
+      }
       
       // actionフェーズでのみ実行可能
-      if (ctx.phase !== 'action') return 'INVALID_MOVE';
+      if (ctx.phase !== 'action') {
+        console.error('PartTimeWork: Not in action phase');
+        return;
+      }
       
       player.money += 5;
       player.actionPoints -= 2;
+      console.log(`PartTimeWork: Player ${ctx.currentPlayer} earned 5 money`);
     },
     
     design: ({ G, ctx }, isOpenSource = false) => {
       const player = G.players[ctx.currentPlayer];
-      if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
-      if (player.designs.length >= 6) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 2) {
+        console.error('Design: Player not found or insufficient AP');
+        return;
+      }
+      if (player.designs.length >= 6) {
+        console.error('Design: Too many designs');
+        return;
+      }
       
       // actionフェーズでのみ実行可能
-      if (ctx.phase !== 'action') return 'INVALID_MOVE';
+      if (ctx.phase !== 'action') {
+        console.error('Design: Not in action phase');
+        return;
+      }
       
       const designDice = rollMultipleDice(3);
       const selectedCost = designDice[Math.floor(Math.random() * 3)];
@@ -220,19 +260,32 @@ const MarketDisruption = {
       
       if (isOpenSource) {
         player.prestige += 2;
+        console.log(`Design: Player ${ctx.currentPlayer} created open-source design with cost ${selectedCost}, gained 2 prestige`);
+      } else {
+        console.log(`Design: Player ${ctx.currentPlayer} created design with cost ${selectedCost}`);
       }
     },
     
     dayLabor: ({ G, ctx }) => {
       const player = G.players[ctx.currentPlayer];
-      if (!player || player.actionPoints < 3) return 'INVALID_MOVE';
-      if (player.money > 100) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 3) {
+        console.error('DayLabor: Player not found or insufficient AP');
+        return;
+      }
+      if (player.money > 100) {
+        console.error('DayLabor: Player has too much money');
+        return;
+      }
       
       // actionフェーズでのみ実行可能
-      if (ctx.phase !== 'action') return 'INVALID_MOVE';
+      if (ctx.phase !== 'action') {
+        console.error('DayLabor: Not in action phase');
+        return;
+      }
       
       player.money += 18;
       player.actionPoints -= 3;
+      console.log(`DayLabor: Player ${ctx.currentPlayer} earned 18 money`);
     },
     
     review: ({ G, ctx }, targetPlayerId, productId, isPositive) => {
@@ -258,12 +311,36 @@ const MarketDisruption = {
     
     research: ({ G, ctx }) => {
       const player = G.players[ctx.currentPlayer];
-      if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
+      if (!player || player.actionPoints < 1) {
+        console.error('Research: Player not found or insufficient AP');
+        return;
+      }
+      
+      // actionフェーズでのみ実行可能
+      if (ctx.phase !== 'action') {
+        console.error('Research: Not in action phase');
+        return;
+      }
       
       player.actionPoints -= 1;
       
-      // Research provides 3d6 dice roll result (implementation simplified)
-      rollMultipleDice(3);
+      // トレンドダイス3個を振る
+      const trendDice = rollMultipleDice(3);
+      const trendSum = trendDice.reduce((sum, die) => sum + die, 0);
+      
+      // トレンドバズテーブルに基づく効果を提供
+      const trendEffects = getTrendEffect(trendSum);
+      
+      console.log(`🔬 Research: Player ${ctx.currentPlayer} rolled trend dice ${trendDice.join(',')} (sum: ${trendSum})`);
+      console.log(`📊 Trend Effect: ${trendEffects.name} - ${trendEffects.description}`);
+      
+      // 研究結果をゲーム状態に保存（プレイヤーが効果発動を選択できるように）
+      if (!G.availableTrends) G.availableTrends = {};
+      G.availableTrends[ctx.currentPlayer] = {
+        sum: trendSum,
+        effect: trendEffects,
+        playerId: ctx.currentPlayer
+      };
     },
     
     buyBack: ({ G, ctx }, productId) => {
@@ -456,43 +533,83 @@ function executeManufacturerAutomata(G) {
   const diceSum = rollDice() + rollDice();
   
   let action;
-  if (diceSum <= 4) action = 'high-cost';
-  else if (diceSum <= 7) action = 'mid-cost';
-  else if (diceSum <= 10) action = 'low-cost';
-  else action = 'clearance';
+  let targetCost;
+  let priceMultiplier;
   
-  console.log(`🤖 Manufacturer Automata: dice=${diceSum}, action=${action}`);
-  
-  if (action === 'clearance') {
+  if (diceSum <= 4) {
+    action = 'high-cost';
+    // ダイスを引いてコスト3-5になるまでロール
+    do { targetCost = rollDice(); } while (targetCost < 3);
+    priceMultiplier = 3;
+  } else if (diceSum <= 7) {
+    action = 'mid-cost';
+    // ダイスを引いてコスト3にする
+    targetCost = 3;
+    priceMultiplier = 2;
+  } else if (diceSum <= 10) {
+    action = 'low-cost';
+    // ダイスを引いてコスト1-3になるまでロール
+    do { targetCost = rollDice(); } while (targetCost > 3);
+    priceMultiplier = 2;
+  } else {
+    action = 'clearance';
+    // 在庫一掃販売 - 既存商品の価格を下げる
     for (const product of G.automata.market) {
       product.price = Math.max(1, product.price - 2);
     }
+    console.log(`🤖 Manufacturer Automata: dice=${diceSum}, action=clearance`);
     console.log(`📦 Clearance: reduced prices of ${G.automata.market.length} products`);
-  } else {
-    let targetCost;
-    if (action === 'high-cost') {
-      do { targetCost = rollDice(); } while (targetCost < 3);
-    } else if (action === 'mid-cost') {
-      targetCost = 3;
-    } else {
-      do { targetCost = rollDice(); } while (targetCost > 3);
+    return;
+  }
+  
+  console.log(`🤖 Manufacturer Automata: dice=${diceSum}, action=${action}`);
+  
+  // 製造アクション
+  const product = {
+    id: `manufacturer-automata-${Date.now()}`,
+    cost: targetCost,
+    price: targetCost * priceMultiplier,
+    popularity: 1,
+    playerId: 'manufacturer-automata',
+    isResale: false
+  };
+  
+  G.automata.market.push(product);
+  console.log(`🏭 Manufacturer created product: cost=${targetCost}, price=${product.price}`);
+  
+  // 副行動（レビュー）
+  if (action === 'high-cost') {
+    // 市場最高価格商品に低評価レビュー
+    const allProducts = [];
+    for (const playerId in G.players) {
+      allProducts.push(...G.players[playerId].personalMarket);
     }
+    allProducts.push(...G.automata.market.filter(p => p.id !== product.id)); // 自分の新商品は除外
     
-    const product = {
-      id: `automata-product-${Date.now()}`,
-      cost: targetCost,
-      price: targetCost * (action === 'high-cost' ? 3 : 2),
-      popularity: 1,
-      playerId: 'manufacturer-automata',
-      isResale: false
-    };
-    
-    G.automata.market.push(product);
-    console.log(`🏭 Manufacturer created product: cost=${targetCost}, price=${product.price}`);
+    if (allProducts.length > 0) {
+      const highestPriceProducts = allProducts
+        .filter(p => p.price > 0)
+        .sort((a, b) => b.price - a.price);
+      
+      if (highestPriceProducts.length > 0) {
+        const targetProduct = highestPriceProducts[0];
+        targetProduct.popularity = Math.max(1, targetProduct.popularity - 1);
+        console.log(`👎 Manufacturer gave negative review to product ${targetProduct.id} (price: ${targetProduct.price})`);
+      }
+    }
+  } else if (action === 'low-cost') {
+    // 自分の最安商品に高評価レビュー
+    const ownProducts = G.automata.market.filter(p => p.price > 0);
+    if (ownProducts.length > 0) {
+      const cheapestProduct = ownProducts.sort((a, b) => a.price - b.price)[0];
+      cheapestProduct.popularity = Math.min(6, cheapestProduct.popularity + 1);
+      console.log(`👍 Manufacturer gave positive review to own product ${cheapestProduct.id} (price: ${cheapestProduct.price})`);
+    }
   }
 }
 
 function executeResaleAutomata(G) {
+  // 資金管理：各ターン開始時に20資金まで自動補充
   if (G.automata.resaleOrganizationMoney < 20) {
     G.automata.resaleOrganizationMoney = 20;
   }
@@ -500,61 +617,95 @@ function executeResaleAutomata(G) {
   const diceSum = rollDice() + rollDice();
   console.log(`🔄 Resale Automata: dice=${diceSum}, money=${G.automata.resaleOrganizationMoney}`);
   
+  // 様子見（6,7,8）
   if (diceSum >= 6 && diceSum <= 8) {
-    console.log('📋 Resale Automata: no action (dice 6-8)');
+    console.log('📋 Resale Automata: no action (watching market)');
     return;
   }
   
+  // 全プレイヤーとオートマのマーケットから商品を取得
   const allProducts = [];
   for (const playerId in G.players) {
-    allProducts.push(...G.players[playerId].personalMarket);
+    for (const product of G.players[playerId].personalMarket) {
+      if (product.price > 0) { // 価格が設定されている商品のみ
+        allProducts.push({...product, sourcePlayerId: playerId, sourceType: 'player'});
+      }
+    }
   }
-  allProducts.push(...G.automata.market);
+  for (const product of G.automata.market) {
+    if (product.price > 0 && !product.isResale) { // 転売品ではない商品のみ
+      allProducts.push({...product, sourcePlayerId: 'automata', sourceType: 'automata'});
+    }
+  }
   
   let targetProducts = [];
+  let resalePrice = 0;
   
   if (diceSum <= 4) {
+    // 大量買い占め：最安値商品を3個まで
     targetProducts = allProducts
+      .filter(p => p.price > 0)
       .sort((a, b) => a.price - b.price || b.popularity - a.popularity)
       .slice(0, 3);
+    resalePrice = 5; // 購入価格+5資金
   } else if (diceSum === 5 || diceSum === 9) {
+    // 選別購入：人気度最高の商品を1個
     targetProducts = allProducts
+      .filter(p => p.price > 0)
       .sort((a, b) => b.popularity - a.popularity || a.price - b.price)
       .slice(0, 1);
+    resalePrice = 5; // 購入価格+5資金
   } else if (diceSum >= 10) {
-    const randomIndex = Math.floor(Math.random() * allProducts.length);
-    targetProducts = [allProducts[randomIndex]];
+    // 投機購入：ランダム商品を1個
+    if (allProducts.length > 0) {
+      const randomIndex = Math.floor(Math.random() * allProducts.length);
+      targetProducts = [allProducts[randomIndex]];
+    }
+    resalePrice = 8; // 購入価格+8資金
   }
   
   console.log(`🎯 Resale Automata targeting ${targetProducts.length} products`);
   
   for (const product of targetProducts) {
     if (G.automata.resaleOrganizationMoney >= product.price) {
+      // 購入処理
       G.automata.resaleOrganizationMoney -= product.price;
       
+      // 転売商品として出品
       const resaleProduct = {
-        ...product,
-        id: `resale-${Date.now()}`,
-        price: product.price + 5,
+        id: `resale-automata-${Date.now()}`,
+        cost: product.cost,
+        price: product.price + resalePrice,
+        popularity: product.popularity,
+        playerId: 'resale-automata',
         isResale: true,
         originalCost: product.cost,
-        originalPlayerId: product.playerId,
-        playerId: 'resale-automata'
+        originalPlayerId: product.playerId
       };
       
       G.automata.market.push(resaleProduct);
       
-      const originalPlayer = G.players[product.playerId];
-      if (originalPlayer) {
-        originalPlayer.money += product.price;
-        const productIndex = originalPlayer.personalMarket.findIndex(p => p.id === product.id);
+      // 元の商品を削除し、売上を元の所有者に渡す
+      if (product.sourceType === 'player') {
+        const originalPlayer = G.players[product.sourcePlayerId];
+        if (originalPlayer) {
+          originalPlayer.money += product.price;
+          const productIndex = originalPlayer.personalMarket.findIndex(p => p.id === product.id);
+          if (productIndex !== -1) {
+            originalPlayer.personalMarket.splice(productIndex, 1);
+          }
+        }
+      } else {
+        // オートマの商品の場合、マーケットから削除
+        const productIndex = G.automata.market.findIndex(p => p.id === product.id);
         if (productIndex !== -1) {
-          originalPlayer.personalMarket.splice(productIndex, 1);
+          G.automata.market.splice(productIndex, 1);
         }
       }
       
+      // 市場汚染レベル増加
       G.marketPollution++;
-      console.log(`💰 Resale: bought product for ${product.price}, selling for ${resaleProduct.price}`);
+      console.log(`💰 Resale: bought product for ${product.price}, selling for ${resaleProduct.price}, pollution: ${G.marketPollution}`);
     }
   }
 }
@@ -611,6 +762,29 @@ function getPollutionPenalty(pollutionLevel) {
   if (pollutionLevel <= 11) return 3;
   return 4;
 }
+
+const getTrendEffect = (sum) => {
+  const effects = {
+    3: { name: '経済特需', description: '全プレイヤーに+15資金', cost: null },
+    4: { name: '技術革新', description: '自身の任意の設計1つのダイス値-1', cost: null },
+    5: { name: 'インフルエンサー紹介', description: '自身の全商品の人気度を+1', cost: null },
+    6: { name: '汚染改善キャンペーン', description: '市場汚染レベルを-2', cost: null },
+    7: { name: 'サステナビリティ', description: '任意の商品の人気度を+3（任意の組み合わせ）', cost: { prestige: 1 } },
+    8: { name: 'DIYブーム', description: '全てのプレイヤーの最新設計のダイス値-1', cost: null },
+    9: { name: 'インフレ進行', description: '全ての転売ではない商品の価格+2（発動後永続）', cost: null },
+    10: { name: 'ショート動画ブーム', description: '転売が成功するたびに+2資金ボーナス（発動後永続）', cost: null },
+    11: { name: 'ショート動画ブーム', description: '転売が成功するたびに+2資金ボーナス（発動後永続）', cost: null },
+    12: { name: 'テレワーク需要', description: '価格10以下の全商品の人気度を+1', cost: null },
+    13: { name: 'インフレ進行', description: '全ての転売ではない商品の価格+2（発動後永続）', cost: null },
+    14: { name: 'テレワーク需要', description: '価格10以下の全商品の人気度を+1', cost: null },
+    15: { name: 'DIYブーム', description: '全てのプレイヤーの最新設計のダイス値-1', cost: null },
+    16: { name: 'サステナビリティ', description: '任意の商品の人気度を+3（任意の組み合わせ）', cost: { prestige: 1 } },
+    17: { name: '汚染改善キャンペーン', description: '市場汚染レベルを-2', cost: null },
+    18: { name: '経済特需', description: '全プレイヤーに+15資金', cost: null }
+  };
+  
+  return effects[sum] || { name: '無効果', description: '特に変化なし', cost: null };
+};
 
 const server = Server({
   games: [MarketDisruption],
