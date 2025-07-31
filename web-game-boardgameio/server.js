@@ -53,6 +53,20 @@ const getResaleBonus = (resaleHistory) => {
   return 15;
 };
 
+// ログ記録ヘルパー関数
+const addToPlayLog = (G, ctx, actor, action, details) => {
+  if (!G.playLog) G.playLog = [];
+  G.playLog.push({
+    id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    round: G.round,
+    phase: ctx?.phase || G.phase,
+    actor,
+    action,
+    details,
+    timestamp: Date.now()
+  });
+};
+
 // Initial game state functions
 const initialGameState = {
   players: {},
@@ -67,6 +81,7 @@ const initialGameState = {
     market: []
   },
   trendEffects: [],
+  playLog: [],
   gameEnded: false,
   winner: null
 };
@@ -139,6 +154,8 @@ const MarketDisruption = {
       
       player.personalMarket.push(product);
       console.log(`Manufacture: Successfully created product ${product.id} with cost ${design.cost}`);
+      
+      addToPlayLog(G, ctx, ctx.currentPlayer, '製造', `コスト${design.cost}の商品を製造`);
     },
     
     sell: ({ G, ctx }, productId, price) => {
@@ -171,6 +188,8 @@ const MarketDisruption = {
       product.price = price;
       player.actionPoints -= 1;
       console.log(`Sell: Successfully set price ${price} for product ${productId}`);
+      
+      addToPlayLog(G, ctx, ctx.currentPlayer, '販売設定', `商品を${price}資金で販売設定`);
     },
     
     purchase: ({ G, ctx }, targetPlayerId, productId) => {
@@ -227,6 +246,8 @@ const MarketDisruption = {
       player.money += 5;
       player.actionPoints -= 2;
       console.log(`PartTimeWork: Player ${ctx.currentPlayer} earned 5 money`);
+      
+      addToPlayLog(G, ctx, ctx.currentPlayer, 'アルバイト', '5資金を獲得');
     },
     
     design: ({ G, ctx }, isOpenSource = false) => {
@@ -261,8 +282,10 @@ const MarketDisruption = {
       if (isOpenSource) {
         player.prestige += 2;
         console.log(`Design: Player ${ctx.currentPlayer} created open-source design with cost ${selectedCost}, gained 2 prestige`);
+        addToPlayLog(G, ctx, ctx.currentPlayer, 'オープンソース設計', `コスト${selectedCost}の設計を作成、威厳+2`);
       } else {
         console.log(`Design: Player ${ctx.currentPlayer} created design with cost ${selectedCost}`);
+        addToPlayLog(G, ctx, ctx.currentPlayer, '設計', `コスト${selectedCost}の設計を作成`);
       }
     },
     
@@ -286,6 +309,8 @@ const MarketDisruption = {
       player.money += 18;
       player.actionPoints -= 3;
       console.log(`DayLabor: Player ${ctx.currentPlayer} earned 18 money`);
+      
+      addToPlayLog(G, ctx, ctx.currentPlayer, '日雇い労働', '18資金を獲得');
     },
     
     review: ({ G, ctx }, targetPlayerId, productId, isPositive) => {
@@ -341,6 +366,43 @@ const MarketDisruption = {
         effect: trendEffects,
         playerId: ctx.currentPlayer
       };
+      
+      addToPlayLog(G, ctx, ctx.currentPlayer, 'リサーチ', `トレンド調査: ${trendEffects.name}`);
+    },
+
+    activateTrend: ({ G, ctx }) => {
+      const player = G.players[ctx.currentPlayer];
+      if (!player) {
+        console.error('ActivateTrend: Player not found');
+        return;
+      }
+
+      if (!G.availableTrends || !G.availableTrends[ctx.currentPlayer]) {
+        console.error('ActivateTrend: No available trend for player');
+        return;
+      }
+
+      const trendData = G.availableTrends[ctx.currentPlayer];
+      const effect = trendData.effect;
+
+      // コストチェック
+      if (effect.cost && effect.cost.prestige && player.prestige < effect.cost.prestige) {
+        console.error('ActivateTrend: Insufficient prestige');
+        return;
+      }
+
+      // コスト支払い
+      if (effect.cost && effect.cost.prestige) {
+        player.prestige -= effect.cost.prestige;
+      }
+
+      // 効果実行
+      executeTrendEffect(G, effect, ctx.currentPlayer);
+
+      // トレンドを消費
+      delete G.availableTrends[ctx.currentPlayer];
+
+      addToPlayLog(G, ctx, ctx.currentPlayer, 'トレンド発動', `${effect.name}を発動`);
     },
     
     buyBack: ({ G, ctx }, productId) => {
@@ -577,6 +639,8 @@ function executeManufacturerAutomata(G) {
   G.automata.market.push(product);
   console.log(`🏭 Manufacturer created product: cost=${targetCost}, price=${product.price}`);
   
+  addToPlayLog(G, null, 'manufacturer-automata', '製造', `コスト${targetCost}、価格${product.price}の商品を製造`);
+  
   // 副行動（レビュー）
   if (action === 'high-cost') {
     // 市場最高価格商品に低評価レビュー
@@ -595,6 +659,8 @@ function executeManufacturerAutomata(G) {
         const targetProduct = highestPriceProducts[0];
         targetProduct.popularity = Math.max(1, targetProduct.popularity - 1);
         console.log(`👎 Manufacturer gave negative review to product ${targetProduct.id} (price: ${targetProduct.price})`);
+        
+        addToPlayLog(G, null, 'manufacturer-automata', 'レビュー', `価格${targetProduct.price}の商品に低評価`);
       }
     }
   } else if (action === 'low-cost') {
@@ -604,6 +670,8 @@ function executeManufacturerAutomata(G) {
       const cheapestProduct = ownProducts.sort((a, b) => a.price - b.price)[0];
       cheapestProduct.popularity = Math.min(6, cheapestProduct.popularity + 1);
       console.log(`👍 Manufacturer gave positive review to own product ${cheapestProduct.id} (price: ${cheapestProduct.price})`);
+      
+      addToPlayLog(G, null, 'manufacturer-automata', 'レビュー', `価格${cheapestProduct.price}の自商品に高評価`);
     }
   }
 }
@@ -706,6 +774,8 @@ function executeResaleAutomata(G) {
       // 市場汚染レベル増加
       G.marketPollution++;
       console.log(`💰 Resale: bought product for ${product.price}, selling for ${resaleProduct.price}, pollution: ${G.marketPollution}`);
+      
+      addToPlayLog(G, null, 'resale-automata', '転売', `${product.price}資金で購入、${resaleProduct.price}資金で転売`);
     }
   }
 }
@@ -784,6 +854,71 @@ const getTrendEffect = (sum) => {
   };
   
   return effects[sum] || { name: '無効果', description: '特に変化なし', cost: null };
+};
+
+const executeTrendEffect = (G, effect, playerId) => {
+  console.log(`🌟 Executing trend effect: ${effect.name}`);
+  
+  switch (effect.name) {
+    case '経済特需':
+      for (const pid in G.players) {
+        G.players[pid].money += 15;
+      }
+      console.log('📈 All players gained 15 money');
+      break;
+      
+    case 'インフルエンサー紹介':
+      const player = G.players[playerId];
+      if (player) {
+        for (const product of player.personalMarket) {
+          product.popularity = Math.min(6, product.popularity + 1);
+        }
+        console.log(`📱 All products of player ${playerId} gained +1 popularity`);
+      }
+      break;
+      
+    case '汚染改善キャンペーン':
+      G.marketPollution = Math.max(0, G.marketPollution - 2);
+      console.log(`🌱 Market pollution reduced by 2, now: ${G.marketPollution}`);
+      break;
+      
+    case 'テレワーク需要':
+      // 価格10以下の全商品の人気度+1
+      for (const pid in G.players) {
+        for (const product of G.players[pid].personalMarket) {
+          if (product.price > 0 && product.price <= 10) {
+            product.popularity = Math.min(6, product.popularity + 1);
+          }
+        }
+      }
+      for (const product of G.automata.market) {
+        if (product.price > 0 && product.price <= 10) {
+          product.popularity = Math.min(6, product.popularity + 1);
+        }
+      }
+      console.log('💻 All products with price ≤10 gained +1 popularity');
+      break;
+      
+    case 'インフレ進行':
+      // 全ての転売ではない商品の価格+2（永続）
+      for (const pid in G.players) {
+        for (const product of G.players[pid].personalMarket) {
+          if (!product.isResale && product.price > 0) {
+            product.price += 2;
+          }
+        }
+      }
+      for (const product of G.automata.market) {
+        if (!product.isResale && product.price > 0) {
+          product.price += 2;
+        }
+      }
+      console.log('💸 All non-resale products gained +2 price');
+      break;
+      
+    default:
+      console.log(`⚠️ Trend effect ${effect.name} not implemented yet`);
+  }
 };
 
 const server = Server({

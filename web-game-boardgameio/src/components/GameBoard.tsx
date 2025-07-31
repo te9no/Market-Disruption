@@ -1,5 +1,6 @@
 import React from 'react';
 import { GameState, Player } from '../game/GameState';
+import { PlayLog } from './PlayLog';
 
 interface GameBoardProps {
   G: GameState;
@@ -221,8 +222,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
   );
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>マーケット・ディスラプション</h1>
+    <div style={{ display: 'flex' }}>
+      {/* メインゲーム画面 */}
+      <div style={{ 
+        flex: 1, 
+        padding: '20px', 
+        fontFamily: 'Arial, sans-serif',
+        marginRight: '350px' // プレイログ分の余白
+      }}>
+        <h1>マーケット・ディスラプション</h1>
       
       <div style={{ marginBottom: '20px' }}>
         <h2>ゲーム情報</h2>
@@ -242,6 +250,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                 発動コスト: {G.availableTrends[playerID].effect.cost.prestige ? `威厳${G.availableTrends[playerID].effect.cost.prestige}` : ''}
               </div>
             )}
+            <button
+              onClick={() => moves.activateTrend()}
+              disabled={!!(G.availableTrends[playerID].effect.cost?.prestige && currentPlayer.prestige < G.availableTrends[playerID].effect.cost.prestige)}
+              style={{
+                marginTop: '8px',
+                padding: '8px 16px',
+                backgroundColor: (G.availableTrends[playerID].effect.cost?.prestige && currentPlayer.prestige < G.availableTrends[playerID].effect.cost.prestige) ? '#ccc' : '#FF9800',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: (G.availableTrends[playerID].effect.cost?.prestige && currentPlayer.prestige < G.availableTrends[playerID].effect.cost.prestige) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              トレンド発動 {G.availableTrends[playerID].effect.cost?.prestige && currentPlayer.prestige < G.availableTrends[playerID].effect.cost.prestige ? '[威厳不足]' : ''}
+            </button>
           </div>
         )}
       </div>
@@ -479,6 +502,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           <p>勝者: {G.players[ctx.gameover.winner]?.name || '不明'}</p>
         </div>
       )}
+      </div>
+
+      {/* プレイログ */}
+      <PlayLog playLog={G.playLog} />
     </div>
   );
 };

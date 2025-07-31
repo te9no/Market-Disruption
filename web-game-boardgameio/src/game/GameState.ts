@@ -42,6 +42,7 @@ export interface GameState {
   automata: AutomataState;
   trendEffects: TrendEffect[];
   availableTrends?: { [playerId: string]: AvailableTrend };
+  playLog: PlayLogEntry[];
   gameEnded: boolean;
   winner: string | null;
 }
@@ -65,6 +66,16 @@ export interface AvailableTrend {
   playerId: string;
 }
 
+export interface PlayLogEntry {
+  id: string;
+  round: number;
+  phase: string;
+  actor: string; // プレイヤーID or 'manufacturer-automata' or 'resale-automata'
+  action: string;
+  details: string;
+  timestamp: number;
+}
+
 export const initialGameState: GameState = {
   players: {},
   currentPlayer: null,
@@ -78,6 +89,7 @@ export const initialGameState: GameState = {
     market: []
   },
   trendEffects: [],
+  playLog: [],
   gameEnded: false,
   winner: null
 };

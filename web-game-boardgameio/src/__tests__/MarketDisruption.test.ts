@@ -53,6 +53,7 @@ describe('MarketDisruption Game', () => {
         market: []
       },
       trendEffects: [],
+      playLog: [],
       gameEnded: false,
       winner: null
     };
@@ -107,6 +108,7 @@ describe('MarketDisruption Game', () => {
         market: []
       },
       trendEffects: [],
+      playLog: [],
       gameEnded: false,
       winner: null
     };
