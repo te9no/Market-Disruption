@@ -181,7 +181,7 @@ const MarketDisruption: Game<GameState> = {
 
 function manufacture(G: GameState, ctx: Ctx, designId: string) {
   const player = G.players[ctx.currentPlayer];
-  if (player.actionPoints < 1) return 'INVALID_MOVE';
+  if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   
   const design = player.designs.find(d => d.id === designId);
   if (!design) return 'INVALID_MOVE';
@@ -205,7 +205,7 @@ function manufacture(G: GameState, ctx: Ctx, designId: string) {
 
 function sell(G: GameState, ctx: Ctx, productId: string, price: number) {
   const player = G.players[ctx.currentPlayer];
-  if (player.actionPoints < 1) return 'INVALID_MOVE';
+  if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   if (player.prestige <= -3) return 'INVALID_MOVE';
   
   const productIndex = player.personalMarket.findIndex(p => p.id === productId && p.price === 0);
@@ -228,7 +228,7 @@ function getMaxPrice(cost: number, prestige: number): number {
 
 function purchase(G: GameState, ctx: Ctx, targetPlayerId: string, productId: string) {
   const player = G.players[ctx.currentPlayer];
-  if (player.actionPoints < 1) return 'INVALID_MOVE';
+  if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   
   // actionフェーズでのみ購入可能
   if (ctx.phase !== 'action') return 'INVALID_MOVE';
@@ -411,7 +411,7 @@ function getPollutionPenalty(pollutionLevel: number): number {
 
 function review(G: GameState, ctx: Ctx, targetPlayerId: string, productId: string, isPositive: boolean) {
   const player = G.players[ctx.currentPlayer];
-  if (player.actionPoints < 1) return 'INVALID_MOVE';
+  if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   if (player.prestige < 1) return 'INVALID_MOVE';
   
   const targetPlayer = G.players[targetPlayerId];
@@ -432,7 +432,7 @@ function review(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
 
 function research(G: GameState, ctx: Ctx) {
   const player = G.players[ctx.currentPlayer];
-  if (player.actionPoints < 1) return 'INVALID_MOVE';
+  if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   
   player.actionPoints -= 1;
   
@@ -441,7 +441,7 @@ function research(G: GameState, ctx: Ctx) {
 
 function partTimeWork(G: GameState, ctx: Ctx) {
   const player = G.players[ctx.currentPlayer];
-  if (player.actionPoints < 2) return 'INVALID_MOVE';
+  if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
   
   player.money += 5;
   player.actionPoints -= 2;
@@ -449,7 +449,7 @@ function partTimeWork(G: GameState, ctx: Ctx) {
 
 function buyBack(G: GameState, ctx: Ctx, productId: string) {
   const player = G.players[ctx.currentPlayer];
-  if (player.actionPoints < 1) return 'INVALID_MOVE';
+  if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   
   const productIndex = player.personalMarket.findIndex(p => p.id === productId);
   if (productIndex === -1) return 'INVALID_MOVE';
@@ -460,7 +460,7 @@ function buyBack(G: GameState, ctx: Ctx, productId: string) {
 
 function discontinue(G: GameState, ctx: Ctx, designId: string) {
   const player = G.players[ctx.currentPlayer];
-  if (player.actionPoints < 1) return 'INVALID_MOVE';
+  if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   
   const designIndex = player.designs.findIndex(d => d.id === designId);
   if (designIndex === -1) return 'INVALID_MOVE';
@@ -471,7 +471,7 @@ function discontinue(G: GameState, ctx: Ctx, designId: string) {
 
 function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: string, resalePrice: number) {
   const player = G.players[ctx.currentPlayer];
-  if (player.actionPoints < 2) return 'INVALID_MOVE';
+  if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
   if (player.prestige < 1) return 'INVALID_MOVE';
   
   const targetPlayer = G.players[targetPlayerId];
@@ -519,7 +519,7 @@ function getResaleBonus(resaleHistory: number): number {
 
 function design(G: GameState, ctx: Ctx, isOpenSource: boolean = false) {
   const player = G.players[ctx.currentPlayer];
-  if (player.actionPoints < 2) return 'INVALID_MOVE';
+  if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
   if (player.designs.length >= 6) return 'INVALID_MOVE';
   
   const designDice = rollMultipleDice(3);
@@ -541,7 +541,7 @@ function design(G: GameState, ctx: Ctx, isOpenSource: boolean = false) {
 
 function promoteRegulation(G: GameState, ctx: Ctx) {
   const player = G.players[ctx.currentPlayer];
-  if (player.actionPoints < 2) return 'INVALID_MOVE';
+  if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
   
   const regulationDice = rollDice() + rollDice();
   if (regulationDice >= 9) {
@@ -563,7 +563,7 @@ function promoteRegulation(G: GameState, ctx: Ctx) {
 
 function dayLabor(G: GameState, ctx: Ctx) {
   const player = G.players[ctx.currentPlayer];
-  if (player.actionPoints < 3) return 'INVALID_MOVE';
+  if (!player || player.actionPoints < 3) return 'INVALID_MOVE';
   if (player.money > 100) return 'INVALID_MOVE';
   
   player.money += 18;
