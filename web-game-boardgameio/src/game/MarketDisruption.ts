@@ -272,78 +272,217 @@ function purchase(G: GameState, ctx: Ctx, targetPlayerId: string, productId: str
 
 function executeManufacturerAutomata(G: GameState): void {
   const diceSum = rollDice() + rollDice();
+  console.log(`🤖 メーカー・オートマ: ダイス合計 ${diceSum}`);
   
   let action: string;
-  if (diceSum <= 4) action = 'high-cost';
-  else if (diceSum <= 7) action = 'mid-cost';
-  else if (diceSum <= 10) action = 'low-cost';
-  else action = 'clearance';
+  let targetCost: number;
+  let priceMultiplier: number;
   
-  if (action === 'clearance') {
+  if (diceSum <= 4) {
+    action = 'high-cost';
+    // ダイスを引いてコスト3-5になるまでロール
+    do { targetCost = rollDice(); } while (targetCost < 3);
+    priceMultiplier = 3;
+  } else if (diceSum <= 7) {
+    action = 'mid-cost';
+    // ダイスを引いてコスト3にする
+    targetCost = 3;
+    priceMultiplier = 2;
+  } else if (diceSum <= 10) {
+    action = 'low-cost';
+    // ダイスを引いてコスト1-3になるまでロール
+    do { targetCost = rollDice(); } while (targetCost > 3);
+    priceMultiplier = 2;
+  } else {
+    action = 'clearance';
+    // 在庫一掃販売 - 既存商品の価格を下げる
     for (const product of G.automata.market) {
       product.price = Math.max(1, product.price - 2);
     }
-  } else {
-    let targetCost: number;
-    if (action === 'high-cost') {
-      do { targetCost = rollDice(); } while (targetCost < 3);
-    } else if (action === 'mid-cost') {
-      targetCost = 3;
-    } else {
-      do { targetCost = rollDice(); } while (targetCost > 3);
+    console.log(`🏭 在庫一掃: ${G.automata.market.length}個の商品価格を-2`);
+    
+    // ログ記録
+    if (G.playLog) {
+      G.playLog.push({
+        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        round: G.round,
+        phase: G.phase,
+        actor: 'manufacturer-automata',
+        action: '在庫一掃',
+        details: `${G.automata.market.length}個の商品価格を-2資金`,
+        timestamp: Date.now()
+      });
     }
+    return;
+  }
+  
+  console.log(`🏭 メーカー・オートマ: ${action}製造 (コスト${targetCost})`);
+  
+  // 製造アクション
+  const product: Product = {
+    id: `manufacturer-automata-${Date.now()}`,
+    cost: targetCost,
+    price: targetCost * priceMultiplier,
+    popularity: 1,
+    playerId: 'manufacturer-automata',
+    isResale: false
+  };
+  
+  G.automata.market.push(product);
+  console.log(`🏭 製造完了: コスト${targetCost}、価格${product.price}の商品を作成`);
+  
+  // ログ記録
+  if (G.playLog) {
+    G.playLog.push({
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      round: G.round,
+      phase: G.phase,
+      actor: 'manufacturer-automata',
+      action: '製造',
+      details: `コスト${targetCost}、価格${product.price}の商品を製造`,
+      timestamp: Date.now()
+    });
+  }
+  
+  // 副行動（レビュー）
+  if (action === 'high-cost') {
+    // 市場最高価格商品に低評価レビュー
+    const allProducts: Product[] = [];
+    for (const playerId in G.players) {
+      allProducts.push(...G.players[playerId].personalMarket.filter(p => p.price > 0));
+    }
+    allProducts.push(...G.automata.market.filter(p => p.price > 0));
     
-    const product: Product = {
-      id: `automata-product-${Date.now()}`,
-      cost: targetCost,
-      price: targetCost * (action === 'high-cost' ? 3 : 2),
-      popularity: 1,
-      playerId: 'manufacturer-automata',
-      isResale: false
-    };
-    
-    G.automata.market.push(product);
+    if (allProducts.length > 0) {
+      const maxPrice = Math.max(...allProducts.map(p => p.price));
+      const targetProducts = allProducts.filter(p => p.price === maxPrice);
+      
+      for (const targetProduct of targetProducts) {
+        targetProduct.popularity = Math.max(1, targetProduct.popularity - 1);
+        console.log(`👎 低評価レビュー: 商品${targetProduct.id}の人気度 ${targetProduct.popularity + 1} → ${targetProduct.popularity}`);
+      }
+      
+      // ログ記録
+      if (G.playLog) {
+        G.playLog.push({
+          id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          round: G.round,
+          phase: G.phase,
+          actor: 'manufacturer-automata',
+          action: '低評価レビュー',
+          details: `最高価格商品${targetProducts.length}個に低評価`,
+          timestamp: Date.now()
+        });
+      }
+    }
+  } else if (action === 'low-cost') {
+    // 自分の最安商品に高評価レビュー
+    const ownProducts = G.automata.market.filter(p => p.price > 0);
+    if (ownProducts.length > 0) {
+      const minPrice = Math.min(...ownProducts.map(p => p.price));
+      const targetProducts = ownProducts.filter(p => p.price === minPrice);
+      
+      for (const targetProduct of targetProducts) {
+        targetProduct.popularity = Math.min(6, targetProduct.popularity + 1);
+        console.log(`👍 高評価レビュー: 商品${targetProduct.id}の人気度 ${targetProduct.popularity - 1} → ${targetProduct.popularity}`);
+      }
+      
+      // ログ記録
+      if (G.playLog) {
+        G.playLog.push({
+          id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          round: G.round,
+          phase: G.phase,
+          actor: 'manufacturer-automata',
+          action: '高評価レビュー',
+          details: `自社最安商品${targetProducts.length}個に高評価`,
+          timestamp: Date.now()
+        });
+      }
+    }
   }
 }
 
 function executeResaleAutomata(G: GameState): void {
+  // 資金を20まで自動補充
   if (G.automata.resaleOrganizationMoney < 20) {
     G.automata.resaleOrganizationMoney = 20;
   }
   
   const diceSum = rollDice() + rollDice();
+  console.log(`🔄 転売ヤー・オートマ: ダイス合計 ${diceSum}`);
   
-  if (diceSum >= 6 && diceSum <= 8) return;
+  // 6,7,8は様子見
+  if (diceSum >= 6 && diceSum <= 8) {
+    console.log('🔄 転売ヤー・オートマ: 様子見');
+    
+    // ログ記録
+    if (G.playLog) {
+      G.playLog.push({
+        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        round: G.round,
+        phase: G.phase,
+        actor: 'resale-automata',
+        action: '様子見',
+        details: '購入を見送り',
+        timestamp: Date.now()
+      });
+    }
+    return;
+  }
   
+  // 購入可能な商品を収集（価格が設定されている商品のみ）
   const allProducts: Product[] = [];
   for (const playerId in G.players) {
-    allProducts.push(...G.players[playerId].personalMarket);
+    allProducts.push(...G.players[playerId].personalMarket.filter(p => p.price > 0));
   }
-  allProducts.push(...G.automata.market);
+  allProducts.push(...G.automata.market.filter(p => p.price > 0 && p.playerId === 'manufacturer-automata'));
+  
+  if (allProducts.length === 0) {
+    console.log('🔄 転売ヤー・オートマ: 購入可能な商品なし');
+    return;
+  }
   
   let targetProducts: Product[] = [];
+  let actionName = '';
   
   if (diceSum <= 4) {
+    // 大量買い占め：最安値商品を3個まで
+    actionName = '大量買い占め';
     targetProducts = allProducts
+      .filter(p => G.automata.resaleOrganizationMoney >= p.price)
       .sort((a, b) => a.price - b.price || b.popularity - a.popularity)
       .slice(0, 3);
   } else if (diceSum === 5 || diceSum === 9) {
+    // 選別購入：人気度最高の商品を1個
+    actionName = '選別購入';
     targetProducts = allProducts
+      .filter(p => G.automata.resaleOrganizationMoney >= p.price)
       .sort((a, b) => b.popularity - a.popularity || a.price - b.price)
       .slice(0, 1);
   } else if (diceSum >= 10) {
-    const randomIndex = Math.floor(Math.random() * allProducts.length);
-    targetProducts = [allProducts[randomIndex]];
+    // 投機購入：ランダム商品を1個
+    actionName = '投機購入';
+    const affordableProducts = allProducts.filter(p => G.automata.resaleOrganizationMoney >= p.price);
+    if (affordableProducts.length > 0) {
+      const randomIndex = Math.floor(Math.random() * affordableProducts.length);
+      targetProducts = [affordableProducts[randomIndex]];
+    }
   }
   
+  console.log(`🔄 転売ヤー・オートマ: ${actionName} - ${targetProducts.length}個の商品を対象`);
+  
+  let purchaseCount = 0;
   for (const product of targetProducts) {
     if (G.automata.resaleOrganizationMoney >= product.price) {
       G.automata.resaleOrganizationMoney -= product.price;
       
+      // 転売価格を設定（ダイス結果に応じて）
+      const resaleBonus = (diceSum >= 10) ? 8 : 5;
       const resaleProduct: Product = {
         ...product,
-        id: `resale-${Date.now()}`,
-        price: product.price + 5,
+        id: `resale-automata-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        price: product.price + resaleBonus,
         isResale: true,
         originalCost: product.cost,
         originalPlayerId: product.playerId,
@@ -352,47 +491,89 @@ function executeResaleAutomata(G: GameState): void {
       
       G.automata.market.push(resaleProduct);
       
-      const originalPlayer = G.players[product.playerId];
-      if (originalPlayer) {
-        originalPlayer.money += product.price;
-        const productIndex = originalPlayer.personalMarket.findIndex(p => p.id === product.id);
+      // 元の所有者に支払い
+      if (product.playerId === 'manufacturer-automata') {
+        // メーカー・オートマから購入した場合、オートマ市場から削除
+        const productIndex = G.automata.market.findIndex(p => p.id === product.id);
         if (productIndex !== -1) {
-          originalPlayer.personalMarket.splice(productIndex, 1);
+          G.automata.market.splice(productIndex, 1);
+        }
+      } else {
+        // プレイヤーから購入した場合
+        const originalPlayer = G.players[product.playerId];
+        if (originalPlayer) {
+          originalPlayer.money += product.price;
+          const productIndex = originalPlayer.personalMarket.findIndex(p => p.id === product.id);
+          if (productIndex !== -1) {
+            originalPlayer.personalMarket.splice(productIndex, 1);
+          }
         }
       }
       
       G.marketPollution++;
+      purchaseCount++;
+      
+      console.log(`🔄 転売購入: ${product.price}資金で購入 → ${resaleProduct.price}資金で転売出品`);
     }
+  }
+  
+  // ログ記録
+  if (G.playLog) {
+    G.playLog.push({
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      round: G.round,
+      phase: G.phase,
+      actor: 'resale-automata',
+      action: actionName,
+      details: `${purchaseCount}個の商品を転売購入、市場汚染+${purchaseCount}`,
+      timestamp: Date.now()
+    });
   }
 }
 
 function executeMarketPhase(G: GameState): void {
   const demandDice = rollDice() + rollDice();
+  console.log(`🏪 市場フェーズ: 需要ダイス ${demandDice}`);
   
+  // 販売中の商品を収集（価格が設定されている商品のみ）
   const allProducts: Product[] = [];
   for (const playerId in G.players) {
-    allProducts.push(...G.players[playerId].personalMarket);
+    allProducts.push(...G.players[playerId].personalMarket.filter(p => p.price > 0));
   }
-  allProducts.push(...G.automata.market);
+  allProducts.push(...G.automata.market.filter(p => p.price > 0));
   
+  console.log(`🏪 市場に出品中の商品: ${allProducts.length}個`);
+  
+  // 需要値に合致する商品を選択
   const eligibleProducts = allProducts.filter(product => {
     const demandValues = getDemandValue(product.cost);
     return demandValues.includes(demandDice);
   });
   
+  console.log(`🏪 需要値${demandDice}に合致する商品: ${eligibleProducts.length}個`);
+  
+  // 人気度順、価格順でソート
   eligibleProducts.sort((a, b) => b.popularity - a.popularity || a.price - b.price);
   
+  // 上位5個を購入
   const purchasedProducts = eligibleProducts.slice(0, 5);
+  console.log(`🏪 購入される商品: ${purchasedProducts.length}個`);
   
+  let totalSales = 0;
   for (const product of purchasedProducts) {
-    const actualPrice = Math.max(1, product.price - getPollutionPenalty(G.marketPollution));
+    const pollutionPenalty = getPollutionPenalty(G.marketPollution);
+    const actualPrice = Math.max(1, product.price - pollutionPenalty);
+    
+    console.log(`💰 売上: 商品${product.id} 価格${product.price} → 実際の売価${actualPrice} (汚染ペナルティ-${pollutionPenalty})`);
     
     if (product.playerId === 'manufacturer-automata' || product.playerId === 'resale-automata') {
+      // オートマの商品の場合
       const productIndex = G.automata.market.findIndex(p => p.id === product.id);
       if (productIndex !== -1) {
         G.automata.market.splice(productIndex, 1);
       }
     } else {
+      // プレイヤーの商品の場合
       const player = G.players[product.playerId];
       if (player) {
         player.money += actualPrice;
@@ -400,8 +581,24 @@ function executeMarketPhase(G: GameState): void {
         if (productIndex !== -1) {
           player.personalMarket.splice(productIndex, 1);
         }
+        console.log(`💰 ${player.name}が${actualPrice}資金を獲得`);
       }
     }
+    
+    totalSales += actualPrice;
+  }
+  
+  // ログ記録
+  if (G.playLog) {
+    G.playLog.push({
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      round: G.round,
+      phase: G.phase,
+      actor: 'market',
+      action: '需要処理',
+      details: `需要値${demandDice}、${purchasedProducts.length}個販売、総売上${totalSales}資金`,
+      timestamp: Date.now()
+    });
   }
 }
 
@@ -418,6 +615,9 @@ function review(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
   if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   if (player.prestige < 1) return 'INVALID_MOVE';
   
+  // actionフェーズでのみ実行可能
+  if (ctx.phase !== 'action') return 'INVALID_MOVE';
+  
   const targetPlayer = G.players[targetPlayerId];
   if (!targetPlayer) return 'INVALID_MOVE';
   
@@ -427,10 +627,26 @@ function review(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
   player.prestige -= 1;
   player.actionPoints -= 1;
   
+  const oldPopularity = product.popularity;
   if (isPositive) {
     product.popularity = Math.min(6, product.popularity + 1);
   } else {
     product.popularity = Math.max(1, product.popularity - 1);
+  }
+  
+  console.log(`📝 レビュー: ${player.name}が${targetPlayer.name}の商品に${isPositive ? '高評価' : '低評価'} (人気度 ${oldPopularity} → ${product.popularity})`);
+  
+  // ログ記録
+  if (G.playLog) {
+    G.playLog.push({
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      round: G.round,
+      phase: ctx.phase || G.phase,
+      actor: ctx.currentPlayer,
+      action: isPositive ? '高評価レビュー' : '低評価レビュー',
+      details: `${targetPlayer.name}の商品に${isPositive ? '高評価' : '低評価'}、人気度${oldPopularity}→${product.popularity}`,
+      timestamp: Date.now()
+    });
   }
 }
 

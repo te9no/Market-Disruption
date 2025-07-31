@@ -52,12 +52,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
   };
 
   const renderMarketGrid = (player: Player) => {
-    // 6×6のグリッド（価格1-6 × 人気度1-6）
-    const grid = Array(6).fill(null).map(() => Array(6).fill(null));
+    // 6×24のグリッド（価格1-24 × 人気度1-6）
+    const grid = Array(6).fill(null).map(() => Array(24).fill(null));
     
     // 商品をグリッドに配置（人気度は高い方が上に来るように逆順）
     player.personalMarket.forEach(product => {
-      if (product.price > 0 && product.price <= 6 && product.popularity >= 1 && product.popularity <= 6) {
+      if (product.price > 0 && product.price <= 24 && product.popularity >= 1 && product.popularity <= 6) {
         const priceIndex = product.price - 1;
         const popularityIndex = 6 - product.popularity; // 人気度6が0番目（上）になるように
         if (!grid[popularityIndex][priceIndex]) {
@@ -76,8 +76,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             <div style={{ width: '60px', height: '30px', border: '1px solid #ccc', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
               価格→
             </div>
-            {[1, 2, 3, 4, 5, 6].map(price => (
-              <div key={price} style={{ width: '80px', height: '30px', border: '1px solid #ccc', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+            {Array.from({length: 24}, (_, i) => i + 1).map(price => (
+              <div key={price} style={{ width: '50px', height: '30px', border: '1px solid #ccc', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '10px' }}>
                 {price}
               </div>
             ))}
@@ -94,7 +94,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
               {/* セル */}
               {row.map((cell, priceIndex) => (
                 <div key={priceIndex} style={{ 
-                  width: '80px', 
+                  width: '50px', 
                   height: '60px', 
                   border: '1px solid #ccc', 
                   display: 'flex', 
@@ -102,7 +102,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                   alignItems: 'center', 
                   justifyContent: 'center',
                   backgroundColor: cell && cell.length > 0 ? '#e3f2fd' : 'white',
-                  fontSize: '10px',
+                  fontSize: '8px',
                   overflow: 'hidden'
                 }}>
                   {cell && cell.map((product: any) => (
@@ -112,27 +112,60 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                       backgroundColor: product.isResale ? '#ffcdd2' : '#c8e6c9',
                       border: '1px solid #999',
                       borderRadius: '2px',
-                      fontSize: '8px',
+                      fontSize: '6px',
                       textAlign: 'center',
-                      width: '70px'
+                      width: '46px'
                     }}>
                       {product.isResale ? '転売' : '通常'}
                       <br/>C{product.cost}
-                      {currentPlayer.money >= product.price && isActive && currentPlayer.actionPoints >= 1 && player.id !== currentPlayer.id && (
-                        <button 
-                          onClick={() => moves.purchase(player.id, product.id)}
-                          style={{ 
-                            fontSize: '6px', 
-                            padding: '1px 2px', 
-                            marginTop: '1px',
-                            backgroundColor: '#4CAF50',
-                            color: 'white',
-                            border: 'none',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          購入
-                        </button>
+                      {player.id !== currentPlayer.id && isActive && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginTop: '1px' }}>
+                          {currentPlayer.money >= product.price && currentPlayer.actionPoints >= 1 && (
+                            <button 
+                              onClick={() => moves.purchase(player.id, product.id)}
+                              style={{ 
+                                fontSize: '5px', 
+                                padding: '1px 1px', 
+                                backgroundColor: '#4CAF50',
+                                color: 'white',
+                                border: 'none',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              購入
+                            </button>
+                          )}
+                          {currentPlayer.actionPoints >= 1 && currentPlayer.prestige >= 1 && (
+                            <div style={{ display: 'flex', gap: '1px' }}>
+                              <button 
+                                onClick={() => moves.review(player.id, product.id, true)}
+                                style={{ 
+                                  fontSize: '4px', 
+                                  padding: '1px 1px', 
+                                  backgroundColor: '#2196F3',
+                                  color: 'white',
+                                  border: 'none',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                👍
+                              </button>
+                              <button 
+                                onClick={() => moves.review(player.id, product.id, false)}
+                                style={{ 
+                                  fontSize: '4px', 
+                                  padding: '1px 1px', 
+                                  backgroundColor: '#f44336',
+                                  color: 'white',
+                                  border: 'none',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                👎
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))}
@@ -461,7 +494,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
 
       <div style={{ marginTop: '30px' }}>
         <h2>🏪 マーケットボード</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', overflowX: 'auto' }}>
           {Object.values(G.players).map((player) => renderMarketGrid(player))}
         </div>
       </div>
