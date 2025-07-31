@@ -621,152 +621,59 @@ const server = Server({
   ],
 });
 
-// デバッグ・テスト用のAPIエンドポイントを追加
-const express = require('express');
-const app = express();
-app.use(express.json());
-
-// ゲーム状態取得API
-app.get('/api/game/:gameId', async (req, res) => {
-  try {
-    const { gameId } = req.params;
-    
-    // boardgame.ioの内部APIを使用してゲーム状態を取得
-    const gameState = await server.db.fetch(gameId, { state: true });
-    
-    if (!gameState) {
-      return res.status(404).json({ error: 'Game not found' });
-    }
-
-    const response = {
-      gameId,
-      state: gameState.state,
-      metadata: {
-        phase: gameState.state.ctx.phase,
-        turn: gameState.state.ctx.turn,
-        currentPlayer: gameState.state.ctx.currentPlayer,
-        numPlayers: gameState.state.ctx.numPlayers,
-        round: gameState.state.G.round
-      },
-      players: gameState.state.G.players,
-      automata: gameState.state.G.automata,
+// Koaミドルウェアとして直接APIルートを追加
+server.app.use(async (ctx, next) => {
+  // API ルートの処理
+  if (ctx.path === '/api/status') {
+    ctx.type = 'application/json';
+    ctx.body = {
+      status: 'running',
+      version: '2025-07-30-v3-api',
+      timestamp: new Date().toISOString(),
+      game: 'MarketDisruption',
       availableMoves: Object.keys(MarketDisruption.moves),
-      serverInfo: {
-        version: '2025-07-30-v3-api',
-        timestamp: new Date().toISOString()
-      }
-    };
-
-    res.json(response);
-  } catch (error) {
-    console.error('API Error:', error);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
-  }
-});
-
-// アクション実行API
-app.post('/api/game/:gameId/action', async (req, res) => {
-  try {
-    const { gameId } = req.params;
-    const { playerId, action, args = [] } = req.body;
-
-    if (!action) {
-      return res.status(400).json({ error: 'Action is required' });
-    }
-
-    if (!Object.keys(MarketDisruption.moves).includes(action)) {
-      return res.status(400).json({ 
-        error: 'Invalid action', 
-        availableActions: Object.keys(MarketDisruption.moves) 
-      });
-    }
-
-    // boardgame.ioの内部APIを使用してアクションを実行
-    const gameState = await server.db.fetch(gameId, { state: true });
-    
-    if (!gameState) {
-      return res.status(404).json({ error: 'Game not found' });
-    }
-
-    // アクション実行のロジック（簡略化版）
-    const ctx = gameState.state.ctx;
-    const G = gameState.state.G;
-
-    // 現在のプレイヤーが正しいかチェック
-    if (playerId && ctx.currentPlayer !== playerId) {
-      return res.status(400).json({ 
-        error: 'Not current player', 
-        currentPlayer: ctx.currentPlayer,
-        requestedPlayer: playerId 
-      });
-    }
-
-    // アクションを実行
-    const moveFunction = MarketDisruption.moves[action];
-    const result = moveFunction({ G, ctx }, ...args);
-
-    if (result === 'INVALID_MOVE') {
-      return res.status(400).json({ error: 'Invalid move', action, args });
-    }
-
-    // 状態を保存（実際の実装では boardgame.io の内部メソッドを使用）
-    // await server.db.setState(gameId, gameState.state);
-
-    res.json({
-      success: true,
-      action,
-      args,
-      playerId,
-      newState: {
-        phase: ctx.phase,
-        currentPlayer: ctx.currentPlayer,
-        round: G.round
+      moveCount: Object.keys(MarketDisruption.moves).length,
+      criticalMoves: {
+        partTimeWork: Object.keys(MarketDisruption.moves).includes('partTimeWork'),
+        design: Object.keys(MarketDisruption.moves).includes('design'),
+        dayLabor: Object.keys(MarketDisruption.moves).includes('dayLabor'),
+        purchase: Object.keys(MarketDisruption.moves).includes('purchase')
       },
-      message: `Action ${action} executed successfully`
+      endpoints: [
+        'GET /api/status - Server status',
+        'GET /api/moves - List all moves'
+      ]
+    };
+    return;
+  }
+  
+  if (ctx.path === '/api/moves') {
+    ctx.type = 'application/json';
+    const moves = {};
+    Object.keys(MarketDisruption.moves).forEach(moveName => {
+      moves[moveName] = {
+        name: moveName,
+        available: true
+      };
     });
 
-  } catch (error) {
-    console.error('Action API Error:', error);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
-  }
-});
-
-// サーバー状態確認API
-app.get('/api/status', (req, res) => {
-  res.json({
-    status: 'running',
-    version: '2025-07-30-v3-api',
-    timestamp: new Date().toISOString(),
-    game: 'MarketDisruption',
-    availableMoves: Object.keys(MarketDisruption.moves),
-    moveCount: Object.keys(MarketDisruption.moves).length,
-    endpoints: [
-      'GET /api/status - Server status',
-      'GET /api/game/:gameId - Get game state',
-      'POST /api/game/:gameId/action - Execute action'
-    ]
-  });
-});
-
-// Move一覧API
-app.get('/api/moves', (req, res) => {
-  const moves = {};
-  Object.keys(MarketDisruption.moves).forEach(moveName => {
-    moves[moveName] = {
-      name: moveName,
-      function: MarketDisruption.moves[moveName].toString().substring(0, 200) + '...'
+    ctx.body = {
+      moves,
+      count: Object.keys(moves).length,
+      list: Object.keys(moves),
+      criticalMovesCheck: {
+        partTimeWork: Object.keys(MarketDisruption.moves).includes('partTimeWork') ? '✅ FOUND' : '❌ MISSING',
+        design: Object.keys(MarketDisruption.moves).includes('design') ? '✅ FOUND' : '❌ MISSING',
+        dayLabor: Object.keys(MarketDisruption.moves).includes('dayLabor') ? '✅ FOUND' : '❌ MISSING',
+        purchase: Object.keys(MarketDisruption.moves).includes('purchase') ? '✅ FOUND' : '❌ MISSING'
+      }
     };
-  });
-
-  res.json({
-    moves,
-    count: Object.keys(moves).length,
-    list: Object.keys(moves)
-  });
+    return;
+  }
+  
+  // その他の場合は次のミドルウェアへ
+  await next();
 });
-
-// Express アプリケーションをboardgame.ioサーバーに統合
-server.app.use(app);
 
 console.log('Server origins configured:', [
   'Origins.LOCALHOST_IN_DEVELOPMENT', 
