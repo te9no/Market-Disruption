@@ -242,7 +242,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
       <div style={{ marginBottom: '20px' }}>
         <h2>アクション</h2>
         <div style={{ marginBottom: '10px', fontSize: '12px', color: '#666' }}>
-          デバッグ情報: プレイヤーID={playerID}, 現在のプレイヤー={ctx.currentPlayer}, アクティブ={isActive ? 'Yes' : 'No'}, フェーズ={ctx.phase}<br/>
+          デバッグ情報 (v16ba9b3): プレイヤーID={playerID}, 現在のプレイヤー={ctx.currentPlayer}, アクティブ={isActive ? 'Yes' : 'No'}, フェーズ={ctx.phase}<br/>
           条件チェック: currentPlayer.id({currentPlayer.id}) === ctx.currentPlayer({ctx.currentPlayer}) = {currentPlayer.id === ctx.currentPlayer ? 'True' : 'False'}<br/>
           フェーズチェック: ctx.phase({ctx.phase}) === 'action' = {ctx.phase === 'action' ? 'True' : 'False'}<br/>
           最終条件: {currentPlayer.id === ctx.currentPlayer && isActive && ctx.phase === 'action' ? 'アクション可能' : 'アクション不可'}
