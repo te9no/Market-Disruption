@@ -8,7 +8,10 @@
     "preview": "vite preview",
     "test": "jest",
     "server": "node server.js",
-    "start": "concurrently \"npm run server\" \"npm run dev\""
+    "start": "concurrently \"npm run server\" \"npm run dev\"",
+    "debug-api": "node debug-api-test.js",
+    "debug-local": "NODE_ENV=development node debug-api-test.js",
+    "debug-prod": "NODE_ENV=production node debug-api-test.js"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +24,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "boardgame.io": "^0.50.2",
     "concurrently": "^9.1.0",
+    "express": "^4.18.2",
     "jest": "^30.0.5",
     "koa": "^2.15.5",
     "react": "^19.1.1",
