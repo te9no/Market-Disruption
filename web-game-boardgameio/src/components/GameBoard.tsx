@@ -226,13 +226,41 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           <div key={design.id} style={{ margin: '5px', padding: '5px', border: '1px solid #ccc' }}>
             コスト: {design.cost} {design.isOpenSource ? '(オープンソース)' : ''}
             {player.id === playerID && isActive && (
-              <button 
-                onClick={() => handleManufacture(design.id)}
-                disabled={player.money < design.cost || player.actionPoints < 1}
-                style={{ marginLeft: '10px' }}
-              >
-                製造 ({design.cost}資金)
-              </button>
+              <>
+                <button 
+                  onClick={() => handleManufacture(design.id)}
+                  disabled={player.money < design.cost || player.actionPoints < 1}
+                  style={{ marginLeft: '10px' }}
+                >
+                  製造 ({design.cost}資金)
+                </button>
+                {currentPlayer.prestige > -3 && (
+                  <>
+                    <button 
+                      onClick={() => {
+                        const quantity = parseInt(prompt('製造個数を入力してください（1-5）:') || '1', 10);
+                        if (quantity > 0 && quantity <= 5) {
+                          moves.outsourceManufacturing(design.id, quantity, 'automata');
+                        }
+                      }}
+                      disabled={currentPlayer.money < (design.cost + 2) || currentPlayer.actionPoints < 1}
+                      style={{ marginLeft: '5px', backgroundColor: '#FF9800', color: 'white', border: 'none', padding: '2px 6px', fontSize: '11px' }}
+                    >
+                      オートマ外注 ({design.cost + 2}/個)
+                    </button>
+                    {Object.values(G.players).filter(p => p.id !== currentPlayer.id).map(otherPlayer => (
+                      <button 
+                        key={otherPlayer.id}
+                        onClick={() => moves.outsourceManufacturing(design.id, 1, 'player', otherPlayer.id)}
+                        disabled={currentPlayer.money < design.cost || currentPlayer.actionPoints < 1}
+                        style={{ marginLeft: '5px', backgroundColor: '#9C27B0', color: 'white', border: 'none', padding: '2px 6px', fontSize: '10px' }}
+                      >
+                        {otherPlayer.name}に外注 ({design.cost}資金)
+                      </button>
+                    ))}
+                  </>
+                )}
+              </>
             )}
           </div>
         ))}
@@ -301,6 +329,52 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
         <div>フェーズ: {ctx.phase === 'action' ? 'アクション' : ctx.phase}</div>
         <div>市場汚染レベル: {G.marketPollution}</div>
         <div>規制レベル: {G.regulationLevel}</div>
+        
+        {/* 外注依頼通知 */}
+        {G.pendingManufacturingOrders && G.pendingManufacturingOrders
+          .filter(order => order.contractorId === playerID && order.status === 'pending')
+          .map(order => {
+            const client = G.players[order.clientId];
+            return (
+              <div key={order.id} style={{ marginTop: '10px', padding: '10px', backgroundColor: '#e8f5e8', border: '1px solid #4CAF50', borderRadius: '4px' }}>
+                <h4>📋 製造外注依頼</h4>
+                <div><strong>{client?.name}</strong>からの依頼</div>
+                <div>製造コスト: {order.cost}資金</div>
+                <div>依頼ラウンド: {order.round}</div>
+                <div style={{ marginTop: '8px' }}>
+                  <button
+                    onClick={() => moves.respondToManufacturingOrder(order.id, true)}
+                    disabled={!isActive}
+                    style={{
+                      marginRight: '8px',
+                      padding: '8px 16px',
+                      backgroundColor: isActive ? '#4CAF50' : '#ccc',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: isActive ? 'pointer' : 'not-allowed'
+                    }}
+                  >
+                    ✅ 受諾 (次ラウンドAP-1)
+                  </button>
+                  <button
+                    onClick={() => moves.respondToManufacturingOrder(order.id, false)}
+                    disabled={!isActive}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: isActive ? '#f44336' : '#ccc',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: isActive ? 'pointer' : 'not-allowed'
+                    }}
+                  >
+                    ❌ 拒否
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         
         {G.availableTrends && G.availableTrends[playerID] && (
           <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#e3f2fd', border: '1px solid #2196F3', borderRadius: '4px' }}>
