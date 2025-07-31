@@ -43,6 +43,7 @@ export interface GameState {
   trendEffects: TrendEffect[];
   availableTrends?: { [playerId: string]: AvailableTrend };
   prestigePurchasePerRound?: { [key: string]: boolean };
+  pendingManufacturingOrders?: ManufacturingOrder[];
   playLog: PlayLogEntry[];
   gameEnded: boolean;
   winner: string | null;
@@ -65,6 +66,16 @@ export interface AvailableTrend {
     cost: { prestige?: number } | null;
   };
   playerId: string;
+}
+
+export interface ManufacturingOrder {
+  id: string;
+  clientId: string; // 依頼者のプレイヤーID
+  contractorId: string; // 受注者のプレイヤーID
+  designId: string;
+  cost: number;
+  round: number; // 依頼されたラウンド
+  status: 'pending' | 'accepted' | 'rejected' | 'completed';
 }
 
 export interface PlayLogEntry {

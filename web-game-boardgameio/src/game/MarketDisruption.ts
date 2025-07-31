@@ -1,5 +1,5 @@
 import { Game, Ctx } from 'boardgame.io';
-import { GameState, initialGameState, createInitialPlayer, Player, Product, Design } from './GameState';
+import { GameState, initialGameState, createInitialPlayer, Player, Product, Design, ManufacturingOrder } from './GameState';
 
 const rollDice = (sides: number = 6): number => Math.floor(Math.random() * sides) + 1;
 const rollMultipleDice = (count: number, sides: number = 6): number[] => 
@@ -57,6 +57,8 @@ const MarketDisruption: Game<GameState> = {
     activateTrend: ({ G, ctx }) => activateTrend(G, ctx),
     purchasePrestige: ({ G, ctx }) => purchasePrestige(G, ctx),
     outsourceReview: ({ G, ctx }, targetPlayerId: string, productId: string, isPositive: boolean) => outsourceReview(G, ctx, targetPlayerId, productId, isPositive),
+    outsourceManufacturing: ({ G, ctx }, designId: string, quantity: number, targetType: 'automata' | 'player', targetPlayerId?: string) => outsourceManufacturing(G, ctx, designId, quantity, targetType, targetPlayerId),
+    respondToManufacturingOrder: ({ G, ctx }, orderId: string, accept: boolean) => respondToManufacturingOrder(G, ctx, orderId, accept),
     
     // 新しい統合アクション: オートマフェーズ + マーケットフェーズ + 次ラウンド
     executeAutomataAndMarket: ({ G }) => {
@@ -927,6 +929,248 @@ function outsourceReview(G: GameState, ctx: Ctx, targetPlayerId: string, product
       timestamp: Date.now()
     });
   }
+}
+
+function outsourceManufacturing(G: GameState, ctx: Ctx, designId: string, quantity: number, targetType: 'automata' | 'player', targetPlayerId?: string) {
+  const player = G.players[ctx.currentPlayer];
+  if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
+  
+  // 威厳制限チェック
+  if (player.prestige <= -3) return 'INVALID_MOVE';
+  
+  // actionフェーズでのみ実行可能
+  if (ctx.phase !== 'action') return 'INVALID_MOVE';
+  
+  // 設計が存在するかチェック（自分の設計または他プレイヤーのオープンソース設計）
+  let design = player.designs.find(d => d.id === designId);
+  let designOwner = ctx.currentPlayer;
+  let isOpenSource = false;
+  
+  // 自分の設計でない場合、オープンソース設計を探す
+  if (!design) {
+    for (const playerId in G.players) {
+      const otherPlayer = G.players[playerId];
+      const openSourceDesign = otherPlayer.designs.find(d => d.id === designId && d.isOpenSource);
+      if (openSourceDesign) {
+        design = openSourceDesign;
+        designOwner = playerId;
+        isOpenSource = true;
+        break;
+      }
+    }
+  }
+  
+  if (!design) return 'INVALID_MOVE';
+  
+  if (targetType === 'automata') {
+    // オートマ外注：製造依頼数×(製造コスト+2)
+    const totalCost = quantity * (design.cost + 2);
+    if (player.money < totalCost) return 'INVALID_MOVE';
+    
+    player.money -= totalCost;
+    player.actionPoints -= 1;
+    
+    // 即座に指定個数製造
+    for (let i = 0; i < quantity; i++) {
+      const product: Product = {
+        id: `product-${ctx.currentPlayer}-${Date.now()}-${i}`,
+        cost: design.cost,
+        price: 0,
+        popularity: 1,
+        playerId: ctx.currentPlayer,
+        isResale: false
+      };
+      player.personalMarket.push(product);
+    }
+    
+    // オープンソース外注料
+    if (isOpenSource && designOwner !== ctx.currentPlayer) {
+      const outsourceFee = Math.min(G.round, 8);
+      const designOwnerPlayer = G.players[designOwner];
+      if (designOwnerPlayer) {
+        designOwnerPlayer.money += outsourceFee * quantity;
+        console.log(`💰 オープンソース外注料: ${designOwnerPlayer.name}が${outsourceFee * quantity}資金獲得`);
+      }
+    }
+    
+    console.log(`🏭 オートマ外注: ${player.name}が${totalCost}資金で${quantity}個製造完了`);
+    
+    // ログ記録
+    if (G.playLog) {
+      G.playLog.push({
+        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        round: G.round,
+        phase: ctx.phase || G.phase,
+        actor: ctx.currentPlayer,
+        action: 'オートマ外注',
+        details: `コスト${design.cost}の商品を${quantity}個製造、総額${totalCost}資金${isOpenSource ? `、外注料${Math.min(G.round, 8) * quantity}資金` : ''}`,
+        timestamp: Date.now()
+      });
+    }
+    
+  } else if (targetType === 'player' && targetPlayerId) {
+    // プレイヤー外注
+    const targetPlayer = G.players[targetPlayerId];
+    if (!targetPlayer || targetPlayerId === ctx.currentPlayer) return 'INVALID_MOVE';
+    
+    if (player.money < design.cost) return 'INVALID_MOVE';
+    
+    // 製造外注オーダーを作成（pending状態）
+    if (!G.pendingManufacturingOrders) {
+      G.pendingManufacturingOrders = [];
+    }
+    
+    const order: ManufacturingOrder = {
+      id: `order-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      clientId: ctx.currentPlayer,
+      contractorId: targetPlayerId,
+      designId: designId,
+      cost: design.cost,
+      round: G.round,
+      status: 'pending'
+    };
+    
+    G.pendingManufacturingOrders.push(order);
+    
+    // APを消費（拒否された場合は後で返却）
+    player.actionPoints -= 1;
+    
+    console.log(`📋 プレイヤー外注依頼: ${player.name} → ${targetPlayer.name} (コスト${design.cost})`);
+    
+    // ログ記録
+    if (G.playLog) {
+      G.playLog.push({
+        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        round: G.round,
+        phase: ctx.phase || G.phase,
+        actor: ctx.currentPlayer,
+        action: 'プレイヤー外注依頼',
+        details: `${targetPlayer.name}に製造依頼、コスト${design.cost}`,
+        timestamp: Date.now()
+      });
+    }
+  }
+}
+
+function respondToManufacturingOrder(G: GameState, ctx: Ctx, orderId: string, accept: boolean) {
+  const player = G.players[ctx.currentPlayer];
+  if (!player) return 'INVALID_MOVE';
+  
+  if (!G.pendingManufacturingOrders) return 'INVALID_MOVE';
+  
+  const orderIndex = G.pendingManufacturingOrders.findIndex(order => 
+    order.id === orderId && 
+    order.contractorId === ctx.currentPlayer && 
+    order.status === 'pending'
+  );
+  
+  if (orderIndex === -1) return 'INVALID_MOVE';
+  
+  const order = G.pendingManufacturingOrders[orderIndex];
+  const client = G.players[order.clientId];
+  
+  if (!client) return 'INVALID_MOVE';
+  
+  if (accept) {
+    // 外注を受諾
+    order.status = 'accepted';
+    
+    // 依頼者から製造コストを受け取る
+    client.money -= order.cost;
+    player.money += order.cost;
+    
+    // 次ラウンドでAPを1消費する予定を記録
+    // これは次ラウンド開始時に処理される
+    
+    // 設計を取得して製造
+    let design = null;
+    let designOwner = null;
+    let isOpenSource = false;
+    
+    // まず依頼者の設計を探す
+    design = client.designs.find(d => d.id === order.designId);
+    if (design) {
+      designOwner = order.clientId;
+    } else {
+      // オープンソース設計を探す
+      for (const playerId in G.players) {
+        const otherPlayer = G.players[playerId];
+        const openSourceDesign = otherPlayer.designs.find(d => d.id === order.designId && d.isOpenSource);
+        if (openSourceDesign) {
+          design = openSourceDesign;
+          designOwner = playerId;
+          isOpenSource = true;
+          break;
+        }
+      }
+    }
+    
+    if (design) {
+      // 商品を製造して依頼者に渡す
+      const product: Product = {
+        id: `product-${order.clientId}-${Date.now()}`,
+        cost: design.cost,
+        price: 0,
+        popularity: 1,
+        playerId: order.clientId,
+        isResale: false
+      };
+      client.personalMarket.push(product);
+      
+      // オープンソース外注料
+      if (isOpenSource && designOwner && designOwner !== order.clientId) {
+        const outsourceFee = Math.min(G.round, 8);
+        const designOwnerPlayer = G.players[designOwner];
+        if (designOwnerPlayer) {
+          designOwnerPlayer.money += outsourceFee;
+          console.log(`💰 オープンソース外注料: ${designOwnerPlayer.name}が${outsourceFee}資金獲得`);
+        }
+      }
+      
+      console.log(`✅ 外注受諾: ${player.name}が${client.name}の依頼を受諾、製造完了`);
+      
+      // ログ記録
+      if (G.playLog) {
+        G.playLog.push({
+          id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          round: G.round,
+          phase: ctx.phase || G.phase,
+          actor: ctx.currentPlayer,
+          action: '外注受諾',
+          details: `${client.name}の製造依頼を受諾、コスト${design.cost}の商品を製造${isOpenSource ? `、外注料${Math.min(G.round, 8)}資金` : ''}`,
+          timestamp: Date.now()
+        });
+      }
+    }
+    
+    // オーダーを完了状態に
+    order.status = 'completed';
+    
+  } else {
+    // 外注を拒否
+    order.status = 'rejected';
+    
+    // 依頼者のAPを返却
+    client.actionPoints += 1;
+    
+    console.log(`❌ 外注拒否: ${player.name}が${client.name}の依頼を拒否`);
+    
+    // ログ記録
+    if (G.playLog) {
+      G.playLog.push({
+        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        round: G.round,
+        phase: ctx.phase || G.phase,
+        actor: ctx.currentPlayer,
+        action: '外注拒否',
+        details: `${client.name}の製造依頼を拒否、依頼者のAPを返還`,
+        timestamp: Date.now()
+      });
+    }
+  }
+  
+  // 処理済みオーダーを削除
+  G.pendingManufacturingOrders.splice(orderIndex, 1);
 }
 
 function getTrendEffect(sum: number) {
