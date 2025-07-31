@@ -53,7 +53,8 @@ const MarketDisruption: Game<GameState> = {
     resale: ({ G, ctx }, targetPlayerId: string, productId: string, resalePrice: number) => resale(G, ctx, targetPlayerId, productId, resalePrice),
     design: ({ G, ctx }, isOpenSource: boolean = false) => design(G, ctx, isOpenSource),
     promoteRegulation: ({ G, ctx }) => promoteRegulation(G, ctx),
-    dayLabor: ({ G, ctx }) => dayLabor(G, ctx)
+    dayLabor: ({ G, ctx }) => dayLabor(G, ctx),
+    activateTrend: ({ G, ctx }) => activateTrend(G, ctx)
   },
 
 
@@ -439,7 +440,34 @@ function research(G: GameState, ctx: Ctx) {
   
   player.actionPoints -= 1;
   
-  rollMultipleDice(3);
+  const dice = rollMultipleDice(3);
+  const sum = dice.reduce((a, b) => a + b, 0);
+  
+  const trendEffect = getTrendEffect(sum);
+  
+  // プレイヤーにトレンド情報を提供
+  if (!G.availableTrends) {
+    G.availableTrends = {};
+  }
+  
+  G.availableTrends[ctx.currentPlayer] = {
+    sum,
+    effect: trendEffect,
+    playerId: ctx.currentPlayer
+  };
+  
+  // ログ記録
+  if (G.playLog) {
+    G.playLog.push({
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      round: G.round,
+      phase: ctx.phase || G.phase,
+      actor: ctx.currentPlayer,
+      action: 'リサーチ',
+      details: `トレンド調査: ${trendEffect.name}`,
+      timestamp: Date.now()
+    });
+  }
 }
 
 function partTimeWork(G: GameState, ctx: Ctx) {
@@ -580,6 +608,166 @@ function dayLabor(G: GameState, ctx: Ctx) {
   
   player.money += 18;
   player.actionPoints -= 3;
+}
+
+function activateTrend(G: GameState, ctx: Ctx) {
+  const player = G.players[ctx.currentPlayer];
+  if (!player) {
+    console.error('ActivateTrend: Player not found');
+    return 'INVALID_MOVE';
+  }
+  if (!G.availableTrends || !G.availableTrends[ctx.currentPlayer]) {
+    console.error('ActivateTrend: No available trend for player');
+    return 'INVALID_MOVE';
+  }
+  
+  const trendData = G.availableTrends[ctx.currentPlayer];
+  const effect = trendData.effect;
+  
+  // コストチェック
+  if (effect.cost && effect.cost.prestige && player.prestige < effect.cost.prestige) {
+    console.error('ActivateTrend: Insufficient prestige');
+    return 'INVALID_MOVE';
+  }
+  
+  // コスト支払い
+  if (effect.cost && effect.cost.prestige) {
+    player.prestige -= effect.cost.prestige;
+  }
+  
+  // 効果実行
+  executeTrendEffect(G, effect, ctx.currentPlayer);
+  
+  // トレンドを消費
+  delete G.availableTrends[ctx.currentPlayer];
+  
+  // ログ記録
+  if (G.playLog) {
+    G.playLog.push({
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      round: G.round,
+      phase: ctx.phase || G.phase,
+      actor: ctx.currentPlayer,
+      action: 'トレンド発動',
+      details: `${effect.name}を発動`,
+      timestamp: Date.now()
+    });
+  }
+}
+
+function getTrendEffect(sum: number) {
+  const effects: { [key: number]: { name: string; description: string; cost: { prestige?: number } | null } } = {
+    3: { name: '経済特需', description: '全プレイヤーに+15資金', cost: null },
+    4: { name: '技術革新', description: '自身の任意の設計1つのダイス値-1', cost: null },
+    5: { name: 'インフルエンサー紹介', description: '自身の全商品の人気度を+1', cost: null },
+    6: { name: '汚染改善キャンペーン', description: '市場汚染レベルを-2', cost: null },
+    7: { name: 'サステナビリティ', description: '任意の商品の人気度を+3（任意の組み合わせ）', cost: { prestige: 1 } },
+    8: { name: 'DIYブーム', description: '全てのプレイヤーの最新設計のダイス値-1', cost: null },
+    9: { name: 'インフレ進行', description: '全ての転売ではない商品の価格+2（発動後永続）', cost: null },
+    10: { name: 'ショート動画ブーム', description: '転売が成功するたびに+2資金ボーナス（発動後永続）', cost: null },
+    11: { name: 'ショート動画ブーム', description: '転売が成功するたびに+2資金ボーナス（発動後永続）', cost: null },
+    12: { name: 'テレワーク需要', description: '価格10以下の全商品の人気度を+1', cost: null },
+    13: { name: 'ギフト需要', description: '人気度3以下の全商品の人気度を+1', cost: null },
+    14: { name: '緑化促進', description: '市場汚染レベルを-3', cost: { prestige: 3 } },
+    15: { name: '消費者不信', description: 'あなた以外の全プレイヤーの威厳-1', cost: { prestige: 2 } },
+    16: { name: '市場開放', description: 'ダイスを3つ引き、コスト0で設計（オープンソース不可）、製造、販売を行うことができる。使用しなかったダイスはダイスプールに戻す。', cost: null },
+    17: { name: '風評操作', description: '任意のプレイヤー1人の威厳-3', cost: { prestige: 2 } },
+    18: { name: '市場の寵児', description: 'あなたの威厳+5', cost: null }
+  };
+  
+  return effects[sum] || { name: '無効果', description: '特に変化なし', cost: null };
+}
+
+function executeTrendEffect(G: GameState, effect: any, playerId: string) {
+  console.log(`🌟 Executing trend effect: ${effect.name}`);
+  
+  switch (effect.name) {
+    case '経済特需':
+      for (const pid in G.players) {
+        G.players[pid].money += 15;
+      }
+      console.log('📈 All players gained 15 money');
+      break;
+      
+    case 'インフルエンサー紹介':
+      const player = G.players[playerId];
+      if (player) {
+        for (const product of player.personalMarket) {
+          // 人気度上昇時の位置更新処理
+          const oldPopularity = product.popularity;
+          product.popularity = Math.min(6, product.popularity + 1);
+          
+          // パーソナル・マーケット内での位置調整が必要な場合
+          if (product.popularity !== oldPopularity && product.price > 0) {
+            // 商品の位置を更新（価格は変わらず、人気度のみ変更）
+            console.log(`Product ${product.id} popularity: ${oldPopularity} → ${product.popularity}`);
+          }
+        }
+        console.log(`📱 All products of player ${playerId} gained +1 popularity`);
+      }
+      break;
+      
+    case '汚染改善キャンペーン':
+      G.marketPollution = Math.max(0, G.marketPollution - 2);
+      console.log(`🌱 Market pollution reduced by 2, now: ${G.marketPollution}`);
+      break;
+      
+    case 'テレワーク需要':
+      // 価格10以下の全商品の人気度+1
+      for (const pid in G.players) {
+        for (const product of G.players[pid].personalMarket) {
+          if (product.price > 0 && product.price <= 10) {
+            const oldPopularity = product.popularity;
+            product.popularity = Math.min(6, product.popularity + 1);
+            if (product.popularity !== oldPopularity) {
+              console.log(`Product ${product.id} popularity: ${oldPopularity} → ${product.popularity}`);
+            }
+          }
+        }
+      }
+      for (const product of G.automata.market) {
+        if (product.price > 0 && product.price <= 10) {
+          product.popularity = Math.min(6, product.popularity + 1);
+        }
+      }
+      console.log('💻 All products with price ≤10 gained +1 popularity');
+      break;
+      
+    case 'インフレ進行':
+      // 全ての転売ではない商品の価格+2（永続）
+      for (const pid in G.players) {
+        for (const product of G.players[pid].personalMarket) {
+          if (!product.isResale && product.price > 0) {
+            product.price += 2;
+          }
+        }
+      }
+      for (const product of G.automata.market) {
+        if (!product.isResale && product.price > 0) {
+          product.price += 2;
+        }
+      }
+      console.log('💰 All non-resale products gained +2 price');
+      break;
+      
+    case 'サステナビリティ':
+      // プレイヤーが任意の商品の人気度を+3できる（実装は簡易版：自分の商品全てに+1）
+      const sustainabilityPlayer = G.players[playerId];
+      if (sustainabilityPlayer) {
+        for (const product of sustainabilityPlayer.personalMarket) {
+          const oldPopularity = product.popularity;
+          product.popularity = Math.min(6, product.popularity + 1);
+          if (product.popularity !== oldPopularity) {
+            console.log(`Product ${product.id} popularity: ${oldPopularity} → ${product.popularity}`);
+          }
+        }
+      }
+      break;
+      
+    default:
+      console.log(`Unknown trend effect: ${effect.name}`);
+      break;
+  }
 }
 
 export default MarketDisruption;
