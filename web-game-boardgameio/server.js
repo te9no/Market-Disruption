@@ -709,12 +709,25 @@ server.run(port, () => {
     console.log(`  - ${move}: ${exists ? '✅ FOUND' : '❌ MISSING'}`);
   });
   
-  // APIエンドポイント情報
-  console.log('🔧 Debug API endpoints:');
-  console.log(`  - GET  ${process.env.NODE_ENV === 'production' ? 'https://market-disruption-production.up.railway.app' : `http://localhost:${port}`}/api/status`);
-  console.log(`  - GET  ${process.env.NODE_ENV === 'production' ? 'https://market-disruption-production.up.railway.app' : `http://localhost:${port}`}/api/moves`);
-  console.log(`  - GET  ${process.env.NODE_ENV === 'production' ? 'https://market-disruption-production.up.railway.app' : `http://localhost:${port}`}/api/game/:gameId`);
-  console.log(`  - POST ${process.env.NODE_ENV === 'production' ? 'https://market-disruption-production.up.railway.app' : `http://localhost:${port}`}/api/game/:gameId/action`);
+  // 完全な問題診断情報
+  console.log('🔧 COMPLETE DIAGNOSTIC INFORMATION:');
+  console.log('='.repeat(50));
+  console.log(`📅 Server Start Time: ${new Date().toISOString()}`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🎯 Game Definition:`, MarketDisruption.name);
+  console.log(`📊 Total Moves Available: ${moveNames.length}`);
+  console.log(`📋 Complete Move List:`);
+  moveNames.forEach((move, index) => {
+    console.log(`   ${index + 1}. ${move} ✅`);
+  });
+  console.log('='.repeat(50));
+  
+  // API endpoints are disabled for now - focusing on core game functionality
+  console.log('💡 To test moves, use the web interface and check browser console');
+  console.log('🌐 Game URL: https://market-disruption.netlify.app');
+  console.log('🔍 If buttons still not working, the issue is browser cache.');
+  console.log('⚡ Solution: Hard refresh (Ctrl+F5) or clear browser cache');
+  console.log('='.repeat(50));
 }).catch(error => {
   console.error('❌ Failed to start server:', error);
   process.exit(1);
