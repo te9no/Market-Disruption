@@ -303,56 +303,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
               日雇い労働 (3AP → 18資金) {currentPlayer.actionPoints < 3 ? '[AP不足]' : currentPlayer.money > 100 ? '[資金上限]' : ''}
             </button>
             <div style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
-              <button 
-                onClick={() => {
-                  console.log('ターン終了ボタン押下:', { events, ctx });
-                  // Simple turn end - let boardgame.io handle turn transitions
-                  if (events && events.endTurn) {
-                    events.endTurn();
-                  } else if (ctx.events && ctx.events.endTurn) {
-                    ctx.events.endTurn();
-                  } else {
-                    console.error('endTurn イベントが見つかりません');
-                  }
-                }}
-                style={{ 
-                  margin: '5px', 
-                  padding: '15px 30px',
-                  backgroundColor: '#9C27B0',
-                  color: 'white',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: 'bold'
-                }}
-              >
-                ターン終了 (残りAP: {currentPlayer.actionPoints})
-              </button>
-              
-              {ctx.phase === 'action' && (
+              {ctx.numPlayers === 1 ? (
+                // 一人プレイ: オートマフェーズへ移行ボタン（ターン終了も含む）
                 <button 
                   onClick={() => {
-                    console.log('🔄 フェーズ終了ボタン押下:', { 
-                      events, 
-                      ctx, 
-                      phase: ctx.phase, 
-                      numPlayers: ctx.numPlayers,
-                      currentPlayer: ctx.currentPlayer,
-                      playerID,
-                      isActive
-                    });
+                    console.log('🎯 一人プレイ: オートマフェーズへ移行:', { events, ctx });
                     
                     try {
-                      console.log('🚀 Starting automata sequence...');
-                      
-                      // 1人プレイ時は先にターン終了してからフェーズ終了
-                      if (ctx.numPlayers === 1) {
-                        console.log('🎯 Single player mode - ending turn first');
-                        if (events && typeof events.endTurn === 'function') {
-                          console.log('✅ Calling events.endTurn');
-                          const turnResult = events.endTurn();
-                          console.log('📊 endTurn result:', turnResult);
-                        }
+                      // 1人プレイ時はターン終了してからフェーズ終了
+                      if (events && typeof events.endTurn === 'function') {
+                        console.log('✅ Calling events.endTurn');
+                        events.endTurn();
                       }
                       
                       // オートマフェーズに移行
@@ -360,29 +321,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                         console.log('✅ Transitioning to automata phase');
                         const result = events.endPhase();
                         console.log('📊 endPhase result:', result);
-                        
-                        // フェーズ遷移後、少し待ってオートマフェーズの処理状況を確認
-                        setTimeout(() => {
-                          console.log('⏱️ Checking game state after phase transition:', {
-                            currentPhase: ctx.phase,
-                            round: G.round,
-                            automataMarket: G.automata?.market?.length || 0
-                          });
-                        }, 500);
-                        
                       } else if (ctx.events && typeof ctx.events.endPhase === 'function') {
                         console.log('✅ Using ctx.events.endPhase');
-                        const result = ctx.events.endPhase();
-                        console.log('📊 ctx.events.endPhase result:', result);
+                        ctx.events.endPhase();
                       } else {
-                        console.error('❌ endPhase function not found in events or ctx.events');
-                        console.log('📋 Available events:', Object.keys(events || {}));
-                        console.log('📋 Available ctx.events:', Object.keys(ctx.events || {}));
-                        console.log('📋 events object:', events);
-                        console.log('📋 ctx.events object:', ctx.events);
+                        console.error('❌ endPhase function not found');
                       }
                     } catch (error) {
-                      console.error('💥 Error calling endPhase:', error);
+                      console.error('💥 Error transitioning to automata phase:', error);
                     }
                   }}
                   style={{ 
@@ -396,7 +342,33 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                     fontWeight: 'bold'
                   }}
                 >
-                  {ctx.numPlayers === 1 ? 'オートマフェーズへ' : 'アクションフェーズ終了'} (フェーズ: {ctx.phase})
+                  オートマフェーズへ (残りAP: {currentPlayer.actionPoints})
+                </button>
+              ) : (
+                // 複数人プレイ: 通常のターン終了ボタン
+                <button 
+                  onClick={() => {
+                    console.log('👥 複数人プレイ: ターン終了:', { events, ctx });
+                    if (events && events.endTurn) {
+                      events.endTurn();
+                    } else if (ctx.events && ctx.events.endTurn) {
+                      ctx.events.endTurn();
+                    } else {
+                      console.error('endTurn イベントが見つかりません');
+                    }
+                  }}
+                  style={{ 
+                    margin: '5px', 
+                    padding: '15px 30px',
+                    backgroundColor: '#9C27B0',
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  ターン終了 (残りAP: {currentPlayer.actionPoints})
                 </button>
               )}
             </div>
