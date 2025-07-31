@@ -107,7 +107,7 @@ const MarketDisruption: Game<GameState> = {
   minPlayers: 1,
   maxPlayers: 4,
   
-  // シンプルなフェーズ設計: actionフェーズのみ
+  // フェーズシステム: アクション → オートマ → 市場
   phases: {
     action: {
       start: true,
@@ -124,8 +124,91 @@ const MarketDisruption: Game<GameState> = {
           },
         }
       },
-      // フェーズは終了しない（ゲーム終了まで継続）
-      endIf: () => false
+      // 全プレイヤーがターンを終了したらオートマフェーズへ
+      endIf: ({ ctx }) => {
+        if (ctx.numPlayers === 1) return false; // 1人プレイは手動実行
+        // 全プレイヤーがターンを終了したかチェック（最後のプレイヤーのターン後）
+        return ctx.playOrderPos === ctx.numPlayers - 1 && ctx.turn > 0;
+      },
+      next: 'automata'
+    },
+    
+    automata: {
+      // オートマフェーズは自動実行
+      onBegin: ({ G, events }) => {
+        console.log('🤖 Auto-executing Automata Phase in multiplayer...');
+        executeManufacturerAutomata(G);
+        executeResaleAutomata(G);
+        events.endPhase();
+      },
+      moves: {
+        executeAutomataPhase: ({ G, events }) => {
+          console.log('🤖 Manual Automata Phase execution...');
+          executeManufacturerAutomata(G);
+          executeResaleAutomata(G);
+          events.endPhase();
+        }
+      },
+      endIf: () => true,
+      next: 'market'
+    },
+    
+    market: {
+      // 市場フェーズは自動実行
+      onBegin: ({ G, events }) => {
+        console.log('🏪 Auto-executing Market Phase in multiplayer...');
+        executeMarketPhase(G);
+        
+        // 次ラウンドの準備
+        G.round++;
+        console.log(`🎮 Starting round ${G.round}`);
+        
+        // 全プレイヤーのAPをリセット
+        for (const playerId in G.players) {
+          G.players[playerId].actionPoints = 3;
+        }
+        
+        // 勝利条件チェック
+        for (const playerId in G.players) {
+          if (checkVictoryConditions(G.players[playerId])) {
+            G.gameEnded = true;
+            G.winner = playerId;
+            console.log(`🏆 Game ended! Winner: ${G.players[playerId].name}`);
+            break;
+          }
+        }
+        
+        events.endPhase();
+      },
+      moves: {
+        executeMarketPhase: ({ G, events }) => {
+          console.log('🏪 Manual Market Phase execution...');
+          executeMarketPhase(G);
+          
+          // 次ラウンドの準備
+          G.round++;
+          console.log(`🎮 Starting round ${G.round}`);
+          
+          // 全プレイヤーのAPをリセット
+          for (const playerId in G.players) {
+            G.players[playerId].actionPoints = 3;
+          }
+          
+          // 勝利条件チェック
+          for (const playerId in G.players) {
+            if (checkVictoryConditions(G.players[playerId])) {
+              G.gameEnded = true;
+              G.winner = playerId;
+              console.log(`🏆 Game ended! Winner: ${G.players[playerId].name}`);
+              break;
+            }
+          }
+          
+          events.endPhase();
+        }
+      },
+      endIf: () => true,
+      next: 'action'
     }
   },
   
@@ -138,7 +221,8 @@ const MarketDisruption: Game<GameState> = {
   
   // 基本的なイベントのみ
   events: {
-    endTurn: true
+    endTurn: true,
+    endPhase: true
   }
 };
 

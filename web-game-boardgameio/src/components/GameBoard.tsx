@@ -410,7 +410,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
         <h2>ゲーム情報</h2>
         <div>ゲームモード: {ctx.numPlayers === 1 ? '🤖 オートマ対戦' : `👥 ${ctx.numPlayers}人プレイ`}</div>
         <div>ラウンド: {G.round}</div>
-        <div>フェーズ: {ctx.phase === 'action' ? 'アクション' : ctx.phase}</div>
+        <div>フェーズ: {ctx.phase === 'action' ? 'アクション' : ctx.phase === 'automata' ? 'オートマ' : ctx.phase === 'market' ? '市場' : ctx.phase}</div>
         <div>市場汚染レベル: {G.marketPollution}</div>
         <div>規制レベル: {G.regulationLevel}</div>
         
@@ -652,12 +652,34 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             </div>
           </div>
         ) : (
-          <div style={{ color: '#999' }}>
-            {currentPlayer.id !== ctx.currentPlayer 
-              ? 'あなたのターンではありません' 
-              : ctx.phase !== 'action' 
-                ? `現在は${ctx.phase}フェーズです。アクションフェーズまでお待ちください。` 
-                : 'アクションを実行できません'}
+          <div>
+            {ctx.phase === 'automata' && (
+              <div style={{ textAlign: 'center', margin: '20px 0', backgroundColor: '#fff3e0', padding: '20px', borderRadius: '8px', border: '2px solid #FF9800' }}>
+                <h3 style={{ color: '#FF9800' }}>🤖 オートマフェーズ</h3>
+                <p style={{ fontSize: '14px', color: '#666' }}>メーカー・オートマと転売ヤー・オートマが自動でアクションを実行中...</p>
+                <div style={{ fontSize: '12px', color: '#FF9800', marginTop: '10px' }}>
+                  ⏳ 自動進行中 - しばらくお待ちください
+                </div>
+              </div>
+            )}
+            
+            {ctx.phase === 'market' && (
+              <div style={{ textAlign: 'center', margin: '20px 0', backgroundColor: '#e8f5e8', padding: '20px', borderRadius: '8px', border: '2px solid #4CAF50' }}>
+                <h3 style={{ color: '#4CAF50' }}>🏪 市場フェーズ</h3>
+                <p style={{ fontSize: '14px', color: '#666' }}>需要ダイスによる商品購入とマーケット処理を実行中...</p>
+                <div style={{ fontSize: '12px', color: '#4CAF50', marginTop: '10px' }}>
+                  ⏳ 自動進行中 - 次ラウンドの準備をしています
+                </div>
+              </div>
+            )}
+            
+            {ctx.phase === 'action' && (
+              <div style={{ color: '#999' }}>
+                {currentPlayer.id !== ctx.currentPlayer 
+                  ? 'あなたのターンではありません' 
+                  : 'アクションを実行できません'}
+              </div>
+            )}
           </div>
         )}
       </div>
