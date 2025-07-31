@@ -382,45 +382,46 @@ const MarketDisruption = {
     
     automata: {
       moves: {},
-      turn: {
-        order: {
-          first: () => 0,
-          next: () => undefined,
-        },
-        onBegin: ({ G, events }) => {
-          console.log('Automata phase: executing automata actions');
-          executeManufacturerAutomata(G);
-          executeResaleAutomata(G);
-          
-          // 自動的に次のフェーズに進む
+      onBegin: ({ G, events }) => {
+        console.log('🤖 Automata phase started: executing automata actions');
+        executeManufacturerAutomata(G);
+        executeResaleAutomata(G);
+        
+        // 少し待ってから次のフェーズに進む
+        console.log('⏰ Scheduling transition to market phase in 2000ms');
+        setTimeout(() => {
+          console.log('🔄 Transitioning from automata to market phase');
           if (events && events.endPhase) {
-            setTimeout(() => events.endPhase(), 1500);
+            events.endPhase();
+          } else {
+            console.error('❌ events.endPhase not available in automata phase');
           }
-        }
+        }, 2000);
       },
       next: 'market'
     },
     
     market: {
       moves: {},
-      turn: {
-        order: {
-          first: () => 0,
-          next: () => undefined,
-        },
-        onBegin: ({ G, events }) => {
-          console.log('Market phase: executing market actions');
-          executeMarketPhase(G);
-          
-          // 自動的に次のフェーズに進む
+      onBegin: ({ G, events }) => {
+        console.log('🏪 Market phase started: executing market actions');
+        executeMarketPhase(G);
+        
+        // 少し待ってから次のフェーズに進む
+        console.log('⏰ Scheduling transition to action phase in 2000ms');
+        setTimeout(() => {
+          console.log('🔄 Transitioning from market to action phase');
           if (events && events.endPhase) {
-            setTimeout(() => events.endPhase(), 1500);
+            events.endPhase();
+          } else {
+            console.error('❌ events.endPhase not available in market phase');
           }
-        }
+        }, 2000);
       },
       next: 'action',
       onEnd: ({ G }) => {
         G.round++;
+        console.log(`🎮 Starting round ${G.round}`);
         
         // 勝利条件チェック
         for (const playerId in G.players) {
@@ -428,6 +429,7 @@ const MarketDisruption = {
             G.gameEnded = true;
             G.winner = playerId;
             G.phase = 'victory';
+            console.log(`🏆 Game ended! Winner: ${G.players[playerId].name}`);
             break;
           }
         }
