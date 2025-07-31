@@ -84,15 +84,8 @@ const MarketDisruption: Game<GameState> = {
           },
         }
       },
-      // 1人プレイ時のフェーズ終了条件を緩和
-      endIf: ({ ctx }) => {
-        // 1人プレイの場合は即座にフェーズ終了可能
-        if (ctx.numPlayers === 1) {
-          return true;
-        }
-        // 複数人プレイの場合は全プレイヤーがパスまたはアクション終了まで待機
-        return false;
-      },
+      // フェーズ終了は手動で制御（ボタンクリック時）
+      endIf: () => false,
       onEnd: ({ G }) => {
         console.log('Action phase ending - resetting AP for all players');
         // 全プレイヤーのAPをリセット

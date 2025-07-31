@@ -355,12 +355,8 @@ const MarketDisruption = {
           },
         }
       },
-      endIf: ({ ctx }) => {
-        if (ctx.numPlayers === 1) {
-          return true; // 1人プレイの場合は即座にフェーズ終了可能
-        }
-        return false;
-      },
+      // フェーズ終了は手動で制御（ボタンクリック時）
+      endIf: () => false,
       onEnd: ({ G }) => {
         console.log('Action phase ending - resetting AP for all players');
         for (const playerId in G.players) {
