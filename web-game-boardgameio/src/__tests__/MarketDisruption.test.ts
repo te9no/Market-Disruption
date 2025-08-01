@@ -47,6 +47,8 @@ describe('MarketDisruption Game', () => {
       round: 1,
       marketPollution: 0,
       regulationLevel: 0,
+      regulationStage: 'none',
+      regulationStageRounds: 0,
       automata: {
         manufacturerMoney: Infinity,
         resaleOrganizationMoney: 20,
@@ -103,6 +105,8 @@ describe('MarketDisruption Game', () => {
       round: 1,
       marketPollution: 0,
       regulationLevel: 0,
+      regulationStage: 'none',
+      regulationStageRounds: 0,
       automata: {
         manufacturerMoney: Infinity,
         resaleOrganizationMoney: 20,
