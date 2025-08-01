@@ -771,6 +771,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             >
               威厳購入 (1AP + 5資金 → 威厳+1) {currentPlayer.actionPoints < 1 ? '[AP不足]' : currentPlayer.money < 5 ? '[資金不足]' : (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`]) ? '[使用済み]' : ''}
             </button>
+            <button 
+              onClick={() => moves.promoteRegulation()}
+              disabled={currentPlayer.actionPoints < 2}
+              style={{ 
+                margin: '5px', 
+                padding: '10px',
+                backgroundColor: currentPlayer.actionPoints < 2 ? '#ccc' : '#E91E63',
+                color: 'white',
+                border: 'none',
+                cursor: currentPlayer.actionPoints < 2 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              規制推進 (2AP → ダイス判定で規制進行) {currentPlayer.actionPoints < 2 ? '[AP不足]' : ''}
+            </button>
             <div style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
               {ctx.numPlayers === 1 ? (
                 // 一人プレイ: オートマ＆マーケット実行ボタン
