@@ -525,6 +525,11 @@ function executeResaleAutomata(G: GameState): void {
       
       G.automata.market.push(resaleProduct);
       
+      // ショート動画ブーム効果（オートマは資金増加なし）
+      if (G.shortVideoBonus) {
+        console.log(`📱 ショート動画ブーム: 転売ヤー・オートマが転売成功（効果：プレイヤーのみ）`);
+      }
+      
       // 元の所有者に支払い
       if (product.playerId === 'manufacturer-automata') {
         // メーカー・オートマから購入した場合、オートマ市場から削除
@@ -850,6 +855,12 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
   
   player.personalMarket.push(resaleProduct);
   G.marketPollution++;
+  
+  // ショート動画ブーム効果
+  if (G.shortVideoBonus) {
+    player.money += 2;
+    console.log(`📱 ショート動画ブーム: ${player.name}が転売成功により+2資金ボーナス獲得`);
+  }
   
   console.log(`🔄 転売実行: ${player.name}が${targetName}の商品を${product.price}資金で購入、${resalePrice}資金で転売出品`);
   
@@ -1396,6 +1407,18 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
       console.log('📈 All players gained 15 money');
       break;
       
+    case '技術革新':
+      // 自身の任意の設計1つのダイス値-1（簡易実装：最初の設計のコスト-1）
+      const techPlayer = G.players[playerId];
+      if (techPlayer && techPlayer.designs.length > 0) {
+        const design = techPlayer.designs[0]; // 最初の設計を選択
+        if (design.cost > 1) {
+          design.cost -= 1;
+          console.log(`🔬 技術革新: ${techPlayer.name}の設計コスト ${design.cost + 1} → ${design.cost}`);
+        }
+      }
+      break;
+      
     case 'インフルエンサー紹介':
       const player = G.players[playerId];
       if (player) {
@@ -1457,6 +1480,112 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
       console.log('💰 All non-resale products gained +2 price');
       break;
       
+    case 'DIYブーム':
+      // 全てのプレイヤーの最新設計のダイス値-1
+      for (const pid in G.players) {
+        const diyPlayer = G.players[pid];
+        if (diyPlayer.designs.length > 0) {
+          const latestDesign = diyPlayer.designs[diyPlayer.designs.length - 1]; // 最新設計
+          if (latestDesign.cost > 1) {
+            latestDesign.cost -= 1;
+            console.log(`🔨 DIYブーム: ${diyPlayer.name}の最新設計コスト ${latestDesign.cost + 1} → ${latestDesign.cost}`);
+          }
+        }
+      }
+      break;
+      
+    case 'ショート動画ブーム':
+      // 転売が成功するたびに+2資金ボーナス（発動後永続）
+      G.shortVideoBonus = true;
+      console.log('📱 ショート動画ブーム: 転売成功時+2資金ボーナスが永続発動');
+      break;
+      
+    case 'ギフト需要':
+      // 人気度3以下の全商品の人気度を+1
+      for (const pid in G.players) {
+        for (const product of G.players[pid].personalMarket) {
+          if (product.price > 0 && product.popularity <= 3) {
+            const oldPopularity = product.popularity;
+            product.popularity = Math.min(6, product.popularity + 1);
+            if (product.popularity !== oldPopularity) {
+              console.log(`🎁 ギフト需要: 商品${product.id} 人気度 ${oldPopularity} → ${product.popularity}`);
+            }
+          }
+        }
+      }
+      for (const product of G.automata.market) {
+        if (product.price > 0 && product.popularity <= 3) {
+          product.popularity = Math.min(6, product.popularity + 1);
+        }
+      }
+      console.log('🎁 All products with popularity ≤3 gained +1 popularity');
+      break;
+      
+    case '緑化促進':
+      // 市場汚染レベルを-3
+      G.marketPollution = Math.max(0, G.marketPollution - 3);
+      console.log(`🌱 緑化促進: 市場汚染レベル-3、現在: ${G.marketPollution}`);
+      break;
+      
+    case '消費者不信':
+      // あなた以外の全プレイヤーの威厳-1
+      for (const pid in G.players) {
+        if (pid !== playerId) {
+          const targetPlayer = G.players[pid];
+          targetPlayer.prestige = Math.max(-5, targetPlayer.prestige - 1);
+          console.log(`😠 消費者不信: ${targetPlayer.name}の威厳-1 (現在: ${targetPlayer.prestige})`);
+        }
+      }
+      break;
+      
+    case '市場開放':
+      // ダイスを3つ引き、コスト0で設計・製造・販売（簡易実装）
+      const marketPlayer = G.players[playerId];
+      if (marketPlayer) {
+        // 3つのダイスを振る
+        const dice1 = rollDice();
+        const dice2 = rollDice();
+        const dice3 = rollDice();
+        console.log(`🎲 市場開放: ダイス結果 ${dice1}, ${dice2}, ${dice3}`);
+        
+        // 最初のダイスで無料設計・製造・販売
+        if (marketPlayer.designs.length < 6) {
+          const freeDesign = {
+            id: `free-design-${playerId}-${Date.now()}`,
+            cost: dice1,
+            isOpenSource: false
+          };
+          marketPlayer.designs.push(freeDesign);
+          
+          // 無料製造
+          const freeProduct = {
+            id: `free-product-${playerId}-${Date.now()}`,
+            cost: dice1,
+            price: dice1 * 2, // 自動販売価格設定
+            popularity: 1,
+            playerId: playerId,
+            isResale: false
+          };
+          marketPlayer.personalMarket.push(freeProduct);
+          
+          console.log(`🆓 市場開放: ${marketPlayer.name}が無料で設計・製造・販売完了（コスト${dice1}、価格${dice1 * 2}）`);
+        }
+      }
+      break;
+      
+    case '風評操作':
+      // 任意のプレイヤー1人の威厳-3（簡易実装：ランダムな他プレイヤー）
+      const otherPlayerIds = Object.keys(G.players).filter(pid => pid !== playerId);
+      if (otherPlayerIds.length > 0) {
+        const targetIndex = Math.floor(Math.random() * otherPlayerIds.length);
+        const targetId = otherPlayerIds[targetIndex];
+        const targetPlayer = G.players[targetId];
+        
+        targetPlayer.prestige = Math.max(-5, targetPlayer.prestige - 3);
+        console.log(`🗣️ 風評操作: ${targetPlayer.name}の威厳-3 (現在: ${targetPlayer.prestige})`);
+      }
+      break;
+      
     case 'サステナビリティ':
       // プレイヤーが任意の商品の人気度を+3できる（実装は簡易版：自分の商品全てに+1）
       const sustainabilityPlayer = G.players[playerId];
@@ -1468,6 +1597,15 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
             console.log(`Product ${product.id} popularity: ${oldPopularity} → ${product.popularity}`);
           }
         }
+      }
+      break;
+      
+    case '市場の寵児':
+      // あなたの威厳+5
+      const favoritePlayer = G.players[playerId];
+      if (favoritePlayer) {
+        favoritePlayer.prestige += 5;
+        console.log(`👑 市場の寵児: ${favoritePlayer.name}の威厳+5 (現在: ${favoritePlayer.prestige})`);
       }
       break;
       

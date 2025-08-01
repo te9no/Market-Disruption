@@ -43,6 +43,7 @@ export interface GameState {
   regulationStageRounds: number; // 規制段階が続いているラウンド数
   automata: AutomataState;
   trendEffects: TrendEffect[];
+  shortVideoBonus: boolean; // ショート動画ブーム効果フラグ
   availableTrends?: { [playerId: string]: AvailableTrend };
   prestigePurchasePerRound?: { [key: string]: boolean };
   pendingManufacturingOrders?: ManufacturingOrder[];
@@ -106,6 +107,7 @@ export const initialGameState: GameState = {
     market: []
   },
   trendEffects: [],
+  shortVideoBonus: false,
   playLog: [],
   gameEnded: false,
   winner: null,
