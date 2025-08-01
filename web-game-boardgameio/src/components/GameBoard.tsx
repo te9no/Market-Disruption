@@ -685,7 +685,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
       </div>
 
       <div style={{ marginTop: '20px' }}>
-        <h2>オートマ・マーケット</h2>
+        <h2>🤖 オートマ・マーケット (転売可能)</h2>
+        <div style={{ fontSize: '12px', color: '#FF5722', backgroundColor: '#ffebee', padding: '8px', marginBottom: '10px', border: '1px solid #FF5722', borderRadius: '4px' }}>
+          ✅ オートマの商品も転売・レビューが可能です！
+        </div>
         <div>メーカー・オートマ資金: 無限</div>
         <div>転売ヤー・オートマ資金: {G.automata.resaleOrganizationMoney}</div>
         
@@ -706,14 +709,129 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             ) : (
               <>通常品 - コスト: {product.cost}, 価格: {product.price}, 人気度: {product.popularity}</>
             )}
-            {currentPlayer.money >= product.price && isActive && currentPlayer.actionPoints >= 1 && (
-              <button 
-                onClick={() => moves.purchase('automata', product.id)}
-                style={{ marginLeft: '10px' }}
-              >
-                購入 ({product.price}資金)
-              </button>
-            )}
+            <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
+              {currentPlayer.money >= product.price && isActive && currentPlayer.actionPoints >= 1 && (
+                <button 
+                  onClick={() => moves.purchase('automata', product.id)}
+                  style={{ 
+                    padding: '5px 10px',
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  購入 ({product.price}資金)
+                </button>
+              )}
+              {product.price > 0 && isActive && currentPlayer.actionPoints >= 2 && currentPlayer.prestige >= 1 && (
+                <button 
+                  onClick={() => {
+                    if (currentPlayer.money < product.price) {
+                      alert(`資金不足: ${product.price}資金が必要です（現在${currentPlayer.money}資金）`);
+                      return;
+                    }
+                    if (currentPlayer.actionPoints < 2) {
+                      alert(`AP不足: 2APが必要です（現在${currentPlayer.actionPoints}AP）`);
+                      return;
+                    }
+                    if (currentPlayer.prestige < 1) {
+                      alert(`威厳不足: 1威厳が必要です（現在${currentPlayer.prestige}威厳）`);
+                      return;
+                    }
+                    
+                    const resaleBonus = currentPlayer.resaleHistory <= 1 ? 5 : 
+                                       currentPlayer.resaleHistory <= 4 ? 8 :
+                                       currentPlayer.resaleHistory <= 7 ? 11 : 15;
+                    const maxPrice = Math.min(24, product.price + resaleBonus);
+                    const resalePrice = parseInt(prompt(`転売価格を入力 (${product.price + 1}-${maxPrice}):`) || '0', 10);
+                    if (resalePrice >= product.price + 1 && resalePrice <= maxPrice) {
+                      moves.resale('automata', product.id, resalePrice);
+                    } else if (resalePrice > 0) {
+                      alert(`価格範囲外: ${product.price + 1}～${maxPrice}の間で入力してください`);
+                    }
+                  }}
+                  style={{ 
+                    padding: '5px 10px',
+                    backgroundColor: '#FF5722',
+                    color: 'white',
+                    border: '2px solid #FF0000',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  🔴転売🔴 ({product.price}→{Math.min(24, product.price + (currentPlayer.resaleHistory <= 1 ? 5 : currentPlayer.resaleHistory <= 4 ? 8 : currentPlayer.resaleHistory <= 7 ? 11 : 15))}まで)
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '2px', marginTop: '3px' }}>
+              {currentPlayer.actionPoints >= 1 && currentPlayer.prestige >= 1 && (
+                <>
+                  <button 
+                    onClick={() => moves.review('automata', product.id, true)}
+                    style={{ 
+                      fontSize: '10px', 
+                      padding: '2px 4px', 
+                      backgroundColor: '#2196F3',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '2px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    👍
+                  </button>
+                  <button 
+                    onClick={() => moves.review('automata', product.id, false)}
+                    style={{ 
+                      fontSize: '10px', 
+                      padding: '2px 4px', 
+                      backgroundColor: '#f44336',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '2px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    👎
+                  </button>
+                </>
+              )}
+              {currentPlayer.actionPoints >= 1 && currentPlayer.money >= 3 && (
+                <>
+                  <button 
+                    onClick={() => moves.outsourceReview('automata', product.id, true)}
+                    style={{ 
+                      fontSize: '8px', 
+                      padding: '2px 4px', 
+                      backgroundColor: '#FF9800',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '2px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    💰👍
+                  </button>
+                  <button 
+                    onClick={() => moves.outsourceReview('automata', product.id, false)}
+                    style={{ 
+                      fontSize: '8px', 
+                      padding: '2px 4px', 
+                      backgroundColor: '#795548',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '2px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    💰👎
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         ))}
       </div>
