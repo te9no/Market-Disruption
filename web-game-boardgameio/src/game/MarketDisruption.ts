@@ -23,21 +23,9 @@ const checkVictoryConditions = (player: Player): boolean => {
 const MarketDisruption: Game<GameState> = {
   name: 'MarketDisruption',
   
-  setup: ({ ctx }) => {
+  setup: () => {
     const G = { ...initialGameState };
-    
-    for (let i = 0; i < ctx.numPlayers; i++) {
-      const playerId = String(i);
-      G.players[playerId] = createInitialPlayer(playerId, `Player ${i + 1}`);
-      
-      const designDice = rollMultipleDice(2);
-      G.players[playerId].designs = designDice.map((cost, index) => ({
-        id: `design-${playerId}-${index}`,
-        cost,
-        isOpenSource: false
-      }));
-    }
-    
+    // ロビー状態で開始（プレイヤーは初期化しない）
     return G;
   },
 
@@ -59,6 +47,9 @@ const MarketDisruption: Game<GameState> = {
     outsourceReview: ({ G, ctx }, targetPlayerId: string, productId: string, isPositive: boolean) => outsourceReview(G, ctx, targetPlayerId, productId, isPositive),
     outsourceManufacturing: ({ G, ctx }, designId: string, quantity: number, targetType: 'automata' | 'player', targetPlayerId?: string) => outsourceManufacturing(G, ctx, designId, quantity, targetType, targetPlayerId),
     respondToManufacturingOrder: ({ G, ctx }, orderId: string, accept: boolean) => respondToManufacturingOrder(G, ctx, orderId, accept),
+    
+    // ゲーム開始ムーブ
+    startGame: ({ G, ctx }) => startGame(G, ctx),
     
     // 新しい統合アクション: オートマフェーズ + マーケットフェーズ + 次ラウンド
     executeAutomataAndMarket: ({ G }) => {
@@ -1384,6 +1375,44 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
       console.log(`Unknown trend effect: ${effect.name}`);
       break;
   }
+}
+
+function startGame(G: GameState, ctx: Ctx) {
+  console.log('🎮 Starting game...');
+  
+  // プレイヤーを初期化
+  for (let i = 0; i < ctx.numPlayers; i++) {
+    const playerId = String(i);
+    G.players[playerId] = createInitialPlayer(playerId, `Player ${i + 1}`);
+    
+    // 初期設計を2つ生成
+    const designDice = rollMultipleDice(2);
+    G.players[playerId].designs = designDice.map((cost, index) => ({
+      id: `design-${playerId}-${index}`,
+      cost,
+      isOpenSource: false
+    }));
+  }
+  
+  // ゲーム状態を更新
+  G.phase = 'action';
+  G.gameStarted = true;
+  G.currentPlayer = '0';
+  
+  // ログ記録
+  if (G.playLog) {
+    G.playLog.push({
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      round: G.round,
+      phase: 'lobby',
+      actor: 'system',
+      action: 'ゲーム開始',
+      details: `${ctx.numPlayers}人でゲームを開始しました`,
+      timestamp: Date.now()
+    });
+  }
+  
+  console.log(`🎯 Game started with ${ctx.numPlayers} players`);
 }
 
 export default MarketDisruption;

@@ -17,6 +17,100 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
     return <div>プレイヤーIDが設定されていません</div>;
   }
   
+  // ロビー画面
+  if (G.phase === 'lobby') {
+    return (
+      <div style={{ 
+        padding: '20px', 
+        fontFamily: 'Arial, sans-serif',
+        textAlign: 'center',
+        maxWidth: '800px',
+        margin: '0 auto'
+      }}>
+        <div style={{ 
+          backgroundColor: '#f5f5f5', 
+          padding: '30px', 
+          borderRadius: '12px',
+          border: '2px solid #333',
+          marginBottom: '20px'
+        }}>
+          <h1 style={{ fontSize: '36px', color: '#FF5722', marginBottom: '10px' }}>
+            🏪 マーケット・ディスラプション
+          </h1>
+          <h2 style={{ fontSize: '18px', color: '#666', marginBottom: '30px' }}>
+            転売ヤーをテーマにしたボードゲーム
+          </h2>
+          
+          <div style={{ 
+            backgroundColor: 'white', 
+            padding: '20px', 
+            borderRadius: '8px',
+            marginBottom: '20px',
+            textAlign: 'left'
+          }}>
+            <h3 style={{ color: '#333', marginBottom: '15px' }}>📋 ゲーム情報</h3>
+            <div style={{ fontSize: '16px', lineHeight: '1.6' }}>
+              <div><strong>プレイヤー数:</strong> {ctx.numPlayers}人</div>
+              <div><strong>プレイ時間:</strong> 30-45分</div>
+              <div><strong>勝利条件:</strong> 威厳17ポイント + 資金75以上 または 資金150以上</div>
+            </div>
+          </div>
+
+          <div style={{ 
+            backgroundColor: '#e3f2fd', 
+            padding: '20px', 
+            borderRadius: '8px',
+            marginBottom: '30px',
+            textAlign: 'left'
+          }}>
+            <h3 style={{ color: '#1976d2', marginBottom: '15px' }}>🎯 ゲームの流れ</h3>
+            <div style={{ fontSize: '14px', lineHeight: '1.5' }}>
+              <div>1. <strong>アクションフェーズ</strong> - 各プレイヤーが3APでアクション実行</div>
+              <div>2. <strong>オートマフェーズ</strong> - メーカー・転売ヤーオートマが自動行動</div>
+              <div>3. <strong>市場フェーズ</strong> - 需要ダイスによる商品購入処理</div>
+              <div>4. <strong>勝利判定</strong> - 勝利条件達成で即座に終了</div>
+            </div>
+          </div>
+
+          <div style={{ 
+            backgroundColor: '#fff3e0', 
+            padding: '20px', 
+            borderRadius: '8px',
+            marginBottom: '30px',
+            textAlign: 'left'
+          }}>
+            <h3 style={{ color: '#f57c00', marginBottom: '15px' }}>⚠️ 戦略の選択</h3>
+            <div style={{ fontSize: '14px', lineHeight: '1.5' }}>
+              <div><strong>正規ルート:</strong> 革新的技術開発、オープンソース公開で業界信頼獲得</div>
+              <div><strong>転売ルート:</strong> 市場の隙を突いて転売で荒稼ぎ（評判悪化リスクあり）</div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              if (moves.startGame) {
+                moves.startGame();
+              }
+            }}
+            style={{
+              fontSize: '24px',
+              padding: '15px 40px',
+              backgroundColor: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+            }}
+          >
+            🎮 ゲーム開始！
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
   const currentPlayer = G.players[playerID];
   
   if (!currentPlayer) {

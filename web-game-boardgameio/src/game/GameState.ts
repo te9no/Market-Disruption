@@ -35,7 +35,7 @@ export interface AutomataState {
 export interface GameState {
   players: { [key: string]: Player };
   currentPlayer: string | null;
-  phase: 'setup' | 'action' | 'automata' | 'market' | 'victory';
+  phase: 'lobby' | 'setup' | 'action' | 'automata' | 'market' | 'victory';
   round: number;
   marketPollution: number;
   regulationLevel: number;
@@ -47,6 +47,7 @@ export interface GameState {
   playLog: PlayLogEntry[];
   gameEnded: boolean;
   winner: string | null;
+  gameStarted: boolean;
 }
 
 export interface TrendEffect {
@@ -91,7 +92,7 @@ export interface PlayLogEntry {
 export const initialGameState: GameState = {
   players: {},
   currentPlayer: null,
-  phase: 'setup',
+  phase: 'lobby',
   round: 1,
   marketPollution: 0,
   regulationLevel: 0,
@@ -103,7 +104,8 @@ export const initialGameState: GameState = {
   trendEffects: [],
   playLog: [],
   gameEnded: false,
-  winner: null
+  winner: null,
+  gameStarted: false
 };
 
 export const createInitialPlayer = (id: string, name: string): Player => ({

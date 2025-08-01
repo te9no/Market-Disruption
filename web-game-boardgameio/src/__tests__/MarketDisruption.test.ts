@@ -55,7 +55,8 @@ describe('MarketDisruption Game', () => {
       trendEffects: [],
       playLog: [],
       gameEnded: false,
-      winner: null
+      winner: null,
+      gameStarted: true
     };
 
     const ctx = {
@@ -110,7 +111,8 @@ describe('MarketDisruption Game', () => {
       trendEffects: [],
       playLog: [],
       gameEnded: false,
-      winner: null
+      winner: null,
+      gameStarted: true
     };
 
     const ctx = {
