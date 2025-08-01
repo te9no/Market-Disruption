@@ -1059,7 +1059,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
       </div>
 
       <div style={{ marginTop: '30px' }}>
-        <h2>🏪 マーケットボード</h2>
+        <div style={{ 
+          backgroundColor: '#f5f5f5',
+          border: '2px solid #333',
+          borderRadius: '8px',
+          padding: '15px',
+          marginBottom: '20px'
+        }}>
+          <h2 style={{ margin: '0 0 15px 0', color: '#333' }}>🏪 マーケットボード</h2>
         <div style={{ fontSize: '12px', color: '#FF5722', backgroundColor: '#ffebee', padding: '10px', marginBottom: '10px', border: '2px solid #FF5722', borderRadius: '8px' }}>
           <strong>🔍 転売ボタン確認ガイド：</strong><br/>
           ✅ <strong>他のプレイヤーのマーケット</strong>の商品には転売ボタン（🔴転売🔴）が表示されます<br/>
