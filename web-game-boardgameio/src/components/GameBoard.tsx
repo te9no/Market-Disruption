@@ -347,10 +347,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                                 alert(`AP不足: 2APが必要です（現在${currentPlayer.actionPoints}AP）`);
                                 return;
                               }
-                              if (currentPlayer.prestige < 1) {
-                                alert(`威厳不足: 1威厳が必要です（現在${currentPlayer.prestige}威厳）`);
-                                return;
-                              }
+                              // 威厳制限を削除（威厳-5でも転売可能）
                               
                               const resaleBonus = currentPlayer.resaleHistory <= 1 ? 5 : 
                                                  currentPlayer.resaleHistory <= 4 ? 8 :
@@ -912,10 +909,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                       alert(`AP不足: 2APが必要です（現在${currentPlayer.actionPoints}AP）`);
                       return;
                     }
-                    if (currentPlayer.prestige < 1) {
-                      alert(`威厳不足: 1威厳が必要です（現在${currentPlayer.prestige}威厳）`);
-                      return;
-                    }
+                    // 威厳制限を削除（威厳-5でも転売可能）
                     
                     const resaleBonus = currentPlayer.resaleHistory <= 1 ? 5 : 
                                        currentPlayer.resaleHistory <= 4 ? 8 :
