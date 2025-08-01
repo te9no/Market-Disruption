@@ -724,7 +724,9 @@ function discontinue(G: GameState, ctx: Ctx, designId: string) {
 function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: string, resalePrice: number) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
-  // 威厳による転売制限は削除（威厳-5でも転売可能）
+  
+  // Rule.mdに従い転売には1威厳が必要
+  if (player.prestige < 1) return 'INVALID_MOVE';
   
   let product;
   let targetName;
