@@ -194,7 +194,7 @@ function manufacture(G: GameState, ctx: Ctx, designId: string) {
 function sell(G: GameState, ctx: Ctx, productId: string, price: number) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
-  if (player.prestige <= -3) return 'INVALID_MOVE';
+  if (player.prestige < -5) return 'INVALID_MOVE';
   
   // actionフェーズでのみ販売可能
   if (ctx.phase !== 'action') return 'INVALID_MOVE';
@@ -622,7 +622,7 @@ function review(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
   
   if (!product) return 'INVALID_MOVE';
   
-  player.prestige -= 1;
+  player.prestige = Math.max(-5, player.prestige - 1);
   player.actionPoints -= 1;
   
   const oldPopularity = product.popularity;
@@ -720,7 +720,7 @@ function discontinue(G: GameState, ctx: Ctx, designId: string) {
 function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: string, resalePrice: number) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
-  if (player.prestige < 1) return 'INVALID_MOVE';
+  // 威厳による転売制限は削除（威厳-5でも転売可能）
   
   let product;
   let targetName;
@@ -743,7 +743,7 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
     player.money -= product.price;
     // オートマは資金を受け取らない（無限資金）
     player.actionPoints -= 2;
-    player.prestige -= 1;
+    player.prestige = Math.max(-5, player.prestige - 1);
     player.resaleHistory += 1;
     
     G.automata.market.splice(productIndex, 1);
@@ -768,7 +768,7 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
     player.money -= product.price;
     targetPlayer.money += product.price;
     player.actionPoints -= 2;
-    player.prestige -= 1;
+    player.prestige = Math.max(-5, player.prestige - 1);
     player.resaleHistory += 1;
     
     targetPlayer.personalMarket.splice(productIndex, 1);
@@ -891,7 +891,7 @@ function activateTrend(G: GameState, ctx: Ctx) {
   
   // コスト支払い
   if (effect.cost && effect.cost.prestige) {
-    player.prestige -= effect.cost.prestige;
+    player.prestige = Math.max(-5, player.prestige - effect.cost.prestige);
   }
   
   // 効果実行
@@ -997,7 +997,7 @@ function outsourceReview(G: GameState, ctx: Ctx, targetPlayerId: string, product
   const detectionRoll = rollDice();
   let detected = false;
   if (detectionRoll === 1) {
-    player.prestige -= 2;
+    player.prestige = Math.max(-5, player.prestige - 2);
     detected = true;
     console.log(`🎲 発覚判定: ${detectionRoll} → 外注レビューがバレました！威厳-2`);
   } else {
@@ -1025,7 +1025,7 @@ function outsourceManufacturing(G: GameState, ctx: Ctx, designId: string, quanti
   if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   
   // 威厳制限チェック
-  if (player.prestige <= -3) return 'INVALID_MOVE';
+  if (player.prestige < -5) return 'INVALID_MOVE';
   
   // actionフェーズでのみ実行可能
   if (ctx.phase !== 'action') return 'INVALID_MOVE';
