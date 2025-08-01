@@ -667,7 +667,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
       <div style={{ display: 'flex', flexWrap: 'wrap' }}>
         <h2>プレイヤー情報</h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', width: '100%' }}>
-          {Object.values(G.players).map(renderPlayer)}
+          {Object.values(G.players)
+            .filter((_, index) => index < ctx.numPlayers)
+            .map(renderPlayer)}
         </div>
       </div>
 
@@ -680,7 +682,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           📋 現在のプレイヤー: <strong>{currentPlayer.name}</strong> | ターン: {isActive ? '✅アクティブ' : '❌待機中'} | AP: {currentPlayer.actionPoints} | 資金: {currentPlayer.money} | 威厳: {currentPlayer.prestige}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', overflowX: 'auto' }}>
-          {Object.values(G.players).map((player) => renderMarketGrid(player))}
+          {Object.values(G.players)
+            .filter((_, index) => index < ctx.numPlayers)
+            .map((player) => renderMarketGrid(player))}
         </div>
       </div>
 
