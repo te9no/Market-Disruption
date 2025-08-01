@@ -582,6 +582,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
         <div>フェーズ: アクション（オートマ・市場は自動実行）</div>
         <div>市場汚染レベル: {G.marketPollution}</div>
         <div>規制レベル: {G.regulationLevel}</div>
+        <div style={{ 
+          color: G.regulationStage === 'none' ? '#666' : 
+                 G.regulationStage === 'public_comment' ? '#ff9900' :
+                 G.regulationStage === 'consideration' ? '#ff6600' : '#ff0000',
+          fontWeight: G.regulationStage !== 'none' ? 'bold' : 'normal'
+        }}>
+          規制状態: {
+            G.regulationStage === 'none' ? '規制なし' :
+            G.regulationStage === 'public_comment' ? `パブリックコメント中 (${G.regulationStageRounds}ラウンド目)` :
+            G.regulationStage === 'consideration' ? `規制検討中 (${G.regulationStageRounds}ラウンド目)` :
+            G.regulationStage === 'enforcement' ? `規制発動中 (${G.regulationStageRounds}ラウンド目)` : '不明'
+          }
+        </div>
         
         {/* 外注依頼通知 */}
         {G.pendingManufacturingOrders && G.pendingManufacturingOrders

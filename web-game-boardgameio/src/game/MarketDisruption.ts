@@ -72,6 +72,12 @@ const MarketDisruption: Game<GameState> = {
       
       // 次ラウンドの準備
       G.round++;
+      
+      // 規制段階ラウンド数を増加
+      if (G.regulationStage !== 'none') {
+        G.regulationStageRounds++;
+      }
+      
       console.log(`🎮 Starting round ${G.round}`);
       
       // 全プレイヤーのAPをリセット
@@ -131,8 +137,14 @@ const MarketDisruption: Game<GameState> = {
             executeMarketPhase(G);
             
             // 次ラウンドの準備
-            G.round++;
-            console.log(`🎮 Starting round ${G.round}`);
+      G.round++;
+      
+      // 規制段階ラウンド数を増加
+      if (G.regulationStage !== 'none') {
+        G.regulationStageRounds++;
+      }
+      
+      console.log(`🎮 Starting round ${G.round}`);
             
             // 全プレイヤーのAPをリセット
             for (const playerId in G.players) {
@@ -395,6 +407,24 @@ function executeManufacturerAutomata(G: GameState): void {
 }
 
 function executeResaleAutomata(G: GameState): void {
+  // 規制発動段階では転売ヤー・オートマが2ラウンド行動停止
+  if (G.regulationStage === 'enforcement' && G.regulationStageRounds < 2) {
+    console.log('🔄 転売ヤー・オートマ: 規制発動により行動停止中');
+    // ログ記録
+    if (G.playLog) {
+      G.playLog.push({
+        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        round: G.round,
+        phase: G.phase,
+        actor: 'resale-automata',
+        action: '行動停止',
+        details: '規制発動により行動停止中',
+        timestamp: Date.now()
+      });
+    }
+    return;
+  }
+  
   // 資金を20まで自動補充
   if (G.automata.resaleOrganizationMoney < 20) {
     G.automata.resaleOrganizationMoney = 20;
@@ -438,12 +468,16 @@ function executeResaleAutomata(G: GameState): void {
   let actionName = '';
   
   if (diceSum <= 4) {
-    // 大量買い占め：最安値商品を3個まで
+    // 大量買い占め：最安値商品を3個まで（規制段階1では-1個）
     actionName = '大量買い占め';
+    let maxPurchase = 3;
+    if (G.regulationStage === 'public_comment') {
+      maxPurchase = 2; // パブリックコメント段階では大量買い占め-1個
+    }
     targetProducts = allProducts
       .filter(p => G.automata.resaleOrganizationMoney >= p.price)
       .sort((a, b) => a.price - b.price || b.popularity - a.popularity)
-      .slice(0, 3);
+      .slice(0, maxPurchase);
   } else if (diceSum === 5 || diceSum === 9) {
     // 選別購入：人気度最高の商品を1個
     actionName = '選別購入';
@@ -470,10 +504,19 @@ function executeResaleAutomata(G: GameState): void {
       
       // 転売価格を設定（ダイス結果に応じて）
       const resaleBonus = (diceSum >= 10) ? 8 : 5;
+      let resalePrice = product.price + resaleBonus;
+      
+      // 規制段階による価格制限を適用
+      if (G.regulationStage === 'consideration') {
+        resalePrice = Math.min(resalePrice, product.price + 3);
+      } else if (G.regulationStage === 'enforcement') {
+        resalePrice = Math.min(resalePrice, product.price + 1);
+      }
+      
       const resaleProduct: Product = {
         ...product,
         id: `resale-automata-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        price: product.price + resaleBonus,
+        price: resalePrice,
         isResale: true,
         originalCost: product.cost,
         originalPlayerId: product.playerId,
@@ -743,7 +786,14 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
     if (player.money < product.price) return 'INVALID_MOVE';
     
     const resaleBonus = getResaleBonus(player.resaleHistory);
-    const maxResalePrice = Math.min(24, product.price + resaleBonus);
+    let maxResalePrice = Math.min(24, product.price + resaleBonus);
+    
+    // 規制段階による価格制限を適用
+    if (G.regulationStage === 'consideration') {
+      maxResalePrice = Math.min(maxResalePrice, product.price + 3);
+    } else if (G.regulationStage === 'enforcement') {
+      maxResalePrice = Math.min(maxResalePrice, product.price + 1);
+    }
     
     if (resalePrice > maxResalePrice) return 'INVALID_MOVE';
     
@@ -768,7 +818,14 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
     if (player.money < product.price) return 'INVALID_MOVE';
     
     const resaleBonus = getResaleBonus(player.resaleHistory);
-    const maxResalePrice = Math.min(24, product.price + resaleBonus);
+    let maxResalePrice = Math.min(24, product.price + resaleBonus);
+    
+    // 規制段階による価格制限を適用
+    if (G.regulationStage === 'consideration') {
+      maxResalePrice = Math.min(maxResalePrice, product.price + 3);
+    } else if (G.regulationStage === 'enforcement') {
+      maxResalePrice = Math.min(maxResalePrice, product.price + 1);
+    }
     
     if (resalePrice > maxResalePrice) return 'INVALID_MOVE';
     
@@ -847,18 +904,54 @@ function promoteRegulation(G: GameState, ctx: Ctx) {
   if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
   
   const regulationDice = rollDice() + rollDice();
+  
+  // 規制推進成功（合計9以上）
   if (regulationDice >= 9) {
-    G.regulationLevel++;
-    
-    if (G.regulationLevel >= 3) {
-      for (const playerId in G.players) {
-        const p = G.players[playerId];
-        p.personalMarket = p.personalMarket.filter(product => !product.isResale);
-        p.money -= p.resaleHistory * 2;
-      }
-      
-      G.automata.market = G.automata.market.filter(product => !product.isResale);
+    switch (G.regulationStage) {
+      case 'none':
+        // 段階1：パブリックコメント開始
+        G.regulationStage = 'public_comment';
+        G.regulationStageRounds = 0;
+        G.regulationLevel = 1;
+        addPlayLog(G, ctx.currentPlayer, '規制推進', 'パブリックコメント募集開始 - 転売規制が検討されています');
+        break;
+        
+      case 'public_comment':
+        // 段階2：検討段階に移行
+        G.regulationStage = 'consideration';
+        G.regulationStageRounds = 0;
+        G.regulationLevel = 2;
+        addPlayLog(G, ctx.currentPlayer, '規制推進', '規制検討中 - 転売価格に制限がかかります（購入価格+3資金まで）');
+        break;
+        
+      case 'consideration':
+        // 段階3：規制発動
+        G.regulationStage = 'enforcement';
+        G.regulationStageRounds = 0;
+        G.regulationLevel = 3;
+        
+        // 全転売品没収
+        for (const playerId in G.players) {
+          const p = G.players[playerId];
+          p.personalMarket = p.personalMarket.filter(product => !product.isResale);
+          // 転売履歴×2資金没収
+          const penalty = Math.min(p.resaleHistory * 2, p.money);
+          p.money = Math.max(0, p.money - penalty);
+        }
+        
+        // オートマ市場からも転売品除去
+        G.automata.market = G.automata.market.filter(product => !product.isResale);
+        
+        addPlayLog(G, ctx.currentPlayer, '規制推進', '転売規制発動 - 全転売品没収、転売価格制限（購入価格+1資金まで）');
+        break;
+        
+      case 'enforcement':
+        // 既に最大段階なので何もしない
+        addPlayLog(G, ctx.currentPlayer, '規制推進', '規制は既に最大レベルです');
+        break;
     }
+  } else {
+    addPlayLog(G, ctx.currentPlayer, '規制推進', `規制推進失敗（ダイス合計: ${regulationDice}）`);
   }
   
   player.actionPoints -= 2;
@@ -1476,6 +1569,20 @@ function joinGame(G: GameState, _ctx: Ctx, playerName: string) {
       actor: newPlayerId,
       action: 'ゲーム参加',
       details: `${G.players[newPlayerId].name}がゲームに参加しました`,
+      timestamp: Date.now()
+    });
+  }
+}
+
+function addPlayLog(G: GameState, playerId: string, action: string, details: string) {
+  if (G.playLog) {
+    G.playLog.push({
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      round: G.round,
+      phase: G.phase,
+      actor: playerId,
+      action: action,
+      details: details,
       timestamp: Date.now()
     });
   }

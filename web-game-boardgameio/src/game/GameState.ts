@@ -39,6 +39,8 @@ export interface GameState {
   round: number;
   marketPollution: number;
   regulationLevel: number;
+  regulationStage: 'none' | 'public_comment' | 'consideration' | 'enforcement';
+  regulationStageRounds: number; // 規制段階が続いているラウンド数
   automata: AutomataState;
   trendEffects: TrendEffect[];
   availableTrends?: { [playerId: string]: AvailableTrend };
@@ -96,6 +98,8 @@ export const initialGameState: GameState = {
   round: 1,
   marketPollution: 0,
   regulationLevel: 0,
+  regulationStage: 'none',
+  regulationStageRounds: 0,
   automata: {
     manufacturerMoney: Infinity,
     resaleOrganizationMoney: 20,
