@@ -614,10 +614,21 @@ function review(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
   // actionフェーズでのみ実行可能
   if (ctx.phase !== 'action') return 'INVALID_MOVE';
   
-  const targetPlayer = G.players[targetPlayerId];
-  if (!targetPlayer) return 'INVALID_MOVE';
+  let product;
+  let targetName;
   
-  const product = targetPlayer.personalMarket.find(p => p.id === productId);
+  // オートマの商品の場合
+  if (targetPlayerId === 'automata') {
+    product = G.automata.market.find(p => p.id === productId);
+    targetName = 'オートマ';
+  } else {
+    // プレイヤーの商品の場合
+    const targetPlayer = G.players[targetPlayerId];
+    if (!targetPlayer) return 'INVALID_MOVE';
+    product = targetPlayer.personalMarket.find(p => p.id === productId);
+    targetName = targetPlayer.name;
+  }
+  
   if (!product) return 'INVALID_MOVE';
   
   player.prestige -= 1;
@@ -630,7 +641,7 @@ function review(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
     product.popularity = Math.max(1, product.popularity - 1);
   }
   
-  console.log(`📝 レビュー: ${player.name}が${targetPlayer.name}の商品に${isPositive ? '高評価' : '低評価'} (人気度 ${oldPopularity} → ${product.popularity})`);
+  console.log(`📝 レビュー: ${player.name}が${targetName}の商品に${isPositive ? '高評価' : '低評価'} (人気度 ${oldPopularity} → ${product.popularity})`);
   
   // ログ記録
   if (G.playLog) {
@@ -640,7 +651,7 @@ function review(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
       phase: ctx.phase || G.phase,
       actor: ctx.currentPlayer,
       action: isPositive ? '高評価レビュー' : '低評価レビュー',
-      details: `${targetPlayer.name}の商品に${isPositive ? '高評価' : '低評価'}、人気度${oldPopularity}→${product.popularity}`,
+      details: `${targetName}の商品に${isPositive ? '高評価' : '低評価'}、人気度${oldPopularity}→${product.popularity}`,
       timestamp: Date.now()
     });
   }
@@ -720,27 +731,57 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
   if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
   if (player.prestige < 1) return 'INVALID_MOVE';
   
-  const targetPlayer = G.players[targetPlayerId];
-  if (!targetPlayer) return 'INVALID_MOVE';
+  let product;
+  let targetName;
   
-  const productIndex = targetPlayer.personalMarket.findIndex(p => p.id === productId);
-  if (productIndex === -1) return 'INVALID_MOVE';
-  
-  const product = targetPlayer.personalMarket[productIndex];
-  if (player.money < product.price) return 'INVALID_MOVE';
-  
-  const resaleBonus = getResaleBonus(player.resaleHistory);
-  const maxResalePrice = Math.min(24, product.price + resaleBonus);
-  
-  if (resalePrice > maxResalePrice) return 'INVALID_MOVE';
-  
-  player.money -= product.price;
-  targetPlayer.money += product.price;
-  player.actionPoints -= 2;
-  player.prestige -= 1;
-  player.resaleHistory += 1;
-  
-  targetPlayer.personalMarket.splice(productIndex, 1);
+  // オートマの商品の場合
+  if (targetPlayerId === 'automata') {
+    const productIndex = G.automata.market.findIndex(p => p.id === productId);
+    if (productIndex === -1) return 'INVALID_MOVE';
+    
+    product = G.automata.market[productIndex];
+    targetName = 'オートマ';
+    
+    if (player.money < product.price) return 'INVALID_MOVE';
+    
+    const resaleBonus = getResaleBonus(player.resaleHistory);
+    const maxResalePrice = Math.min(24, product.price + resaleBonus);
+    
+    if (resalePrice > maxResalePrice) return 'INVALID_MOVE';
+    
+    player.money -= product.price;
+    // オートマは資金を受け取らない（無限資金）
+    player.actionPoints -= 2;
+    player.prestige -= 1;
+    player.resaleHistory += 1;
+    
+    G.automata.market.splice(productIndex, 1);
+  } else {
+    // プレイヤーの商品の場合
+    const targetPlayer = G.players[targetPlayerId];
+    if (!targetPlayer) return 'INVALID_MOVE';
+    
+    const productIndex = targetPlayer.personalMarket.findIndex(p => p.id === productId);
+    if (productIndex === -1) return 'INVALID_MOVE';
+    
+    product = targetPlayer.personalMarket[productIndex];
+    targetName = targetPlayer.name;
+    
+    if (player.money < product.price) return 'INVALID_MOVE';
+    
+    const resaleBonus = getResaleBonus(player.resaleHistory);
+    const maxResalePrice = Math.min(24, product.price + resaleBonus);
+    
+    if (resalePrice > maxResalePrice) return 'INVALID_MOVE';
+    
+    player.money -= product.price;
+    targetPlayer.money += product.price;
+    player.actionPoints -= 2;
+    player.prestige -= 1;
+    player.resaleHistory += 1;
+    
+    targetPlayer.personalMarket.splice(productIndex, 1);
+  }
   
   const resaleProduct: Product = {
     ...product,
@@ -755,7 +796,7 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
   player.personalMarket.push(resaleProduct);
   G.marketPollution++;
   
-  console.log(`🔄 転売実行: ${player.name}が${targetPlayer.name}の商品を${product.price}資金で購入、${resalePrice}資金で転売出品`);
+  console.log(`🔄 転売実行: ${player.name}が${targetName}の商品を${product.price}資金で購入、${resalePrice}資金で転売出品`);
   
   // ログ記録
   if (G.playLog) {
@@ -765,7 +806,7 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
       phase: ctx.phase || G.phase,
       actor: ctx.currentPlayer,
       action: '転売',
-      details: `${targetPlayer.name}の商品(コスト${product.cost})を${product.price}資金で購入、${resalePrice}資金で転売、威厳-1、転売履歴+1、市場汚染+1`,
+      details: `${targetName}の商品(コスト${product.cost})を${product.price}資金で購入、${resalePrice}資金で転売、威厳-1、転売履歴+1、市場汚染+1`,
       timestamp: Date.now()
     });
   }
@@ -934,10 +975,21 @@ function outsourceReview(G: GameState, ctx: Ctx, targetPlayerId: string, product
   // 資金チェック（高評価・低評価ともに3資金）
   if (player.money < 3) return 'INVALID_MOVE';
   
-  const targetPlayer = G.players[targetPlayerId];
-  if (!targetPlayer) return 'INVALID_MOVE';
+  let product;
+  let targetName;
   
-  const product = targetPlayer.personalMarket.find(p => p.id === productId);
+  // オートマの商品の場合
+  if (targetPlayerId === 'automata') {
+    product = G.automata.market.find(p => p.id === productId);
+    targetName = 'オートマ';
+  } else {
+    // プレイヤーの商品の場合
+    const targetPlayer = G.players[targetPlayerId];
+    if (!targetPlayer) return 'INVALID_MOVE';
+    product = targetPlayer.personalMarket.find(p => p.id === productId);
+    targetName = targetPlayer.name;
+  }
+  
   if (!product) return 'INVALID_MOVE';
   
   player.money -= 3;
@@ -961,7 +1013,7 @@ function outsourceReview(G: GameState, ctx: Ctx, targetPlayerId: string, product
     console.log(`🎲 発覚判定: ${detectionRoll} → 外注レビューは発覚しませんでした`);
   }
   
-  console.log(`💰 レビュー外注: ${player.name}が3資金で${targetPlayer.name}の商品に${isPositive ? '高評価' : '低評価'}外注 (人気度 ${oldPopularity} → ${product.popularity})`);
+  console.log(`💰 レビュー外注: ${player.name}が3資金で${targetName}の商品に${isPositive ? '高評価' : '低評価'}外注 (人気度 ${oldPopularity} → ${product.popularity})`);
   
   // ログ記録
   if (G.playLog) {
@@ -971,7 +1023,7 @@ function outsourceReview(G: GameState, ctx: Ctx, targetPlayerId: string, product
       phase: ctx.phase || G.phase,
       actor: ctx.currentPlayer,
       action: 'レビュー外注',
-      details: `${targetPlayer.name}の商品に${isPositive ? '高評価' : '低評価'}外注、人気度${oldPopularity}→${product.popularity}${detected ? '、発覚により威厳-2' : ''}`,
+      details: `${targetName}の商品に${isPositive ? '高評価' : '低評価'}外注、人気度${oldPopularity}→${product.popularity}${detected ? '、発覚により威厳-2' : ''}`,
       timestamp: Date.now()
     });
   }
