@@ -898,7 +898,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                   購入 ({product.price}資金)
                 </button>
               )}
-              {product.price > 0 && isActive && currentPlayer.actionPoints >= 2 && currentPlayer.prestige >= 1 && (
+              {product.price > 0 && isActive && currentPlayer.actionPoints >= 2 && (
                 <button 
                   onClick={() => {
                     if (currentPlayer.money < product.price) {
