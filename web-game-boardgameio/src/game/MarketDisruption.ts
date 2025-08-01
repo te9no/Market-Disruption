@@ -552,10 +552,12 @@ function executeMarketPhase(G: GameState): void {
   
   let totalSales = 0;
   for (const product of purchasedProducts) {
-    const pollutionPenalty = getPollutionPenalty(G.marketPollution);
+    // Rule.mdに従い転売商品は汚染ペナルティの影響を受けない
+    const pollutionPenalty = product.isResale ? 0 : getPollutionPenalty(G.marketPollution);
     const actualPrice = Math.max(1, product.price - pollutionPenalty);
     
-    console.log(`💰 売上: 商品${product.id} 価格${product.price} → 実際の売価${actualPrice} (汚染ペナルティ-${pollutionPenalty})`);
+    const penaltyMessage = product.isResale ? '転売品のため汚染免除' : `汚染ペナルティ-${pollutionPenalty}`;
+    console.log(`💰 売上: 商品${product.id} 価格${product.price} → 実際の売価${actualPrice} (${penaltyMessage})`);
     
     if (product.playerId === 'manufacturer-automata' || product.playerId === 'resale-automata') {
       // オートマの商品の場合
