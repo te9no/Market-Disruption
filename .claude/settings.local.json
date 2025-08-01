@@ -54,7 +54,11 @@
       "Bash(NODE_ENV=production node claude-test.js)",
       "mcp__serena__find_symbol",
       "mcp__serena__insert_after_symbol",
-      "mcp__serena__get_symbols_overview"
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__write_memory",
+      "Bash(npx jest:*)",
+      "Bash(npx typescript:*)",
+      "Bash(npm:*)"
     ],
     "deny": []
   }

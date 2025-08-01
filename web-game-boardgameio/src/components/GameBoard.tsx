@@ -454,11 +454,52 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
       margin: '5px',
       backgroundColor: player.id === playerID ? '#e3f2fd' : '#f5f5f5'
     }}>
-      <h3>{player.name} {player.id === ctx.currentPlayer && isActive ? '(現在のターン)' : ''}</h3>
-      <div>資金: {player.money}</div>
-      <div>威厳: {player.prestige}</div>
-      <div>転売履歴: {player.resaleHistory}</div>
-      <div>AP: {player.actionPoints}/3</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <h3 style={{ margin: 0 }}>{player.name} {player.id === ctx.currentPlayer && isActive ? '👑' : ''}</h3>
+        {player.id === ctx.currentPlayer && isActive && (
+          <span style={{ 
+            backgroundColor: '#4CAF50', 
+            color: 'white', 
+            padding: '4px 8px', 
+            borderRadius: '4px', 
+            fontSize: '12px',
+            fontWeight: 'bold'
+          }}>現在のターン</span>
+        )}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '10px' }}>
+        <div style={{ padding: '6px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #ddd' }}>
+          <strong>💰 資金:</strong> {player.money}
+          {/* 勝利条件チェック */}
+          {player.money >= 150 && <span style={{ color: '#4CAF50', marginLeft: '5px' }}>🎉資金勝利!</span>}
+          {player.money >= 75 && player.prestige >= 17 && <span style={{ color: '#4CAF50', marginLeft: '5px' }}>🎉威厳勝利!</span>}
+        </div>
+        <div style={{ 
+          padding: '6px', 
+          backgroundColor: player.prestige < 0 ? '#ffebee' : player.prestige >= 17 ? '#e8f5e8' : 'white', 
+          borderRadius: '4px', 
+          border: '1px solid #ddd'
+        }}>
+          <strong>⭐ 威厳:</strong> {player.prestige}
+          {player.prestige >= 17 && <span style={{ color: '#4CAF50', marginLeft: '5px' }}>🎯達成!</span>}
+        </div>
+        <div style={{ padding: '6px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #ddd' }}>
+          <strong>🔄 転売履歴:</strong> {player.resaleHistory}
+          <div style={{ fontSize: '10px', color: '#666' }}>ボーナス: +{
+            player.resaleHistory <= 1 ? 5 :
+            player.resaleHistory <= 4 ? 8 :
+            player.resaleHistory <= 7 ? 11 : 15
+          }資金</div>
+        </div>
+        <div style={{ 
+          padding: '6px', 
+          backgroundColor: player.actionPoints === 0 ? '#ffebee' : 'white', 
+          borderRadius: '4px', 
+          border: '1px solid #ddd'
+        }}>
+          <strong>⚡ AP:</strong> {player.actionPoints}/3
+        </div>
+      </div>
       
       <div>
         <h4>設計図</h4>
@@ -575,26 +616,81 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
       }}>
         <h1>マーケット・ディスラプション</h1>
       
-      <div style={{ marginBottom: '20px' }}>
-        <h2>ゲーム情報</h2>
-        <div>ゲームモード: {ctx.numPlayers === 1 ? '🤖 オートマ対戦' : `👥 ${ctx.numPlayers}人プレイ`}</div>
-        <div>ラウンド: {G.round}</div>
-        <div>フェーズ: アクション（オートマ・市場は自動実行）</div>
-        <div>市場汚染レベル: {G.marketPollution}</div>
-        <div>規制レベル: {G.regulationLevel}</div>
-        <div style={{ 
-          color: G.regulationStage === 'none' ? '#666' : 
-                 G.regulationStage === 'public_comment' ? '#ff9900' :
-                 G.regulationStage === 'consideration' ? '#ff6600' : '#ff0000',
-          fontWeight: G.regulationStage !== 'none' ? 'bold' : 'normal'
-        }}>
-          規制状態: {
-            G.regulationStage === 'none' ? '規制なし' :
-            G.regulationStage === 'public_comment' ? `パブリックコメント中 (${G.regulationStageRounds}ラウンド目)` :
-            G.regulationStage === 'consideration' ? `規制検討中 (${G.regulationStageRounds}ラウンド目)` :
-            G.regulationStage === 'enforcement' ? `規制発動中 (${G.regulationStageRounds}ラウンド目)` : '不明'
-          }
+      <div style={{ 
+        marginBottom: '20px',
+        backgroundColor: '#f5f5f5',
+        border: '2px solid #333',
+        borderRadius: '8px',
+        padding: '15px'
+      }}>
+        <h2 style={{ margin: '0 0 15px 0', color: '#333' }}>📊 ゲーム情報</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '14px' }}>
+          <div style={{ padding: '8px', backgroundColor: 'white', borderRadius: '4px' }}>
+            <strong>ゲームモード:</strong> {ctx.numPlayers === 1 ? '🤖 オートマ対戦' : `👥 ${ctx.numPlayers}人プレイ`}
+          </div>
+          <div style={{ padding: '8px', backgroundColor: 'white', borderRadius: '4px' }}>
+            <strong>ラウンド:</strong> {G.round}
+          </div>
+          <div style={{ padding: '8px', backgroundColor: 'white', borderRadius: '4px' }}>
+            <strong>フェーズ:</strong> アクション
+          </div>
+          <div style={{ 
+            padding: '8px', 
+            backgroundColor: G.marketPollution > 8 ? '#ffebee' : G.marketPollution > 5 ? '#fff3e0' : 'white', 
+            borderRadius: '4px',
+            border: G.marketPollution > 8 ? '2px solid #f44336' : G.marketPollution > 5 ? '1px solid #ff9800' : 'none'
+          }}>
+            <strong>市場汚染:</strong> {G.marketPollution}/12 
+            {G.marketPollution > 8 && <span style={{ color: '#f44336' }}> ⚠️重度</span>}
+            {G.marketPollution > 5 && G.marketPollution <= 8 && <span style={{ color: '#ff9800' }}> ⚠️中度</span>}
+          </div>
+          <div style={{ 
+            padding: '8px', 
+            backgroundColor: G.regulationStage !== 'none' ? '#e8f5e8' : 'white', 
+            borderRadius: '4px',
+            border: G.regulationStage !== 'none' ? '1px solid #4CAF50' : 'none',
+            color: G.regulationStage === 'none' ? '#666' : 
+                   G.regulationStage === 'public_comment' ? '#ff9900' :
+                   G.regulationStage === 'consideration' ? '#ff6600' : '#f44336',
+            fontWeight: G.regulationStage !== 'none' ? 'bold' : 'normal'
+          }}>
+            <strong>規制状態:</strong> {
+              G.regulationStage === 'none' ? '規制なし' :
+              G.regulationStage === 'public_comment' ? `📢 パブコメ中 (${G.regulationStageRounds}R)` :
+              G.regulationStage === 'consideration' ? `🔍 検討中 (${G.regulationStageRounds}R)` :
+              G.regulationStage === 'enforcement' ? `⚖️ 規制発動中 (${G.regulationStageRounds}R)` : '不明'
+            }
+          </div>
+          {G.shortVideoBonus && (
+            <div style={{ 
+              padding: '8px', 
+              backgroundColor: '#e3f2fd', 
+              borderRadius: '4px',
+              border: '1px solid #2196F3'
+            }}>
+              <strong>📱 ショート動画ブーム:</strong> 転売時+2資金
+            </div>
+          )}
         </div>
+        
+        {/* 汚染ペナルティ情報 */}
+        {G.marketPollution > 2 && (
+          <div style={{ 
+            marginTop: '10px', 
+            padding: '8px', 
+            backgroundColor: '#fff3e0', 
+            border: '1px solid #ff9800',
+            borderRadius: '4px',
+            fontSize: '12px'
+          }}>
+            <strong>🏭 汚染ペナルティ:</strong> 全商品価格 -{
+              G.marketPollution <= 5 ? 1 :
+              G.marketPollution <= 8 ? 2 :
+              G.marketPollution <= 11 ? 3 : 4
+            } (転売品は除外)
+          </div>
+        )}
+      </div>
         
         {/* 外注依頼通知 */}
         {G.pendingManufacturingOrders && G.pendingManufacturingOrders
@@ -671,121 +767,214 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
         )}
       </div>
 
+      {/* 勝利条件ステータス */}
+      <div style={{ 
+        marginBottom: '20px',
+        backgroundColor: '#e8f5e8',
+        border: '2px solid #4CAF50',
+        borderRadius: '8px',
+        padding: '15px'
+      }}>
+        <h2 style={{ margin: '0 0 15px 0', color: '#2E7D32' }}>🏆 勝利条件</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+          <div style={{ 
+            padding: '10px', 
+            backgroundColor: 'white', 
+            borderRadius: '6px',
+            border: '1px solid #ddd'
+          }}>
+            <strong>💰 資金勝利:</strong> 150資金以上
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              現在: {currentPlayer.money}/150 ({Math.max(0, 150 - currentPlayer.money)}不足)
+            </div>
+          </div>
+          <div style={{ 
+            padding: '10px', 
+            backgroundColor: 'white', 
+            borderRadius: '6px',
+            border: '1px solid #ddd'
+          }}>
+            <strong>⭐ 威厳勝利:</strong> 威厳17 + 資金75以上
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              威厳: {currentPlayer.prestige}/17 ({Math.max(0, 17 - currentPlayer.prestige)}不足)
+              <br/>資金: {currentPlayer.money}/75 ({Math.max(0, 75 - currentPlayer.money)}不足)
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {G.gameEnded && G.winner ? (
-        <div style={{ fontSize: '24px', color: 'green', textAlign: 'center', margin: '20px' }}>
+        <div style={{ 
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: '#4CAF50',
+          color: 'white',
+          padding: '30px',
+          borderRadius: '12px',
+          textAlign: 'center',
+          fontSize: '28px',
+          fontWeight: 'bold',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          zIndex: 1000
+        }}>
           🎉 {G.players[G.winner].name} の勝利！ 🎉
+          <div style={{ fontSize: '16px', marginTop: '10px', fontWeight: 'normal' }}>
+            おめでとうございます！
+          </div>
         </div>
       ) : null}
 
-      <div style={{ marginBottom: '20px' }}>
-        <h2>アクション</h2>
-        <div style={{ marginBottom: '10px', fontSize: '12px', color: '#666' }}>
-          デバッグ情報 (v16ba9b3): プレイヤーID={playerID}, 現在のプレイヤー={ctx.currentPlayer}, アクティブ={isActive ? 'Yes' : 'No'}, フェーズ={ctx.phase}<br/>
-          条件チェック: currentPlayer.id({currentPlayer.id}) === ctx.currentPlayer({ctx.currentPlayer}) = {currentPlayer.id === ctx.currentPlayer ? 'True' : 'False'}<br/>
-          フェーズチェック: ctx.phase({ctx.phase}) === 'action' = {ctx.phase === 'action' ? 'True' : 'False'}<br/>
-          最終条件: {currentPlayer.id === ctx.currentPlayer && isActive && ctx.phase === 'action' ? 'アクション可能' : 'アクション不可'}
+      <div style={{ 
+        marginBottom: '20px',
+        backgroundColor: '#f5f5f5',
+        border: '2px solid #333',
+        borderRadius: '8px',
+        padding: '15px'
+      }}>
+        <h2 style={{ margin: '0 0 15px 0', color: '#333' }}>⚙️ アクション</h2>
+        <div style={{ 
+          marginBottom: '15px', 
+          padding: '10px', 
+          backgroundColor: currentPlayer.id === ctx.currentPlayer && isActive && ctx.phase === 'action' ? '#e8f5e8' : '#ffebee',
+          border: currentPlayer.id === ctx.currentPlayer && isActive && ctx.phase === 'action' ? '1px solid #4CAF50' : '1px solid #f44336',
+          borderRadius: '4px',
+          fontSize: '14px'
+        }}>
+          <strong>ステータス:</strong> {currentPlayer.id === ctx.currentPlayer && isActive && ctx.phase === 'action' ? '✅ アクション可能' : '❌ アクション不可'}
+          <br/><strong>現在のプレイヤー:</strong> {G.players[ctx.currentPlayer]?.name || '不明'}
         </div>
         {currentPlayer.id === ctx.currentPlayer && isActive && ctx.phase === 'action' ? (
           <div>
-            <button 
-              onClick={handlePartTimeWork}
-              disabled={currentPlayer.actionPoints < 2}
-              style={{ 
-                margin: '5px', 
-                padding: '10px',
-                backgroundColor: currentPlayer.actionPoints < 2 ? '#ccc' : '#4CAF50',
-                color: 'white',
-                border: 'none',
-                cursor: currentPlayer.actionPoints < 2 ? 'not-allowed' : 'pointer'
-              }}
-            >
-              アルバイト (2AP → 5資金) {currentPlayer.actionPoints < 2 ? '[AP不足]' : ''}
-            </button>
-            <button 
-              onClick={() => handleDesign(false)}
-              disabled={currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6}
-              style={{ 
-                margin: '5px', 
-                padding: '10px',
-                backgroundColor: (currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6) ? '#ccc' : '#2196F3',
-                color: 'white',
-                border: 'none',
-                cursor: (currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6) ? 'not-allowed' : 'pointer'
-              }}
-            >
-              設計 (2AP) {currentPlayer.actionPoints < 2 ? '[AP不足]' : currentPlayer.designs.length >= 6 ? '[設計上限]' : ''}
-            </button>
-            <button 
-              onClick={() => handleDesign(true)}
-              disabled={currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6}
-              style={{ 
-                margin: '5px', 
-                padding: '10px',
-                backgroundColor: (currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6) ? '#ccc' : '#FF9800',
-                color: 'white',
-                border: 'none',
-                cursor: (currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6) ? 'not-allowed' : 'pointer'
-              }}
-            >
-              オープンソース設計 (2AP) {currentPlayer.actionPoints < 2 ? '[AP不足]' : currentPlayer.designs.length >= 6 ? '[設計上限]' : ''}
-            </button>
-            <button 
-              onClick={() => moves.dayLabor()}
-              disabled={currentPlayer.actionPoints < 3 || currentPlayer.money > 100}
-              style={{ 
-                margin: '5px', 
-                padding: '10px',
-                backgroundColor: (currentPlayer.actionPoints < 3 || currentPlayer.money > 100) ? '#ccc' : '#f44336',
-                color: 'white',
-                border: 'none',
-                cursor: (currentPlayer.actionPoints < 3 || currentPlayer.money > 100) ? 'not-allowed' : 'pointer'
-              }}
-            >
-              日雇い労働 (3AP → 18資金) {currentPlayer.actionPoints < 3 ? '[AP不足]' : currentPlayer.money > 100 ? '[資金上限]' : ''}
-            </button>
-            <button 
-              onClick={() => moves.research()}
-              disabled={currentPlayer.actionPoints < 1}
-              style={{ 
-                margin: '5px', 
-                padding: '10px',
-                backgroundColor: currentPlayer.actionPoints < 1 ? '#ccc' : '#9C27B0',
-                color: 'white',
-                border: 'none',
-                cursor: currentPlayer.actionPoints < 1 ? 'not-allowed' : 'pointer'
-              }}
-            >
-              リサーチ (1AP → トレンド調査) {currentPlayer.actionPoints < 1 ? '[AP不足]' : ''}
-            </button>
-            <button 
-              onClick={() => moves.purchasePrestige()}
-              disabled={currentPlayer.actionPoints < 1 || currentPlayer.money < 5 || (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`])}
-              style={{ 
-                margin: '5px', 
-                padding: '10px',
-                backgroundColor: (currentPlayer.actionPoints < 1 || currentPlayer.money < 5 || (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`])) ? '#ccc' : '#FFD700',
-                color: 'white',
-                border: 'none',
-                cursor: (currentPlayer.actionPoints < 1 || currentPlayer.money < 5 || (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`])) ? 'not-allowed' : 'pointer'
-              }}
-            >
-              威厳購入 (1AP + 5資金 → 威厳+1) {currentPlayer.actionPoints < 1 ? '[AP不足]' : currentPlayer.money < 5 ? '[資金不足]' : (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`]) ? '[使用済み]' : ''}
-            </button>
-            <button 
-              onClick={() => moves.promoteRegulation()}
-              disabled={currentPlayer.actionPoints < 2}
-              style={{ 
-                margin: '5px', 
-                padding: '10px',
-                backgroundColor: currentPlayer.actionPoints < 2 ? '#ccc' : '#E91E63',
-                color: 'white',
-                border: 'none',
-                cursor: currentPlayer.actionPoints < 2 ? 'not-allowed' : 'pointer'
-              }}
-            >
-              規制推進 (2AP → ダイス判定で規制進行) {currentPlayer.actionPoints < 2 ? '[AP不足]' : ''}
-            </button>
-            <div style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
+            {/* 1APアクション */}
+            <div style={{ marginBottom: '15px' }}>
+              <h3 style={{ margin: '0 0 10px 0', color: '#2196F3' }}>🔵 1APアクション</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                <button 
+                  onClick={() => moves.research()}
+                  disabled={currentPlayer.actionPoints < 1}
+                  style={{ 
+                    padding: '10px 15px',
+                    backgroundColor: currentPlayer.actionPoints < 1 ? '#ccc' : '#9C27B0',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: currentPlayer.actionPoints < 1 ? 'not-allowed' : 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  🔬 リサーチ {currentPlayer.actionPoints < 1 ? '[AP不足]' : ''}
+                </button>
+                <button 
+                  onClick={() => moves.purchasePrestige()}
+                  disabled={currentPlayer.actionPoints < 1 || currentPlayer.money < 5 || (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`])}
+                  style={{ 
+                    padding: '10px 15px',
+                    backgroundColor: (currentPlayer.actionPoints < 1 || currentPlayer.money < 5 || (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`])) ? '#ccc' : '#FFD700',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: (currentPlayer.actionPoints < 1 || currentPlayer.money < 5 || (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`])) ? 'not-allowed' : 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  ⭐ 威厳購入 (5資金) {currentPlayer.actionPoints < 1 ? '[AP不足]' : currentPlayer.money < 5 ? '[資金不足]' : (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`]) ? '[使用済み]' : ''}
+                </button>
+              </div>
+            </div>
+            
+            {/* 2APアクション */}
+            <div style={{ marginBottom: '15px' }}>
+              <h3 style={{ margin: '0 0 10px 0', color: '#FF9800' }}>🟡 2APアクション</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                <button 
+                  onClick={handlePartTimeWork}
+                  disabled={currentPlayer.actionPoints < 2}
+                  style={{ 
+                    padding: '10px 15px',
+                    backgroundColor: currentPlayer.actionPoints < 2 ? '#ccc' : '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: currentPlayer.actionPoints < 2 ? 'not-allowed' : 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  💼 アルバイト (5資金) {currentPlayer.actionPoints < 2 ? '[AP不足]' : ''}
+                </button>
+                <button 
+                  onClick={() => handleDesign(false)}
+                  disabled={currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6}
+                  style={{ 
+                    padding: '10px 15px',
+                    backgroundColor: (currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6) ? '#ccc' : '#2196F3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: (currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6) ? 'not-allowed' : 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  📝 設計 {currentPlayer.actionPoints < 2 ? '[AP不足]' : currentPlayer.designs.length >= 6 ? '[上限]' : ''}
+                </button>
+                <button 
+                  onClick={() => handleDesign(true)}
+                  disabled={currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6}
+                  style={{ 
+                    padding: '10px 15px',
+                    backgroundColor: (currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6) ? '#ccc' : '#FF9800',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: (currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6) ? 'not-allowed' : 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  🅾️ オープンソース設計 {currentPlayer.actionPoints < 2 ? '[AP不足]' : currentPlayer.designs.length >= 6 ? '[上限]' : ''}
+                </button>
+                <button 
+                  onClick={() => moves.promoteRegulation()}
+                  disabled={currentPlayer.actionPoints < 2}
+                  style={{ 
+                    padding: '10px 15px',
+                    backgroundColor: currentPlayer.actionPoints < 2 ? '#ccc' : '#E91E63',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: currentPlayer.actionPoints < 2 ? 'not-allowed' : 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  ⚖️ 規制推進 {currentPlayer.actionPoints < 2 ? '[AP不足]' : ''}
+                </button>
+              </div>
+            </div>
+            
+            {/* 3APアクション */}
+            <div style={{ marginBottom: '15px' }}>
+              <h3 style={{ margin: '0 0 10px 0', color: '#f44336' }}>🔴 3APアクション</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                <button 
+                  onClick={() => moves.dayLabor()}
+                  disabled={currentPlayer.actionPoints < 3 || currentPlayer.money > 100}
+                  style={{ 
+                    padding: '10px 15px',
+                    backgroundColor: (currentPlayer.actionPoints < 3 || currentPlayer.money > 100) ? '#ccc' : '#f44336',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: (currentPlayer.actionPoints < 3 || currentPlayer.money > 100) ? 'not-allowed' : 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  🔨 日雇い労働 (18資金) {currentPlayer.actionPoints < 3 ? '[AP不足]' : currentPlayer.money > 100 ? '[資金上限]' : ''}
+                </button>
+              </div>
+            </div>
+            
+            {/* ターン終了 */}
+            <div style={{ marginTop: '20px', borderTop: '2px solid #333', paddingTop: '15px' }}>
               {ctx.numPlayers === 1 ? (
                 // 一人プレイ: オートマ＆マーケット実行ボタン
                 <button 
