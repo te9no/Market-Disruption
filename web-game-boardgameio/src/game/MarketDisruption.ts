@@ -1,5 +1,5 @@
 import { Game, Ctx } from 'boardgame.io';
-import { GameState, initialGameState, createInitialPlayer, Player, Product, Design, ManufacturingOrder } from './GameState';
+import { GameState, initialGameState, Player, Product, Design, ManufacturingOrder } from './GameState';
 
 const rollDice = (sides: number = 6): number => Math.floor(Math.random() * sides) + 1;
 const rollMultipleDice = (count: number, sides: number = 6): number[] => 
@@ -725,8 +725,7 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
   
-  // Rule.mdに従い転売には1威厳が必要
-  if (player.prestige < 1) return 'INVALID_MOVE';
+  // 転売は悪の所業なので威厳が最低(-5)でも実行可能
   
   let product;
   let targetName;
@@ -1427,7 +1426,7 @@ function startGame(G: GameState, ctx: Ctx) {
   console.log(`🎯 Game started with ${ctx.numPlayers} players`);
 }
 
-function joinGame(G: GameState, ctx: Ctx, playerName: string) {
+function joinGame(G: GameState, _ctx: Ctx, playerName: string) {
   console.log(`🎮 Player joining game: ${playerName}`);
   
   // ロビー状態でのみ参加可能
