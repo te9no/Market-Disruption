@@ -50,6 +50,10 @@ const MarketDisruption: Game<GameState> = {
     
     // ゲーム開始ムーブ
     startGame: ({ G, ctx }) => startGame(G, ctx),
+
+    
+    // ゲーム参加ムーブ
+    joinGame: ({ G, ctx }, playerName: string) => joinGame(G, ctx, playerName),
     
     // 新しい統合アクション: オートマフェーズ + マーケットフェーズ + 次ラウンド
     executeAutomataAndMarket: ({ G }) => {
@@ -1380,14 +1384,20 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
 function startGame(G: GameState, ctx: Ctx) {
   console.log('🎮 Starting game...');
   
-  // プレイヤーを初期化
-  for (let i = 0; i < ctx.numPlayers; i++) {
-    const playerId = String(i);
-    G.players[playerId] = createInitialPlayer(playerId, `Player ${i + 1}`);
+  // 既に参加しているプレイヤーを初期状態に設定
+  for (const playerId in G.players) {
+    const player = G.players[playerId];
+    // 基本ステータスを初期化
+    player.money = 30;
+    player.prestige = 5;
+    player.resaleHistory = 0;
+    player.actionPoints = 3;
+    player.designs = [];
+    player.personalMarket = [];
     
     // 初期設計を2つ生成
     const designDice = rollMultipleDice(2);
-    G.players[playerId].designs = designDice.map((cost, index) => ({
+    player.designs = designDice.map((cost, index) => ({
       id: `design-${playerId}-${index}`,
       cost,
       isOpenSource: false
@@ -1413,6 +1423,59 @@ function startGame(G: GameState, ctx: Ctx) {
   }
   
   console.log(`🎯 Game started with ${ctx.numPlayers} players`);
+}
+
+function joinGame(G: GameState, ctx: Ctx, playerName: string) {
+  console.log(`🎮 Player joining game: ${playerName}`);
+  
+  // ロビー状態でのみ参加可能
+  if (G.phase !== 'lobby') {
+    console.error('Cannot join game: not in lobby phase');
+    return 'INVALID_MOVE';
+  }
+  
+  // プレイヤー数の上限チェック（4人まで）
+  const currentPlayerCount = Object.keys(G.players).length;
+  if (currentPlayerCount >= 4) {
+    console.error('Cannot join game: maximum players reached');
+    return 'INVALID_MOVE';
+  }
+  
+  // 新しいプレイヤーIDを生成（0から順番）
+  const newPlayerId = String(currentPlayerCount);
+  
+  // プレイヤーが既に存在するかチェック
+  if (G.players[newPlayerId]) {
+    console.error(`Player ${newPlayerId} already exists`);
+    return 'INVALID_MOVE';
+  }
+  
+  // 新しいプレイヤーを作成（ゲーム開始時に初期化されるので基本情報のみ）
+  G.players[newPlayerId] = {
+    id: newPlayerId,
+    name: playerName || `Player ${parseInt(newPlayerId) + 1}`,
+    money: 0, // ゲーム開始時に30に設定される
+    prestige: 0, // ゲーム開始時に5に設定される
+    resaleHistory: 0,
+    actionPoints: 0, // ゲーム開始時に3に設定される
+    designs: [],
+    personalMarket: []
+  };
+  
+  console.log(`✅ Player ${newPlayerId} (${G.players[newPlayerId].name}) joined the game`);
+  
+  // ログ記録
+  if (G.playLog) {
+    G.playLog.push({
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      round: G.round,
+      phase: G.phase,
+      actor: newPlayerId,
+      action: 'ゲーム参加',
+      details: `${G.players[newPlayerId].name}がゲームに参加しました`,
+      timestamp: Date.now()
+    });
+  }
 }
 
 export default MarketDisruption;

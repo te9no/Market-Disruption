@@ -13,12 +13,12 @@ interface GameBoardProps {
 
 export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, playerID, isActive }) => {
   
-  if (!playerID) {
-    return <div>プレイヤーIDが設定されていません</div>;
-  }
-  
   // ロビー画面
   if (G.phase === 'lobby') {
+    const currentPlayerCount = Object.keys(G.players).length;
+    const isOwner = playerID === '0'; // プレイヤー0をオーナーとする
+    const isPlayerJoined = playerID && G.players[playerID];
+    
     return (
       <div style={{ 
         padding: '20px', 
@@ -41,71 +41,149 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             転売ヤーをテーマにしたボードゲーム
           </h2>
           
-          <div style={{ 
-            backgroundColor: 'white', 
-            padding: '20px', 
+          {/* 参加プレイヤー一覧 */}
+          <div style={{
+            backgroundColor: 'white',
+            padding: '20px',
             borderRadius: '8px',
             marginBottom: '20px',
             textAlign: 'left'
           }}>
-            <h3 style={{ color: '#333', marginBottom: '15px' }}>📋 ゲーム情報</h3>
-            <div style={{ fontSize: '16px', lineHeight: '1.6' }}>
-              <div><strong>プレイヤー数:</strong> {ctx.numPlayers}人</div>
-              <div><strong>プレイ時間:</strong> 30-45分</div>
-              <div><strong>勝利条件:</strong> 威厳17ポイント + 資金75以上 または 資金150以上</div>
+            <h3 style={{ color: '#333', marginBottom: '15px' }}>👥 参加プレイヤー ({currentPlayerCount}/4)</h3>
+            <div style={{ fontSize: '16px', lineHeight: '1.8' }}>
+              {Object.entries(G.players).map(([id, player]) => (
+                <div key={id} style={{ 
+                  padding: '8px 12px', 
+                  backgroundColor: id === '0' ? '#e8f5e8' : '#f9f9f9',
+                  border: `2px solid ${id === '0' ? '#4CAF50' : '#ddd'}`,
+                  borderRadius: '6px',
+                  marginBottom: '8px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span>
+                    <strong>{player.name}</strong> 
+                    {id === '0' && <span style={{ color: '#4CAF50', marginLeft: '8px' }}>👑 オーナー</span>}
+                  </span>
+                  <span style={{ color: '#666' }}>プレイヤー{parseInt(id) + 1}</span>
+                </div>
+              ))}
             </div>
           </div>
 
+          {/* ゲーム参加ボタン or 待機メッセージ */}
+          {!isPlayerJoined ? (
+            <div style={{ marginBottom: '20px' }}>
+              {currentPlayerCount < 4 ? (
+                <button
+                  onClick={() => {
+                    const playerName = prompt('プレイヤー名を入力してください:', `Player ${currentPlayerCount + 1}`);
+                    if (playerName && moves.joinGame) {
+                      moves.joinGame(playerName);
+                    }
+                  }}
+                  style={{
+                    fontSize: '20px',
+                    padding: '12px 30px',
+                    backgroundColor: '#2196F3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                    marginRight: '10px'
+                  }}
+                >
+                  🎮 ゲームに参加
+                </button>
+              ) : (
+                <div style={{ 
+                  padding: '15px', 
+                  backgroundColor: '#ffeb3b', 
+                  borderRadius: '8px',
+                  border: '2px solid #fbc02d'
+                }}>
+                  <strong>ゲームが満員です (4/4)</strong>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ 
+              padding: '15px', 
+              backgroundColor: '#e8f5e8', 
+              borderRadius: '8px',
+              border: '2px solid #4CAF50',
+              marginBottom: '20px'
+            }}>
+              <strong>✅ ゲームに参加済み</strong>
+              {isOwner && <div style={{ marginTop: '8px', color: '#2E7D32' }}>オーナーとしてゲームを開始できます</div>}
+            </div>
+          )}
+
+          {/* ゲーム開始ボタン（オーナーのみ） */}
+          {isOwner && currentPlayerCount >= 1 && (
+            <button
+              onClick={() => {
+                if (moves.startGame) {
+                  moves.startGame();
+                }
+              }}
+              style={{
+                fontSize: '24px',
+                padding: '15px 40px',
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+              }}
+            >
+              🎮 ゲーム開始！
+            </button>
+          )}
+
+          {/* ゲーム情報 */}
           <div style={{ 
             backgroundColor: '#e3f2fd', 
             padding: '20px', 
             borderRadius: '8px',
-            marginBottom: '30px',
+            marginTop: '20px',
             textAlign: 'left'
           }}>
-            <h3 style={{ color: '#1976d2', marginBottom: '15px' }}>🎯 ゲームの流れ</h3>
-            <div style={{ fontSize: '14px', lineHeight: '1.5' }}>
-              <div>1. <strong>アクションフェーズ</strong> - 各プレイヤーが3APでアクション実行</div>
-              <div>2. <strong>オートマフェーズ</strong> - メーカー・転売ヤーオートマが自動行動</div>
-              <div>3. <strong>市場フェーズ</strong> - 需要ダイスによる商品購入処理</div>
-              <div>4. <strong>勝利判定</strong> - 勝利条件達成で即座に終了</div>
+            <h3 style={{ color: '#1976d2', marginBottom: '15px' }}>📋 ゲーム情報</h3>
+            <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
+              <div><strong>プレイ時間:</strong> 30-45分</div>
+              <div><strong>勝利条件:</strong> 威厳17ポイント + 資金75以上 または 資金150以上</div>
+              <div><strong>戦略:</strong> 正規ルート vs 転売ルートの選択</div>
             </div>
           </div>
-
-          <div style={{ 
-            backgroundColor: '#fff3e0', 
-            padding: '20px', 
-            borderRadius: '8px',
-            marginBottom: '30px',
-            textAlign: 'left'
-          }}>
-            <h3 style={{ color: '#f57c00', marginBottom: '15px' }}>⚠️ 戦略の選択</h3>
-            <div style={{ fontSize: '14px', lineHeight: '1.5' }}>
-              <div><strong>正規ルート:</strong> 革新的技術開発、オープンソース公開で業界信頼獲得</div>
-              <div><strong>転売ルート:</strong> 市場の隙を突いて転売で荒稼ぎ（評判悪化リスクあり）</div>
-            </div>
-          </div>
-
-          <button
-            onClick={() => {
-              if (moves.startGame) {
-                moves.startGame();
-              }
-            }}
-            style={{
-              fontSize: '24px',
-              padding: '15px 40px',
-              backgroundColor: '#4CAF50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
-            }}
-          >
-            🎮 ゲーム開始！
-          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!playerID) {
+    return (
+      <div style={{ 
+        padding: '20px', 
+        textAlign: 'center',
+        fontFamily: 'Arial, sans-serif'
+      }}>
+        <div style={{
+          backgroundColor: '#ffebee',
+          border: '2px solid #f44336',
+          borderRadius: '8px',
+          padding: '20px',
+          maxWidth: '400px',
+          margin: '0 auto'
+        }}>
+          <h2 style={{ color: '#d32f2f', marginBottom: '15px' }}>⚠️ プレイヤーIDが未設定</h2>
+          <p>ゲームに参加するためにはプレイヤーIDが必要です。</p>
+          <p>ページを再読み込みして、再度お試しください。</p>
         </div>
       </div>
     );
