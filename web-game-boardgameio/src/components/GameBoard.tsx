@@ -646,19 +646,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           </div>
           <div style={{ 
             padding: '8px', 
-            backgroundColor: G.regulationStage !== 'none' ? '#e8f5e8' : 'white', 
+            backgroundColor: (G?.regulationStage && G.regulationStage !== 'none') ? '#e8f5e8' : 'white', 
             borderRadius: '4px',
-            border: G.regulationStage !== 'none' ? '1px solid #4CAF50' : 'none',
-            color: G.regulationStage === 'none' ? '#666' : 
+            border: (G?.regulationStage && G.regulationStage !== 'none') ? '1px solid #4CAF50' : 'none',
+            color: (!G?.regulationStage || G.regulationStage === 'none') ? '#666' : 
                    G.regulationStage === 'public_comment' ? '#ff9900' :
                    G.regulationStage === 'consideration' ? '#ff6600' : '#f44336',
-            fontWeight: G.regulationStage !== 'none' ? 'bold' : 'normal'
+            fontWeight: (G?.regulationStage && G.regulationStage !== 'none') ? 'bold' : 'normal'
           }}>
             <strong>規制状態:</strong> {
-              G.regulationStage === 'none' ? '規制なし' :
+              !G?.regulationStage || G.regulationStage === 'none' ? '規制なし' :
               G.regulationStage === 'public_comment' ? `📢 パブコメ中 (${G.regulationStageRounds}R)` :
               G.regulationStage === 'consideration' ? `🔍 検討中 (${G.regulationStageRounds}R)` :
-              G.regulationStage === 'enforcement' ? `⚖️ 規制発動中 (${G.regulationStageRounds}R)` : '不明'
+              G.regulationStage === 'enforcement' ? `⚖️ 規制発動中 (${G.regulationStageRounds}R)` : '規制なし'
             }
           </div>
           {G.shortVideoBonus && (
