@@ -1,47 +1,78 @@
-# テストガイドライン
+# Testing Guidelines
 
-## テスト戦略
+## Testing Framework
+- ZMK uses its own testing framework based on Zephyr
+- Specific testing commands to be determined based on ZMK expert consultation
+- Hardware-in-the-loop testing may be required for sensor functionality
 
-### 単体テスト (Jest)
-- **場所**: `/src/__tests__/`
-- **実行**: `npm test`
-- **対象**: ゲームロジック、ユーティリティ関数
+## Test Categories
 
-### 機能テスト
-- **計画書**: `game_feature_test_plan.md`
-- **レポート保存先**: `report/` フォルダ
-- **対象**: 
-  - 基本ゲームフロー
-  - プレイヤーアクションシステム
-  - オートマシステム
-  - 市場システム
-  - UI/UX
-  - エラーハンドリング
+### 1. Unit Testing
+- Test individual driver functions
+- Test I2C communication layer
+- Test sensor data processing functions
+- Test calibration algorithms
+- Test threshold detection logic
 
-### プレイテスト
-- **保存先**: `playtest/yyyymmdd_hhmmss_テーマ`
-- **参加者**: 4人の仮想プレイヤー + メーカー・オートマ + 転売ヤー・オートマ
-- **記録内容**:
-  - 1ラウンドごとの各プレイヤーの動き
-  - ダイスロール結果
-  - パーソナル・マーケットグリッド状態
-  - 各ラウンド後の感想
+### 2. Integration Testing
+- Test device tree configuration parsing
+- Test behavior binding integration
+- Test input system integration
+- Test state management between normal and pressed modes
 
-### プレイテスト重要ルール
-- 各プレイヤーは実行不可能なアクションを選択しない
-- APの上限（3AP/ラウンド）を厳守
-- 人気度は1より下がらない
-- 日雇い労働の実行条件を順守
+### 3. Hardware Testing
+- Test with actual MLX90393 sensor hardware
+- Verify I2C communication stability
+- Test sensor calibration accuracy
+- Verify threshold detection reliability
+- Test hysteresis functionality
 
-### API テスト
-- **ファイル**: 各種 `*-test.js` ファイル
-- **実行方法**: 
-  ```bash
-  npm run debug-api    # API デバッグテスト
-  npm run debug-local  # ローカル環境
-  npm run debug-prod   # プロダクション環境
-  ```
+### 4. Performance Testing
+- Verify 10ms polling interval performance
+- Test sensor responsiveness
+- Monitor CPU usage and power consumption
+- Test long-term stability
 
-### テスト環境
-- **開発**: `http://localhost:3002` (フロント) + `http://localhost:3001` (バック)
-- **プロダクション**: Netlify + Railway
+## Testing Requirements
+
+### Pre-Implementation Testing
+- Consult ZMK repository expert for current testing practices
+- Understand ZMK testing framework capabilities
+- Plan test coverage for new sensor driver
+
+### During Development Testing
+- Incremental testing of each component
+- Mock hardware testing for I2C communication
+- Unit test critical algorithms
+
+### Build Testing (MANDATORY)
+Always run the mandatory build verification:
+```bash
+export ZMK_CONFIG=zmk-config-MKB2
+just init
+XDG_RUNTIME_DIR=/tmp just build MKB_L_MODULE_RZT
+```
+
+### Post-Implementation Testing
+- Full integration testing
+- Hardware compatibility testing
+- Performance verification
+- Long-term stability testing
+
+## Test Environment Setup
+- Windows development environment
+- Zephyr RTOS testing tools
+- ZMK testing framework
+- Hardware testing setup with MLX90393 sensor
+
+## Debug and Logging for Testing
+- Use `CONFIG_INPUT_LOG_LEVEL` for input subsystem debugging
+- Monitor `tlx493d` log module for sensor-specific logs
+- Enable Zephyr logging system for comprehensive debugging
+- Use appropriate log levels for different test phases
+
+## Test Documentation
+- Document test procedures
+- Maintain test result records
+- Document known issues and workarounds
+- Update testing guidelines based on experience

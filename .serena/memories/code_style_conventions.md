@@ -1,41 +1,41 @@
-# コードスタイルと規約
+# Code Style and Conventions
 
-## TypeScript/React 規約
+## General Principles
+- Follow ZMK and Zephyr coding conventions
+- Base implementation on official Zephyr MLX90394 sensor binding
+- Maintain consistency with existing ZMK input drivers
 
-### ファイル命名
-- コンポーネント: PascalCase (例: `SimpleGame.tsx`)
-- ユーティリティ: camelCase
-- 設定ファイル: kebab-case
+## Critical Development Rules
+1. **MANDATORY**: Consult ZMK repository expert before ANY implementation changes
+2. **MANDATORY**: Consult Zephyr repository expert for Zephyr-specific details
+3. **NO ASSUMPTIONS**: Always verify current ZMK practices before implementation
+4. **EXPERT FIRST**: Consult experts before coding, not after build failures
 
-### コード規約
-- **TypeScript**: 厳密な型付けを使用
-- **React**: 関数コンポーネントを使用
-- **インデント**: 2スペース
-- **セミコロン**: 使用する
+## File Naming Conventions
+- Driver implementation: `drivers/input/input_*.c`
+- Driver headers: `drivers/input/input_*.h`
+- Device tree bindings: `dts/bindings/input/*.yaml`
+- Build files: `CMakeLists.txt`, `Kconfig`
+- Module definition: `zephyr/module.yml`
 
-### プロジェクト固有の規約
-- ゲームロジックは `/src/game/` に配置
-- UIコンポーネントは `/src/components/` に配置
-- boardgame.io のパターンに従う
+## Coding Standards
+- C language following Zephyr style guidelines
+- Proper error handling throughout
+- Use Zephyr logging system for debugging
+- Follow device tree conventions for configuration
+- Implement proper I2C communication patterns
 
-## ファイル構造規約
-```
-src/
-├── main.tsx           # エントリーポイント
-├── SimpleGame.tsx     # メインゲームコンポーネント
-├── components/        # UIコンポーネント
-├── game/             # ゲームロジック
-└── __tests__/        # テストファイル
-```
+## Configuration Naming
+- Use consistent prefix for configuration options
+- Follow ZMK behavior binding patterns
+- Device tree properties should match expected conventions:
+  - `polling-interval-ms`
+  - `z-press-threshold`
+  - `z-hysteresis`
+  - `normal-binding`
+  - `pressed-binding`
 
-## 設定ファイル
-- `vite.config.mjs`: Vite設定
-- `tsconfig.json`: TypeScript設定
-- `jest.config.js`: Jest設定
-- `package.json`: 依存関係とスクリプト
-
-## 環境設定
-- `.env.example`: 環境変数テンプレート
-- `.env.production`: プロダクション環境変数
-- `netlify.toml`: Netlify設定
-- `railway.toml`: Railway設定
+## Documentation Requirements
+- Update README.md after any changes
+- Maintain clear documentation of features and usage
+- Document configuration options and their effects

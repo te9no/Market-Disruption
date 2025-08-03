@@ -58,7 +58,8 @@
       "mcp__serena__write_memory",
       "Bash(npx jest:*)",
       "Bash(npx typescript:*)",
-      "Bash(npm:*)"
+      "Bash(npm:*)",
+      "Bash(\"./node_modules/.bin/tsc\" --noEmit)"
     ],
     "deny": []
   }

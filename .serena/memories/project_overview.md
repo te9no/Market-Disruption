@@ -1,22 +1,29 @@
-# マーケット・ディスラプション - プロジェクト概要
+# Project Overview
 
-## プロジェクトの目的
-転売ヤーをテーマにしたライナー・クニツィア風ボードゲーム「マーケット・ディスラプション」のデジタル実装プロジェクト。
+## Purpose
+ZMK (Zephyr Mechanical Keyboard) firmware module for MLX90393 3-axis magnetic sensor driver. This driver reads input from the magnetic sensor and generates Z-axis state-dependent mouse operations:
+- Normal state: Middle button + movement
+- Pressed state: SHIFT + Middle button + movement
 
-### ゲーム概要
-- **プレイヤー数**: 2-4人
-- **プレイ時間**: 30-45分
-- **勝利条件**: 威厳17ポイント+資金75以上 または 資金150達成
-- **テーマ**: 転売業界の混乱を描いたゲーム
-- **デザイン思想**: クニツィア風のジレンマがあるゲーム
+## Current Status
+The project is in initial stage with only CLAUDE.md documentation file present. The actual implementation files need to be created based on the specifications.
 
-### 主要システム
-1. **アクションポイントシステム**: 各プレイヤー3AP/ラウンド
-2. **需要システム**: 2d6による商品購入判定
-3. **威厳システム**: -5～+15の評判システム
-4. **オートマシステム**: メーカー・オートマと転売ヤー・オートマの自動プレイヤー
-5. **労働システム**: アルバイト(2AP→5資金)と日雇い労働(3AP→18資金)
+## Target Architecture
+Based on CLAUDE.md specifications:
+- Main driver: `drivers/input/input_*.c`
+- Device tree bindings: `dts/bindings/input/*.yaml`
+- Build configuration: `CMakeLists.txt`, `Kconfig`
+- Zephyr module definition: `zephyr/module.yml`
 
-### ゲーム進行
-- アクションフェーズ → オートマフェーズ → 市場フェーズ → 勝利判定
-- 正規ルート（持続的・低リスク）vs 転売ルート（高リターン・高リスク）の二重戦略
+## Key Features to Implement
+1. I2C communication with MLX90393 sensor
+2. Z-axis threshold detection for two-state operation (normal/pressed)
+3. State-dependent behavior binding system
+4. Auto-calibration (30 seconds of inactivity)
+5. Hysteresis functionality for motion detection
+6. Dead zone functionality (X/Y: 3, Z: 5)
+7. Relative input reporting (INPUT_REL_X, INPUT_REL_Y, INPUT_REL_WHEEL)
+
+## Implementation Base
+Should be based on Zephyr official MLX90394 implementation:
+https://docs.zephyrproject.org/latest/build/dts/api/bindings/sensor/melexis%2Cmlx90394.html

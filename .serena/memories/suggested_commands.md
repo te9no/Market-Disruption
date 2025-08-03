@@ -1,52 +1,51 @@
-# 推奨コマンド集
+# Suggested Commands
 
-## 開発コマンド (web-game-boardgameio ディレクトリ内で実行)
+## Windows-specific Commands
+Since the project is developed on Windows, use these commands:
 
-### 基本開発
+### File Operations
+- `dir` - List directory contents
+- `type filename` - Display file contents
+- `copy source dest` - Copy files
+- `del filename` - Delete files
+- `mkdir dirname` - Create directory
+
+### Git Operations
+- `git status` - Check repository status
+- `git add .` - Stage all changes
+- `git commit -m "message"` - Commit changes
+- `git push` - Push to remote
+- `git pull` - Pull from remote
+- `git branch` - List branches
+- `git checkout -b branch-name` - Create and switch to new branch
+
+### Build Commands (MANDATORY)
+**Critical**: After any implementation or modification, run:
 ```bash
-npm run dev          # 開発サーバー起動 (ポート3002)
-npm run build        # プロダクションビルド
-npm run preview      # ビルド結果のプレビュー
-npm run server       # バックエンドサーバー起動
-npm start            # フロントエンド・バックエンド同時起動
+export ZMK_CONFIG=zmk-config-MKB2
+just init
+XDG_RUNTIME_DIR=/tmp just build MKB_L_MODULE_RZT
 ```
 
-### テスト
-```bash
-npm test             # Jest テスト実行
-npm run test         # Jest テスト実行 (同上)
-```
+**Note**: Build may take several minutes. Wait for complete finish before determining success.
 
-### デバッグ
-```bash
-npm run debug-api    # API デバッグテスト
-npm run debug-local  # ローカル環境でのデバッグ
-npm run debug-prod   # プロダクション環境でのデバッグ
-```
+### Development Workflow Commands
+1. **Before implementation**: Consult repository experts
+2. **After changes**: Run mandatory build verification
+3. **On success**: Update documentation
+4. **Testing**: Use appropriate ZMK testing frameworks (TBD)
 
-### ビルド検証
-```bash
-tsc                  # TypeScript コンパイル確認
-npm run build        # ビルドテスト
-```
+### Branch Management
+- **Stable branch**: `v1`
+- **Breaking changes**: Bump to `v2`
+- **Non-breaking changes**: Create from `v1` with prefix `v1-`
 
-## Git コマンド (Windows)
-```bash
-git status           # ステータス確認
-git add .            # 全ファイル追加
-git commit -m "msg"  # コミット
-git push origin main # プッシュ
-```
+### Environment Setup
+- Use `just` for build automation
+- Set `ZMK_CONFIG=zmk-config-MKB2` environment variable
+- Set `XDG_RUNTIME_DIR=/tmp` for build process
 
-## ファイル操作 (Windows)
-```bash
-dir                  # ディレクトリ一覧 (ls 相当)
-cd                   # ディレクトリ移動
-type                 # ファイル内容表示 (cat 相当)
-findstr              # 文字列検索 (grep 相当)
-```
-
-## プレイテスト
-```bash
-python scripts/request_playtest.py  # プレイテスト実行リクエスト
-```
+### Debugging Commands
+- Check Zephyr logs with appropriate log level settings
+- Use `CONFIG_INPUT_LOG_LEVEL` for input-specific logging
+- Monitor `tlx493d` log module for sensor-specific debug info

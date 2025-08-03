@@ -1,35 +1,31 @@
-# 技術スタック
+# Technology Stack
 
-## フロントエンド
-- **React** 19.1.1
-- **TypeScript** 5.8.3
-- **Vite** 7.0.6 (ビルドツール)
-- **boardgame.io** 0.50.2 (ゲームフレームワーク)
+## Primary Technologies
+- **Framework**: ZMK (Zephyr Mechanical Keyboard) firmware
+- **Operating System**: Zephyr RTOS
+- **Hardware**: MLX90393 3-axis magnetic sensor
+- **Communication Protocol**: I2C
+- **Language**: C (Zephyr/ZMK style)
 
-## バックエンド
-- **Node.js**
-- **Express** 4.18.2
-- **Socket.io** 4.7.5 (リアルタイム通信)
-- **Koa** 2.15.5
+## Development Environment
+- **Platform**: Windows
+- **Build System**: Just (justfile-based)
+- **Version Control**: Git
+- **Configuration**: West (Zephyr workspace tool)
 
-## テスト
-- **Jest** 30.0.5
-- **ts-jest** 29.4.0
+## Key Dependencies
+- Zephyr RTOS framework
+- ZMK firmware framework
+- MLX90393 sensor hardware support
+- I2C subsystem
+- Input subsystem
+- Device Tree system
 
-## デプロイメント
-- **フロントエンド**: Netlify
-- **バックエンド**: Railway
-- **ソースコード**: GitHub
+## Reference Implementation
+- Zephyr official MLX90394 sensor binding as base reference
+- ZMK input system integration patterns
 
-## 開発ツール
-- **Concurrently** (同時実行)
-- **TypeScript コンパイラ**
-- **Vite Dev Server**
-
-## ファイル構造
-- `/web-game-boardgameio/` - メインのWebアプリケーション
-- `/web-game-boardgameio/src/` - ソースコード
-- `/web-game-boardgameio/src/components/` - Reactコンポーネント
-- `/web-game-boardgameio/src/game/` - ゲームロジック
-- `/playtest/` - プレイテストログ
-- `/report/` - テストレポート
+## Logging and Debugging
+- Zephyr logging system
+- Log level: `CONFIG_INPUT_LOG_LEVEL`
+- Log module: `tlx493d` (as mentioned in CLAUDE.md)
