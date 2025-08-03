@@ -914,7 +914,8 @@ function promoteRegulation(G: GameState, ctx: Ctx) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
   
-  const regulationDice = rollDice() + rollDice();
+  const diceRolls = rollMultipleDice(2); // 2個のダイスを振る
+  const regulationDice = diceRolls[0] + diceRolls[1]; // 合計値を計算
   
   // 規制推進成功（合計9以上）
   if (regulationDice >= 9) {
@@ -924,7 +925,7 @@ function promoteRegulation(G: GameState, ctx: Ctx) {
         G.regulationStage = 'public_comment';
         G.regulationStageRounds = 0;
         G.regulationLevel = 1;
-        addPlayLog(G, ctx.currentPlayer, '規制推進', 'パブリックコメント募集開始 - 転売規制が検討されています');
+        addPlayLog(G, ctx.currentPlayer, '規制推進', `規制推進成功（ダイス: ${diceRolls[0]}+${diceRolls[1]}=${regulationDice}）- パブリックコメント募集開始`);
         break;
         
       case 'public_comment':
@@ -932,7 +933,7 @@ function promoteRegulation(G: GameState, ctx: Ctx) {
         G.regulationStage = 'consideration';
         G.regulationStageRounds = 0;
         G.regulationLevel = 2;
-        addPlayLog(G, ctx.currentPlayer, '規制推進', '規制検討中 - 転売価格に制限がかかります（購入価格+3資金まで）');
+        addPlayLog(G, ctx.currentPlayer, '規制推進', `規制推進成功（ダイス: ${diceRolls[0]}+${diceRolls[1]}=${regulationDice}）- 規制検討中、転売価格制限（購入価格+3資金まで）`);
         break;
         
       case 'consideration':
@@ -953,16 +954,16 @@ function promoteRegulation(G: GameState, ctx: Ctx) {
         // オートマ市場からも転売品除去
         G.automata.market = G.automata.market.filter(product => !product.isResale);
         
-        addPlayLog(G, ctx.currentPlayer, '規制推進', '転売規制発動 - 全転売品没収、転売価格制限（購入価格+1資金まで）');
+        addPlayLog(G, ctx.currentPlayer, '規制推進', `規制推進成功（ダイス: ${diceRolls[0]}+${diceRolls[1]}=${regulationDice}）- 転売規制発動、全転売品没収、転売価格制限（購入価格+1資金まで）`);
         break;
         
       case 'enforcement':
         // 既に最大段階なので何もしない
-        addPlayLog(G, ctx.currentPlayer, '規制推進', '規制は既に最大レベルです');
+        addPlayLog(G, ctx.currentPlayer, '規制推進', `ダイス: ${diceRolls[0]}+${diceRolls[1]}=${regulationDice} - 規制は既に最大レベルです`);
         break;
     }
   } else {
-    addPlayLog(G, ctx.currentPlayer, '規制推進', `規制推進失敗（ダイス合計: ${regulationDice}）`);
+    addPlayLog(G, ctx.currentPlayer, '規制推進', `規制推進失敗（ダイス: ${diceRolls[0]}+${diceRolls[1]}=${regulationDice}、必要: 9以上）`);
   }
   
   player.actionPoints -= 2;
