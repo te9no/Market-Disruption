@@ -6,6 +6,7 @@ interface PlayLogProps {
 }
 
 export const PlayLog: React.FC<PlayLogProps> = ({ playLog }) => {
+  const isMobile = window.innerWidth <= 768;
   const getActorName = (actor: string) => {
     if (actor === 'manufacturer-automata') return '🏭 メーカー・オートマ';
     if (actor === 'resale-automata') return '🔄 転売ヤー・オートマ';
@@ -32,17 +33,19 @@ export const PlayLog: React.FC<PlayLogProps> = ({ playLog }) => {
 
   return (
     <div style={{
-      width: '350px',
-      height: '100vh',
+      width: isMobile ? '100%' : '350px',
+      height: isMobile ? 'auto' : '100vh',
       backgroundColor: '#f5f5f5',
-      borderLeft: '2px solid #ddd',
-      padding: '10px',
-      overflowY: 'auto',
-      fontSize: '12px',
-      position: 'fixed',
-      right: 0,
-      top: 0,
-      zIndex: 1000
+      borderLeft: isMobile ? 'none' : '2px solid #ddd',
+      borderTop: isMobile ? '2px solid #ddd' : 'none',
+      padding: isMobile ? '5px' : '10px',
+      overflowY: isMobile ? 'visible' : 'auto',
+      fontSize: isMobile ? '10px' : '12px',
+      position: isMobile ? 'static' : 'fixed',
+      right: isMobile ? 'auto' : 0,
+      top: isMobile ? 'auto' : 0,
+      zIndex: isMobile ? 'auto' : 1000,
+      maxHeight: isMobile ? '300px' : 'auto'
     }}>
       <h3 style={{ 
         margin: '0 0 10px 0', 
@@ -51,12 +54,15 @@ export const PlayLog: React.FC<PlayLogProps> = ({ playLog }) => {
         color: 'white', 
         borderRadius: '4px',
         textAlign: 'center',
-        fontSize: '14px'
+        fontSize: isMobile ? '12px' : '14px'
       }}>
         📋 プレイログ
       </h3>
       
-      <div style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
+      <div style={{ 
+        maxHeight: isMobile ? '200px' : 'calc(100vh - 80px)', 
+        overflowY: 'auto' 
+      }}>
         {recentLogs.length === 0 ? (
           <div style={{ textAlign: 'center', color: '#999', marginTop: '20px' }}>
             まだアクションがありません
@@ -83,12 +89,12 @@ export const PlayLog: React.FC<PlayLogProps> = ({ playLog }) => {
                 <span style={{ 
                   fontWeight: 'bold', 
                   color: getActionColor(entry.actor),
-                  fontSize: '11px'
+                  fontSize: isMobile ? '9px' : '11px'
                 }}>
                   {getPhaseIcon(entry.phase)} R{entry.round} - {getActorName(entry.actor)}
                 </span>
                 <span style={{ 
-                  fontSize: '10px', 
+                  fontSize: isMobile ? '8px' : '10px', 
                   color: '#666',
                   backgroundColor: '#f0f0f0',
                   padding: '2px 6px',
@@ -100,7 +106,7 @@ export const PlayLog: React.FC<PlayLogProps> = ({ playLog }) => {
               <div style={{ 
                 color: '#333',
                 lineHeight: '1.3',
-                fontSize: '11px'
+                fontSize: isMobile ? '9px' : '11px'
               }}>
                 {entry.details}
               </div>

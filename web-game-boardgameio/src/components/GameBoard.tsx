@@ -246,14 +246,39 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             '⚠️自分の商品には転売ボタンは表示されません。他のプレイヤーの商品を確認してください。' : 
             '✅このマーケットの商品には転売ボタンが表示されます（価格設定済みの商品のみ）'}
         </div>
-        <div style={{ display: 'inline-block', border: '2px solid #333' }}>
+        <div style={{ 
+          display: 'inline-block', 
+          border: '2px solid #333',
+          overflowX: isMobile ? 'auto' : 'visible',
+          width: isMobile ? '100%' : 'auto'
+        }}>
           {/* ヘッダー（価格） */}
           <div style={{ display: 'flex' }}>
-            <div style={{ width: '60px', height: '30px', border: '1px solid #ccc', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+            <div style={{ 
+              width: isMobile ? '40px' : '60px', 
+              height: '30px', 
+              border: '1px solid #ccc', 
+              backgroundColor: '#f5f5f5', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              fontWeight: 'bold',
+              fontSize: isMobile ? '8px' : '12px'
+            }}>
               価格→
             </div>
             {Array.from({length: 24}, (_, i) => i + 1).map(price => (
-              <div key={price} style={{ width: '50px', height: '30px', border: '1px solid #ccc', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '10px' }}>
+              <div key={price} style={{ 
+                width: isMobile ? '30px' : '50px', 
+                height: '30px', 
+                border: '1px solid #ccc', 
+                backgroundColor: '#f5f5f5', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontWeight: 'bold', 
+                fontSize: isMobile ? '8px' : '10px' 
+              }}>
                 {price}
               </div>
             ))}
@@ -263,22 +288,33 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           {grid.map((row, popularityIndex) => (
             <div key={popularityIndex} style={{ display: 'flex' }}>
               {/* 人気度ラベル */}
-              <div style={{ width: '60px', height: '60px', border: '1px solid #ccc', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', writingMode: 'vertical-rl' }}>
+              <div style={{ 
+                width: isMobile ? '40px' : '60px', 
+                height: isMobile ? '40px' : '60px', 
+                border: '1px solid #ccc', 
+                backgroundColor: '#f5f5f5', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontWeight: 'bold', 
+                writingMode: 'vertical-rl',
+                fontSize: isMobile ? '8px' : '12px'
+              }}>
                 人気{6 - popularityIndex}
               </div>
               
               {/* セル */}
               {row.map((cell, priceIndex) => (
                 <div key={priceIndex} style={{ 
-                  width: '50px', 
-                  height: '60px', 
+                  width: isMobile ? '30px' : '50px', 
+                  height: isMobile ? '40px' : '60px', 
                   border: '1px solid #ccc', 
                   display: 'flex', 
                   flexDirection: 'column',
                   alignItems: 'center', 
                   justifyContent: 'center',
                   backgroundColor: cell && cell.length > 0 ? '#e3f2fd' : 'white',
-                  fontSize: '8px',
+                  fontSize: isMobile ? '6px' : '8px',
                   overflow: 'hidden'
                 }}>
                   {cell && cell.map((product: any) => (
@@ -290,7 +326,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                       borderRadius: product.isResale ? '8px' : '2px',
                       fontSize: '6px',
                       textAlign: 'center',
-                      width: '46px',
+                      width: isMobile ? '28px' : '46px',
                       position: 'relative'
                     }}>
                       {product.isResale ? (
@@ -307,22 +343,28 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                       )}
                       {player.id !== currentPlayer.id && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', marginTop: '1px' }}>
-                          <div style={{ fontSize: '3px', color: '#666', marginBottom: '1px' }}>
+                          <div style={{ 
+                            fontSize: isMobile ? '2px' : '3px', 
+                            color: '#666', 
+                            marginBottom: '1px',
+                            display: isMobile ? 'none' : 'block'
+                          }}>
                             デバッグ: プレイヤー={player.name} vs 現在={currentPlayer.name}, アクティブ={isActive ? 'Yes' : 'No'}, 価格={product.price}
                           </div>
                           {currentPlayer.money >= product.price && currentPlayer.actionPoints >= 1 && isActive && (
                             <button 
                               onClick={() => moves.purchase(player.id, product.id)}
                               style={{ 
-                                fontSize: '5px', 
-                                padding: '1px 1px', 
+                                fontSize: isMobile ? '4px' : '5px', 
+                                padding: '1px', 
                                 backgroundColor: '#4CAF50',
                                 color: 'white',
                                 border: 'none',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                width: isMobile ? '20px' : 'auto'
                               }}
                             >
-                              購入
+                              {isMobile ? '購' : '購入'}
                             </button>
                           )}
                           <button 
@@ -361,18 +403,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                               }
                             }}
                             style={{ 
-                              fontSize: '8px', 
-                              padding: '3px 5px', 
+                              fontSize: isMobile ? '4px' : '8px', 
+                              padding: isMobile ? '1px 2px' : '3px 5px', 
                               backgroundColor: (product.price > 0 && isActive && player.id !== currentPlayer.id) ? '#FF5722' : '#999',
                               color: 'white',
-                              border: '2px solid #FF0000',
+                              border: isMobile ? '1px solid #FF0000' : '2px solid #FF0000',
                               cursor: 'pointer',
                               marginTop: '2px',
                               fontWeight: 'bold',
-                              borderRadius: '4px'
+                              borderRadius: '4px',
+                              width: isMobile ? '25px' : 'auto'
                             }}
                           >
-                            🔴転売🔴 {product.price === 0 ? '[未出品]' : !isActive ? '[非ターン]' : player.id === currentPlayer.id ? '[自分商品]' : ''}
+                            {isMobile ? '転' : '🔴転売🔴'} {isMobile ? '' : (product.price === 0 ? '[未出品]' : !isActive ? '[非ターン]' : player.id === currentPlayer.id ? '[自分商品]' : '')}
                           </button>
                           {currentPlayer.actionPoints >= 1 && currentPlayer.prestige >= 1 && (
                             <div style={{ display: 'flex', gap: '1px' }}>
@@ -467,7 +510,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           }}>現在のターン</span>
         )}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '10px' }}>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', 
+        gap: '8px', 
+        marginBottom: '10px' 
+      }}>
         <div style={{ padding: '6px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #ddd' }}>
           <strong>💰 資金:</strong> {player.money}
           {/* 勝利条件チェック */}
@@ -605,14 +653,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
     </div>
   );
 
+  const isMobile = window.innerWidth <= 768;
+  
   return (
-    <div style={{ display: 'flex' }}>
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row'
+    }}>
       {/* メインゲーム画面 */}
       <div style={{ 
         flex: 1, 
-        padding: '20px', 
+        padding: isMobile ? '10px' : '20px', 
         fontFamily: 'Arial, sans-serif',
-        marginRight: '350px' // プレイログ分の余白
+        marginRight: isMobile ? '0' : '350px', // プレイログ分の余白
+        width: isMobile ? '100%' : 'auto'
       }}>
         <h1>マーケット・ディスラプション</h1>
       
@@ -624,7 +678,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
         padding: '15px'
       }}>
         <h2 style={{ margin: '0 0 15px 0', color: '#333' }}>📊 ゲーム情報</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '14px' }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', 
+          gap: '10px', 
+          fontSize: isMobile ? '12px' : '14px' 
+        }}>
           <div style={{ padding: '8px', backgroundColor: 'white', borderRadius: '4px' }}>
             <strong>ゲームモード:</strong> {ctx.numPlayers === 1 ? '🤖 オートマ対戦' : `👥 ${ctx.numPlayers}人プレイ`}
           </div>
@@ -776,7 +835,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
         padding: '15px'
       }}>
         <h2 style={{ margin: '0 0 15px 0', color: '#2E7D32' }}>🏆 勝利条件</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', 
+          gap: '10px' 
+        }}>
           <div style={{ 
             padding: '10px', 
             backgroundColor: 'white', 
@@ -850,18 +913,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             {/* 1APアクション */}
             <div style={{ marginBottom: '15px' }}>
               <h3 style={{ margin: '0 0 10px 0', color: '#2196F3' }}>🔵 1APアクション</h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: isMobile ? '4px' : '8px',
+                flexDirection: isMobile ? 'column' : 'row'
+              }}>
                 <button 
                   onClick={() => moves.research()}
                   disabled={currentPlayer.actionPoints < 1}
                   style={{ 
-                    padding: '10px 15px',
+                    padding: isMobile ? '8px 12px' : '10px 15px',
                     backgroundColor: currentPlayer.actionPoints < 1 ? '#ccc' : '#9C27B0',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: currentPlayer.actionPoints < 1 ? 'not-allowed' : 'pointer',
-                    fontSize: '14px'
+                    fontSize: isMobile ? '12px' : '14px',
+                    width: isMobile ? '100%' : 'auto'
                   }}
                 >
                   🔬 リサーチ {currentPlayer.actionPoints < 1 ? '[AP不足]' : ''}
@@ -870,13 +939,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                   onClick={() => moves.purchasePrestige()}
                   disabled={currentPlayer.actionPoints < 1 || currentPlayer.money < 5 || (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`])}
                   style={{ 
-                    padding: '10px 15px',
+                    padding: isMobile ? '8px 12px' : '10px 15px',
                     backgroundColor: (currentPlayer.actionPoints < 1 || currentPlayer.money < 5 || (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`])) ? '#ccc' : '#FFD700',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: (currentPlayer.actionPoints < 1 || currentPlayer.money < 5 || (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`])) ? 'not-allowed' : 'pointer',
-                    fontSize: '14px'
+                    fontSize: isMobile ? '12px' : '14px',
+                    width: isMobile ? '100%' : 'auto'
                   }}
                 >
                   ⭐ 威厳購入 (5資金) {currentPlayer.actionPoints < 1 ? '[AP不足]' : currentPlayer.money < 5 ? '[資金不足]' : (G.prestigePurchasePerRound && G.prestigePurchasePerRound[`${G.round}-${currentPlayer.id}`]) ? '[使用済み]' : ''}
@@ -887,18 +957,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             {/* 2APアクション */}
             <div style={{ marginBottom: '15px' }}>
               <h3 style={{ margin: '0 0 10px 0', color: '#FF9800' }}>🟡 2APアクション</h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: isMobile ? '4px' : '8px',
+                flexDirection: isMobile ? 'column' : 'row'
+              }}>
                 <button 
                   onClick={handlePartTimeWork}
                   disabled={currentPlayer.actionPoints < 2}
                   style={{ 
-                    padding: '10px 15px',
+                    padding: isMobile ? '8px 12px' : '10px 15px',
                     backgroundColor: currentPlayer.actionPoints < 2 ? '#ccc' : '#4CAF50',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: currentPlayer.actionPoints < 2 ? 'not-allowed' : 'pointer',
-                    fontSize: '14px'
+                    fontSize: isMobile ? '12px' : '14px',
+                    width: isMobile ? '100%' : 'auto'
                   }}
                 >
                   💼 アルバイト (5資金) {currentPlayer.actionPoints < 2 ? '[AP不足]' : ''}
@@ -907,13 +983,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                   onClick={() => handleDesign(false)}
                   disabled={currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6}
                   style={{ 
-                    padding: '10px 15px',
+                    padding: isMobile ? '8px 12px' : '10px 15px',
                     backgroundColor: (currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6) ? '#ccc' : '#2196F3',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: (currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6) ? 'not-allowed' : 'pointer',
-                    fontSize: '14px'
+                    fontSize: isMobile ? '12px' : '14px',
+                    width: isMobile ? '100%' : 'auto'
                   }}
                 >
                   📝 設計 {currentPlayer.actionPoints < 2 ? '[AP不足]' : currentPlayer.designs.length >= 6 ? '[上限]' : ''}
@@ -922,13 +999,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                   onClick={() => handleDesign(true)}
                   disabled={currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6}
                   style={{ 
-                    padding: '10px 15px',
+                    padding: isMobile ? '8px 12px' : '10px 15px',
                     backgroundColor: (currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6) ? '#ccc' : '#FF9800',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: (currentPlayer.actionPoints < 2 || currentPlayer.designs.length >= 6) ? 'not-allowed' : 'pointer',
-                    fontSize: '14px'
+                    fontSize: isMobile ? '12px' : '14px',
+                    width: isMobile ? '100%' : 'auto'
                   }}
                 >
                   🅾️ オープンソース設計 {currentPlayer.actionPoints < 2 ? '[AP不足]' : currentPlayer.designs.length >= 6 ? '[上限]' : ''}
@@ -937,13 +1015,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                   onClick={() => moves.promoteRegulation()}
                   disabled={currentPlayer.actionPoints < 2}
                   style={{ 
-                    padding: '10px 15px',
+                    padding: isMobile ? '8px 12px' : '10px 15px',
                     backgroundColor: currentPlayer.actionPoints < 2 ? '#ccc' : '#E91E63',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: currentPlayer.actionPoints < 2 ? 'not-allowed' : 'pointer',
-                    fontSize: '14px'
+                    fontSize: isMobile ? '12px' : '14px',
+                    width: isMobile ? '100%' : 'auto'
                   }}
                 >
                   ⚖️ 規制推進 {currentPlayer.actionPoints < 2 ? '[AP不足]' : ''}
@@ -954,18 +1033,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             {/* 3APアクション */}
             <div style={{ marginBottom: '15px' }}>
               <h3 style={{ margin: '0 0 10px 0', color: '#f44336' }}>🔴 3APアクション</h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: isMobile ? '4px' : '8px',
+                flexDirection: isMobile ? 'column' : 'row'
+              }}>
                 <button 
                   onClick={() => moves.dayLabor()}
                   disabled={currentPlayer.actionPoints < 3 || currentPlayer.money > 100}
                   style={{ 
-                    padding: '10px 15px',
+                    padding: isMobile ? '8px 12px' : '10px 15px',
                     backgroundColor: (currentPlayer.actionPoints < 3 || currentPlayer.money > 100) ? '#ccc' : '#f44336',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: (currentPlayer.actionPoints < 3 || currentPlayer.money > 100) ? 'not-allowed' : 'pointer',
-                    fontSize: '14px'
+                    fontSize: isMobile ? '12px' : '14px',
+                    width: isMobile ? '100%' : 'auto'
                   }}
                 >
                   🔨 日雇い労働 (18資金) {currentPlayer.actionPoints < 3 ? '[AP不足]' : currentPlayer.money > 100 ? '[資金上限]' : ''}
@@ -1051,7 +1136,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
 
       <div style={{ display: 'flex', flexWrap: 'wrap' }}>
         <h2>プレイヤー情報</h2>
-        <div style={{ display: 'flex', flexWrap: 'wrap', width: '100%' }}>
+        <div style={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          width: '100%',
+          flexDirection: isMobile ? 'column' : 'row'
+        }}>
           {Object.values(G.players)
             .filter((_, index) => index < ctx.numPlayers)
             .map(renderPlayer)}
@@ -1073,7 +1163,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           ❌ <strong>あなた自身のマーケット</strong>の商品には転売ボタンは表示されません<br/>
           📋 現在のプレイヤー: <strong>{currentPlayer.name}</strong> | ターン: {isActive ? '✅アクティブ' : '❌待機中'} | AP: {currentPlayer.actionPoints} | 資金: {currentPlayer.money} | 威厳: {currentPlayer.prestige}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', overflowX: 'auto' }}>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: isMobile ? '10px' : '20px', 
+          overflowX: 'auto'
+        }}>
           {Object.values(G.players)
             .filter((_, index) => index < ctx.numPlayers)
             .map((player) => renderMarketGrid(player))}
