@@ -917,14 +917,19 @@ function promoteRegulation(G: GameState, ctx: Ctx) {
   const diceRolls = rollMultipleDice(2); // 2個のダイスを振る
   const regulationDice = diceRolls[0] + diceRolls[1]; // 合計値を計算
   
+  // デバッグログ：常にダイス出目を記録
+  console.log(`🎲 規制推進ダイス: ${diceRolls[0]} + ${diceRolls[1]} = ${regulationDice}`);
+  
   // 規制推進成功（合計9以上）
   if (regulationDice >= 9) {
+    console.log(`✅ 規制推進成功: ${regulationDice} >= 9`);
     switch (G.regulationStage) {
       case 'none':
         // 段階1：パブリックコメント開始
         G.regulationStage = 'public_comment';
         G.regulationStageRounds = 0;
         G.regulationLevel = 1;
+        console.log(`📢 規制段階1: パブリックコメント開始`);
         addPlayLog(G, ctx.currentPlayer, '規制推進', `規制推進成功（ダイス: ${diceRolls[0]}+${diceRolls[1]}=${regulationDice}）- パブリックコメント募集開始`);
         break;
         
@@ -963,10 +968,15 @@ function promoteRegulation(G: GameState, ctx: Ctx) {
         break;
     }
   } else {
+    // デバッグログ：失敗時も確認
+    console.log(`❌ 規制推進失敗: ${regulationDice} < 9`);
     addPlayLog(G, ctx.currentPlayer, '規制推進', `規制推進失敗（ダイス: ${diceRolls[0]}+${diceRolls[1]}=${regulationDice}、必要: 9以上）`);
   }
   
   player.actionPoints -= 2;
+  
+  // デバッグログ：ログ追加確認
+  console.log(`📋 プレイログ追加完了。現在のログ数: ${G.playLog?.length || 0}`);
 }
 
 function dayLabor(G: GameState, ctx: Ctx) {
