@@ -57,10 +57,8 @@ const MarketDisruption: Game<GameState> = {
     
     // 新しい統合アクション: オートマフェーズ + マーケットフェーズ + 次ラウンド
     executeAutomataAndMarket: ({ G }) => {
-      console.log('🤖 Starting Automata and Market execution...');
       
       // オートマフェーズ実行
-      console.log('🏭 Executing Manufacturer Automata...');
       executeManufacturerAutomata(G);
       
       console.log('🔄 Executing Resale Automata...');
@@ -78,8 +76,7 @@ const MarketDisruption: Game<GameState> = {
         G.regulationStageRounds++;
       }
       
-      console.log(`🎮 Starting round ${G.round}`);
-      
+            
       // 全プレイヤーのAPをリセット
       for (const playerId in G.players) {
         G.players[playerId].actionPoints = 3;
@@ -90,12 +87,10 @@ const MarketDisruption: Game<GameState> = {
         if (checkVictoryConditions(G.players[playerId])) {
           G.gameEnded = true;
           G.winner = playerId;
-          console.log(`🏆 Game ended! Winner: ${G.players[playerId].name}`);
-          break;
+                    break;
         }
       }
       
-      console.log('✅ Automata and Market execution completed');
     }
   },
 
@@ -144,8 +139,7 @@ const MarketDisruption: Game<GameState> = {
         G.regulationStageRounds++;
       }
       
-      console.log(`🎮 Starting round ${G.round}`);
-            
+                  
             // 全プレイヤーのAPをリセット
             for (const playerId in G.players) {
               G.players[playerId].actionPoints = 3;
@@ -156,8 +150,7 @@ const MarketDisruption: Game<GameState> = {
               if (checkVictoryConditions(G.players[playerId])) {
                 G.gameEnded = true;
                 G.winner = playerId;
-                console.log(`🏆 Game ended! Winner: ${G.players[playerId].name}`);
-                break;
+                                break;
               }
             }
           }
@@ -275,8 +268,7 @@ function purchase(G: GameState, ctx: Ctx, targetPlayerId: string, productId: str
 
 function executeManufacturerAutomata(G: GameState): void {
   const diceSum = rollDice() + rollDice();
-  console.log(`🤖 メーカー・オートマ: ダイス合計 ${diceSum}`);
-  
+    
   let action: string;
   let targetCost: number;
   let priceMultiplier: number;
@@ -302,8 +294,7 @@ function executeManufacturerAutomata(G: GameState): void {
     for (const product of G.automata.market) {
       product.price = Math.max(1, product.price - 2);
     }
-    console.log(`🏭 在庫一掃: ${G.automata.market.length}個の商品価格を-2`);
-    
+        
     // ログ記録
     if (G.playLog) {
       G.playLog.push({
@@ -319,8 +310,7 @@ function executeManufacturerAutomata(G: GameState): void {
     return;
   }
   
-  console.log(`🏭 メーカー・オートマ: ${action}製造 (コスト${targetCost})`);
-  
+    
   // 製造アクション
   const product: Product = {
     id: `manufacturer-automata-${Date.now()}`,
@@ -332,8 +322,7 @@ function executeManufacturerAutomata(G: GameState): void {
   };
   
   G.automata.market.push(product);
-  console.log(`🏭 製造完了: コスト${targetCost}、価格${product.price}の商品を作成`);
-  
+    
   // ログ記録
   if (G.playLog) {
     G.playLog.push({
@@ -362,8 +351,7 @@ function executeManufacturerAutomata(G: GameState): void {
       
       for (const targetProduct of targetProducts) {
         targetProduct.popularity = Math.max(1, targetProduct.popularity - 1);
-        console.log(`👎 低評価レビュー: 商品${targetProduct.id}の人気度 ${targetProduct.popularity + 1} → ${targetProduct.popularity}`);
-      }
+              }
       
       // ログ記録
       if (G.playLog) {
@@ -387,8 +375,7 @@ function executeManufacturerAutomata(G: GameState): void {
       
       for (const targetProduct of targetProducts) {
         targetProduct.popularity = Math.min(6, targetProduct.popularity + 1);
-        console.log(`👍 高評価レビュー: 商品${targetProduct.id}の人気度 ${targetProduct.popularity - 1} → ${targetProduct.popularity}`);
-      }
+              }
       
       // ログ記録
       if (G.playLog) {
@@ -431,11 +418,9 @@ function executeResaleAutomata(G: GameState): void {
   }
   
   const diceSum = rollDice() + rollDice();
-  console.log(`🔄 転売ヤー・オートマ: ダイス合計 ${diceSum}`);
-  
+    
   // 6,7,8は様子見
   if (diceSum >= 6 && diceSum <= 8) {
-    console.log('🔄 転売ヤー・オートマ: 様子見');
     
     // ログ記録
     if (G.playLog) {
@@ -495,8 +480,7 @@ function executeResaleAutomata(G: GameState): void {
     }
   }
   
-  console.log(`🔄 転売ヤー・オートマ: ${actionName} - ${targetProducts.length}個の商品を対象`);
-  
+    
   let purchaseCount = 0;
   for (const product of targetProducts) {
     if (G.automata.resaleOrganizationMoney >= product.price) {
@@ -527,8 +511,7 @@ function executeResaleAutomata(G: GameState): void {
       
       // ショート動画ブーム効果（オートマは資金増加なし）
       if (G.shortVideoBonus) {
-        console.log(`📱 ショート動画ブーム: 転売ヤー・オートマが転売成功（効果：プレイヤーのみ）`);
-      }
+              }
       
       // 元の所有者に支払い
       if (product.playerId === 'manufacturer-automata') {
@@ -552,8 +535,7 @@ function executeResaleAutomata(G: GameState): void {
       G.marketPollution++;
       purchaseCount++;
       
-      console.log(`🔄 転売購入: ${product.price}資金で購入 → ${resaleProduct.price}資金で転売出品`);
-    }
+          }
   }
   
   // ログ記録
@@ -572,8 +554,7 @@ function executeResaleAutomata(G: GameState): void {
 
 function executeMarketPhase(G: GameState): void {
   const demandDice = rollDice() + rollDice();
-  console.log(`🏪 市場フェーズ: 需要ダイス ${demandDice}`);
-  
+    
   // 販売中の商品を収集（価格が設定されている商品のみ）
   const allProducts: Product[] = [];
   for (const playerId in G.players) {
@@ -581,32 +562,27 @@ function executeMarketPhase(G: GameState): void {
   }
   allProducts.push(...G.automata.market.filter(p => p.price > 0));
   
-  console.log(`🏪 市場に出品中の商品: ${allProducts.length}個`);
-  
+    
   // 需要値に合致する商品を選択
   const eligibleProducts = allProducts.filter(product => {
     const demandValues = getDemandValue(product.cost);
     return demandValues.includes(demandDice);
   });
   
-  console.log(`🏪 需要値${demandDice}に合致する商品: ${eligibleProducts.length}個`);
-  
+    
   // 人気度順、価格順でソート
   eligibleProducts.sort((a, b) => b.popularity - a.popularity || a.price - b.price);
   
   // 上位5個を購入
   const purchasedProducts = eligibleProducts.slice(0, 5);
-  console.log(`🏪 購入される商品: ${purchasedProducts.length}個`);
-  
+    
   let totalSales = 0;
   for (const product of purchasedProducts) {
     // Rule.mdに従い転売商品は汚染ペナルティの影響を受けない
     const pollutionPenalty = product.isResale ? 0 : getPollutionPenalty(G.marketPollution);
     const actualPrice = Math.max(1, product.price - pollutionPenalty);
     
-    const penaltyMessage = product.isResale ? '転売品のため汚染免除' : `汚染ペナルティ-${pollutionPenalty}`;
-    console.log(`💰 売上: 商品${product.id} 価格${product.price} → 実際の売価${actualPrice} (${penaltyMessage})`);
-    
+        
     if (product.playerId === 'manufacturer-automata' || product.playerId === 'resale-automata') {
       // オートマの商品の場合
       const productIndex = G.automata.market.findIndex(p => p.id === product.id);
@@ -622,8 +598,7 @@ function executeMarketPhase(G: GameState): void {
         if (productIndex !== -1) {
           player.personalMarket.splice(productIndex, 1);
         }
-        console.log(`💰 ${player.name}が${actualPrice}資金を獲得`);
-      }
+              }
     }
     
     totalSales += actualPrice;
@@ -686,8 +661,7 @@ function review(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
     product.popularity = Math.max(1, product.popularity - 1);
   }
   
-  console.log(`📝 レビュー: ${player.name}が${targetName}の商品に${isPositive ? '高評価' : '低評価'} (人気度 ${oldPopularity} → ${product.popularity})`);
-  
+    
   // ログ記録
   if (G.playLog) {
     G.playLog.push({
@@ -859,11 +833,9 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
   // ショート動画ブーム効果
   if (G.shortVideoBonus) {
     player.money += 2;
-    console.log(`📱 ショート動画ブーム: ${player.name}が転売成功により+2資金ボーナス獲得`);
-  }
+      }
   
-  console.log(`🔄 転売実行: ${player.name}が${targetName}の商品を${product.price}資金で購入、${resalePrice}資金で転売出品`);
-  
+    
   // ログ記録
   if (G.playLog) {
     G.playLog.push({
@@ -1062,8 +1034,7 @@ function purchasePrestige(G: GameState, ctx: Ctx) {
   // このラウンドで威厳購入したことを記録
   G.prestigePurchasePerRound[purchaseKey] = true;
   
-  console.log(`💎 威厳購入: ${player.name}が5資金で威厳1ポイント購入 (威厳: ${player.prestige - 1} → ${player.prestige})`);
-  
+    
   // ログ記録
   if (G.playLog) {
     G.playLog.push({
@@ -1121,13 +1092,10 @@ function outsourceReview(G: GameState, ctx: Ctx, targetPlayerId: string, product
   if (detectionRoll === 1) {
     player.prestige = Math.max(-5, player.prestige - 2);
     detected = true;
-    console.log(`🎲 発覚判定: ${detectionRoll} → 外注レビューがバレました！威厳-2`);
-  } else {
-    console.log(`🎲 発覚判定: ${detectionRoll} → 外注レビューは発覚しませんでした`);
-  }
+      } else {
+      }
   
-  console.log(`💰 レビュー外注: ${player.name}が3資金で${targetName}の商品に${isPositive ? '高評価' : '低評価'}外注 (人気度 ${oldPopularity} → ${product.popularity})`);
-  
+    
   // ログ記録
   if (G.playLog) {
     G.playLog.push({
@@ -1200,12 +1168,10 @@ function outsourceManufacturing(G: GameState, ctx: Ctx, designId: string, quanti
       const designOwnerPlayer = G.players[designOwner];
       if (designOwnerPlayer) {
         designOwnerPlayer.money += outsourceFee * quantity;
-        console.log(`💰 オープンソース外注料: ${designOwnerPlayer.name}が${outsourceFee * quantity}資金獲得`);
-      }
+              }
     }
     
-    console.log(`🏭 オートマ外注: ${player.name}が${totalCost}資金で${quantity}個製造完了`);
-    
+        
     // ログ記録
     if (G.playLog) {
       G.playLog.push({
@@ -1246,8 +1212,7 @@ function outsourceManufacturing(G: GameState, ctx: Ctx, designId: string, quanti
     // APを消費（拒否された場合は後で返却）
     player.actionPoints -= 1;
     
-    console.log(`📋 プレイヤー外注依頼: ${player.name} → ${targetPlayer.name} (コスト${design.cost})`);
-    
+        
     // ログ記録
     if (G.playLog) {
       G.playLog.push({
@@ -1334,12 +1299,10 @@ function respondToManufacturingOrder(G: GameState, ctx: Ctx, orderId: string, ac
         const designOwnerPlayer = G.players[designOwner];
         if (designOwnerPlayer) {
           designOwnerPlayer.money += outsourceFee;
-          console.log(`💰 オープンソース外注料: ${designOwnerPlayer.name}が${outsourceFee}資金獲得`);
-        }
+                  }
       }
       
-      console.log(`✅ 外注受諾: ${player.name}が${client.name}の依頼を受諾、製造完了`);
-      
+            
       // ログ記録
       if (G.playLog) {
         G.playLog.push({
@@ -1364,8 +1327,7 @@ function respondToManufacturingOrder(G: GameState, ctx: Ctx, orderId: string, ac
     // 依頼者のAPを返却
     client.actionPoints += 1;
     
-    console.log(`❌ 外注拒否: ${player.name}が${client.name}の依頼を拒否`);
-    
+        
     // ログ記録
     if (G.playLog) {
       G.playLog.push({
@@ -1408,14 +1370,12 @@ function getTrendEffect(sum: number) {
 }
 
 function executeTrendEffect(G: GameState, effect: any, playerId: string) {
-  console.log(`🌟 Executing trend effect: ${effect.name}`);
-  
+    
   switch (effect.name) {
     case '経済特需':
       for (const pid in G.players) {
         G.players[pid].money += 15;
       }
-      console.log('📈 All players gained 15 money');
       break;
       
     case '技術革新':
@@ -1425,8 +1385,7 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
         const design = techPlayer.designs[0]; // 最初の設計を選択
         if (design.cost > 1) {
           design.cost -= 1;
-          console.log(`🔬 技術革新: ${techPlayer.name}の設計コスト ${design.cost + 1} → ${design.cost}`);
-        }
+                  }
       }
       break;
       
@@ -1441,17 +1400,14 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
           // パーソナル・マーケット内での位置調整が必要な場合
           if (product.popularity !== oldPopularity && product.price > 0) {
             // 商品の位置を更新（価格は変わらず、人気度のみ変更）
-            console.log(`Product ${product.id} popularity: ${oldPopularity} → ${product.popularity}`);
-          }
+                      }
         }
-        console.log(`📱 All products of player ${playerId} gained +1 popularity`);
-      }
+              }
       break;
       
     case '汚染改善キャンペーン':
       G.marketPollution = Math.max(0, G.marketPollution - 2);
-      console.log(`🌱 Market pollution reduced by 2, now: ${G.marketPollution}`);
-      break;
+            break;
       
     case 'テレワーク需要':
       // 価格10以下の全商品の人気度+1
@@ -1461,8 +1417,7 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
             const oldPopularity = product.popularity;
             product.popularity = Math.min(6, product.popularity + 1);
             if (product.popularity !== oldPopularity) {
-              console.log(`Product ${product.id} popularity: ${oldPopularity} → ${product.popularity}`);
-            }
+                          }
           }
         }
       }
@@ -1499,8 +1454,7 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
           const latestDesign = diyPlayer.designs[diyPlayer.designs.length - 1]; // 最新設計
           if (latestDesign.cost > 1) {
             latestDesign.cost -= 1;
-            console.log(`🔨 DIYブーム: ${diyPlayer.name}の最新設計コスト ${latestDesign.cost + 1} → ${latestDesign.cost}`);
-          }
+                      }
         }
       }
       break;
@@ -1508,7 +1462,6 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
     case 'ショート動画ブーム':
       // 転売が成功するたびに+2資金ボーナス（発動後永続）
       G.shortVideoBonus = true;
-      console.log('📱 ショート動画ブーム: 転売成功時+2資金ボーナスが永続発動');
       break;
       
     case 'ギフト需要':
@@ -1519,8 +1472,7 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
             const oldPopularity = product.popularity;
             product.popularity = Math.min(6, product.popularity + 1);
             if (product.popularity !== oldPopularity) {
-              console.log(`🎁 ギフト需要: 商品${product.id} 人気度 ${oldPopularity} → ${product.popularity}`);
-            }
+                          }
           }
         }
       }
@@ -1529,14 +1481,12 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
           product.popularity = Math.min(6, product.popularity + 1);
         }
       }
-      console.log('🎁 All products with popularity ≤3 gained +1 popularity');
       break;
       
     case '緑化促進':
       // 市場汚染レベルを-3
       G.marketPollution = Math.max(0, G.marketPollution - 3);
-      console.log(`🌱 緑化促進: 市場汚染レベル-3、現在: ${G.marketPollution}`);
-      break;
+            break;
       
     case '消費者不信':
       // あなた以外の全プレイヤーの威厳-1
@@ -1544,8 +1494,7 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
         if (pid !== playerId) {
           const targetPlayer = G.players[pid];
           targetPlayer.prestige = Math.max(-5, targetPlayer.prestige - 1);
-          console.log(`😠 消費者不信: ${targetPlayer.name}の威厳-1 (現在: ${targetPlayer.prestige})`);
-        }
+                  }
       }
       break;
       
@@ -1553,12 +1502,9 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
       // ダイスを3つ引き、コスト0で設計・製造・販売（簡易実装）
       const marketPlayer = G.players[playerId];
       if (marketPlayer) {
-        // 3つのダイスを振る
+        // ダイスを振る
         const dice1 = rollDice();
-        const dice2 = rollDice();
-        const dice3 = rollDice();
-        console.log(`🎲 市場開放: ダイス結果 ${dice1}, ${dice2}, ${dice3}`);
-        
+                
         // 最初のダイスで無料設計・製造・販売
         if (marketPlayer.designs.length < 6) {
           const freeDesign = {
@@ -1579,8 +1525,7 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
           };
           marketPlayer.personalMarket.push(freeProduct);
           
-          console.log(`🆓 市場開放: ${marketPlayer.name}が無料で設計・製造・販売完了（コスト${dice1}、価格${dice1 * 2}）`);
-        }
+                  }
       }
       break;
       
@@ -1593,8 +1538,7 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
         const targetPlayer = G.players[targetId];
         
         targetPlayer.prestige = Math.max(-5, targetPlayer.prestige - 3);
-        console.log(`🗣️ 風評操作: ${targetPlayer.name}の威厳-3 (現在: ${targetPlayer.prestige})`);
-      }
+              }
       break;
       
     case 'サステナビリティ':
@@ -1605,8 +1549,7 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
           const oldPopularity = product.popularity;
           product.popularity = Math.min(6, product.popularity + 1);
           if (product.popularity !== oldPopularity) {
-            console.log(`Product ${product.id} popularity: ${oldPopularity} → ${product.popularity}`);
-          }
+                      }
         }
       }
       break;
@@ -1616,18 +1559,15 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
       const favoritePlayer = G.players[playerId];
       if (favoritePlayer) {
         favoritePlayer.prestige += 5;
-        console.log(`👑 市場の寵児: ${favoritePlayer.name}の威厳+5 (現在: ${favoritePlayer.prestige})`);
-      }
+              }
       break;
       
     default:
-      console.log(`Unknown trend effect: ${effect.name}`);
-      break;
+            break;
   }
 }
 
 function startGame(G: GameState, ctx: Ctx) {
-  console.log('🎮 Starting game...');
   
   // 既に参加しているプレイヤーを初期状態に設定
   for (const playerId in G.players) {
@@ -1667,15 +1607,12 @@ function startGame(G: GameState, ctx: Ctx) {
     });
   }
   
-  console.log(`🎯 Game started with ${ctx.numPlayers} players`);
-}
+  }
 
 function joinGame(G: GameState, _ctx: Ctx, playerName: string) {
-  console.log(`🎮 Player joining game: ${playerName}`);
-  
+    
   // ロビー状態でのみ参加可能
   if (G.phase !== 'lobby') {
-    console.error('Cannot join game: not in lobby phase');
     return 'INVALID_MOVE';
   }
   
@@ -1707,8 +1644,7 @@ function joinGame(G: GameState, _ctx: Ctx, playerName: string) {
     personalMarket: []
   };
   
-  console.log(`✅ Player ${newPlayerId} (${G.players[newPlayerId].name}) joined the game`);
-  
+    
   // ログ記録
   if (G.playLog) {
     G.playLog.push({
