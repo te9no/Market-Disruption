@@ -657,21 +657,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
   
   return (
     <div style={{ 
-      display: 'flex', 
+      display: isMobile ? 'flex' : 'grid',
+      gridTemplateColumns: isMobile ? 'none' : '1fr 320px',
       flexDirection: isMobile ? 'column' : 'row',
       minHeight: '100vh',
       width: '100vw',
       maxWidth: '100vw',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      gap: 0
     }}>
       {/* メインゲーム画面 */}
       <div style={{ 
-        flex: '1 1 0',
         padding: isMobile ? '10px' : '20px', 
         fontFamily: 'Arial, sans-serif',
         overflow: 'auto',
-        minWidth: 0,
-        width: 0 // flexで制御するため初期値を0に
+        minWidth: 0
       }}>
         <h1>マーケット・ディスラプション</h1>
       
@@ -885,7 +885,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           fontSize: '28px',
           fontWeight: 'bold',
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          zIndex: 1000
+          zIndex: 9999
         }}>
           🎉 {G.players[G.winner].name} の勝利！ 🎉
           <div style={{ fontSize: '16px', marginTop: '10px', fontWeight: 'normal' }}>

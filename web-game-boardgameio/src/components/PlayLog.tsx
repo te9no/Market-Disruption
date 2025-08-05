@@ -36,18 +36,16 @@ export const PlayLog: React.FC<PlayLogPropsExtended> = ({ playLog, isMobile = wi
 
   return (
     <div style={{
-      width: isMobile ? '100%' : '300px',
+      width: isMobile ? '100%' : '320px',
       height: isMobile ? 'auto' : '100vh',
-      flexShrink: 0,
       backgroundColor: '#f5f5f5',
       borderLeft: isMobile ? 'none' : '2px solid #ddd',
       borderTop: isMobile ? '2px solid #ddd' : 'none',
       padding: isMobile ? '5px' : '10px',
       overflowY: isMobile ? 'visible' : 'auto',
       fontSize: isMobile ? '10px' : '12px',
-      position: 'static',
-      zIndex: isMobile ? 'auto' : 1000,
-      maxHeight: isMobile ? '300px' : 'auto'
+      maxHeight: isMobile ? '300px' : '100vh',
+      boxSizing: 'border-box'
     }}>
       <h3 style={{ 
         margin: '0 0 10px 0', 
