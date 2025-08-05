@@ -5,8 +5,11 @@ interface PlayLogProps {
   playLog: PlayLogEntry[];
 }
 
-export const PlayLog: React.FC<PlayLogProps> = ({ playLog }) => {
-  const isMobile = window.innerWidth <= 768;
+interface PlayLogPropsExtended extends PlayLogProps {
+  isMobile?: boolean;
+}
+
+export const PlayLog: React.FC<PlayLogPropsExtended> = ({ playLog, isMobile = window.innerWidth <= 768 }) => {
   const getActorName = (actor: string) => {
     if (actor === 'manufacturer-automata') return '🏭 メーカー・オートマ';
     if (actor === 'resale-automata') return '🔄 転売ヤー・オートマ';
@@ -33,7 +36,7 @@ export const PlayLog: React.FC<PlayLogProps> = ({ playLog }) => {
 
   return (
     <div style={{
-      width: isMobile ? '100%' : '350px',
+      width: isMobile ? '100%' : '300px',
       height: isMobile ? 'auto' : '100vh',
       flexShrink: 0,
       backgroundColor: '#f5f5f5',

@@ -658,8 +658,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
   return (
     <div style={{ 
       display: 'flex', 
-      flexDirection: isMobile ? 'column' : 'row',
-      minHeight: '100vh'
+      flexDirection: 'row',
+      minHeight: '100vh',
+      maxWidth: '100vw',
+      overflow: 'hidden'
     }}>
       {/* メインゲーム画面 */}
       <div style={{ 
@@ -1342,7 +1344,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
       </div>
 
       {/* プレイログ */}
-      <PlayLog playLog={G.playLog} />
+      <PlayLog playLog={G.playLog} isMobile={isMobile} />
     </div>
   );
 };
