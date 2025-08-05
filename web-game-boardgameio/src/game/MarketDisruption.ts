@@ -552,6 +552,12 @@ function executeResaleAutomata(G: GameState): void {
       G.marketPollution = Math.min(12, G.marketPollution + 1);
       purchaseCount++;
       
+      // ショート動画ブーム効果：転売成功時に+2資金ボーナス
+      if (G.shortVideoBonus) {
+        G.automata.resaleOrganizationMoney += 2;
+        console.log(`📱 ショート動画ブーム効果: 転売ヤー・オートマに+2資金ボーナス`);
+      }
+      
       console.log(`🔄 転売購入: ${product.price}資金で購入 → ${resaleProduct.price}資金で転売出品`);
     }
   }
@@ -904,6 +910,14 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
   player.personalMarket.push(resaleProduct);
   G.marketPollution = Math.min(12, G.marketPollution + 1);
   
+  // ショート動画ブーム効果：転売成功時に+2資金ボーナス
+  let shortVideoBonusText = '';
+  if (G.shortVideoBonus) {
+    player.money += 2;
+    shortVideoBonusText = '、ショート動画ブーム効果で+2資金';
+    console.log(`📱 ショート動画ブーム効果: ${player.name}に+2資金ボーナス`);
+  }
+  
   console.log(`🔄 転売実行: ${player.name}が${targetName}の商品を${product.price}資金で購入、${resalePrice}資金で転売出品`);
   
   // ログ記録
@@ -914,7 +928,7 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
       phase: ctx.phase || G.phase,
       actor: ctx.currentPlayer,
       action: '転売',
-      details: `${targetName}の商品(コスト${product.cost})を${product.price}資金で購入、${resalePrice}資金で転売、威厳-1、転売履歴+1、市場汚染+1`,
+      details: `${targetName}の商品(コスト${product.cost})を${product.price}資金で購入、${resalePrice}資金で転売、威厳-1、転売履歴+1、市場汚染+1${shortVideoBonusText}`,
       timestamp: Date.now()
     });
   }
@@ -1650,6 +1664,25 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
       }
       break;
       
+    case 'ショート動画ブーム':
+      // 転売が成功するたびに+2資金ボーナス（発動後永続）
+      G.shortVideoBonus = true;
+      console.log('📱 ショート動画ブーム: 転売成功時に+2資金ボーナスが永続的に有効になりました');
+      break;
+      
+    case '消費者不信':
+      // あなた以外の全プレイヤーの威厳-1
+      const distrustPlayer = G.players[playerId];
+      if (distrustPlayer) {
+        for (const pid in G.players) {
+          if (pid !== playerId) {
+            G.players[pid].prestige -= 1;
+            console.log(`😠 消費者不信: ${G.players[pid].name}の威厳が-1され、${G.players[pid].prestige}になりました`);
+          }
+        }
+      }
+      break;
+      
     case 'サステナビリティ':
       // プレイヤーが任意の商品の人気度を+3できる（実装は簡易版：自分の商品全てに+1）
       const sustainabilityPlayer = G.players[playerId];
@@ -1658,7 +1691,7 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
           const oldPopularity = product.popularity;
           product.popularity = Math.min(6, product.popularity + 1);
           if (product.popularity !== oldPopularity) {
-            console.log(`Product ${product.id} popularity: ${oldPopularity} → ${product.popularity}`);
+            console.log(`🌱 サステナビリティ: 商品${product.id} 人気度${oldPopularity}→${product.popularity}`);
           }
         }
       }

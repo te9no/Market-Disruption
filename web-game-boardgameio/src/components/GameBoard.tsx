@@ -12,6 +12,26 @@ interface GameBoardProps {
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, playerID, isActive }) => {
+  const [errorMessage, setErrorMessage] = React.useState<string>('');
+  const [successMessage, setSuccessMessage] = React.useState<string>('');
+
+  // メッセージを自動で消す
+  React.useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
+
+  React.useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(''), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  const showError = (message: string) => setErrorMessage(message);
+  const showSuccess = (message: string) => setSuccessMessage(message);
   
   // ロビー画面
   if (G.phase === 'lobby') {
@@ -196,10 +216,51 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
   }
 
   const handleManufacture = (designId: string) => {
-    if (isActive) {
+    if (!isActive) {
+      showError('他のプレイヤーのターンです');
+      return;
+    }
+    
+    const design = currentPlayer.designs.find(d => d.id === designId);
+    if (!design) {
+      showError('設計が見つかりません');
+      return;
+    }
+    
+    const manufactureCheck = canManufacture(design);
+    if (!manufactureCheck.canExecute) {
+      showError(manufactureCheck.reason || '製造できません');
+      return;
+    }
+    
+    try {
       moves.manufacture(designId);
+      showSuccess(`製造を実行しました (コスト${design.cost})`);
+    } catch (error) {
+      showError('製造に失敗しました');
     }
   };
+
+  // アクション実行可能性チェック用ヘルパー関数
+  const canExecuteAction = (requiredAP: number, additionalCheck?: () => boolean): { canExecute: boolean; reason?: string } => {
+    if (!isActive) return { canExecute: false, reason: '他のプレイヤーのターンです' };
+    if (currentPlayer.actionPoints < requiredAP) return { canExecute: false, reason: `APが不足しています (${requiredAP}AP必要)` };
+    if (currentPlayer.prestige <= -3 && requiredAP > 0) return { canExecute: false, reason: '威厳が-3以下のため実行不可' };
+    if (additionalCheck && !additionalCheck()) return { canExecute: false, reason: '条件を満たしていません' };
+    return { canExecute: true };
+  };
+
+  const canManufacture = (design: any) => {
+    return canExecuteAction(1, () => currentPlayer.money >= design.cost);
+  };
+
+  // const canSell = () => {
+  //   return canExecuteAction(1, () => currentPlayer.personalMarket.some(p => p.price === 0));
+  // };
+
+  // const canDesign = () => {
+  //   return canExecuteAction(2, () => currentPlayer.designs.length < 6 && currentPlayer.money >= 0);
+  // };
 
   const handleSell = (productId: string, price: number) => {
     if (isActive && price > 0 && Number.isInteger(price)) {
@@ -556,13 +617,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             コスト: {design.cost} {design.isOpenSource ? '(オープンソース)' : ''}
             {player.id === playerID && isActive && (
               <>
-                <button 
-                  onClick={() => handleManufacture(design.id)}
-                  disabled={player.money < design.cost || player.actionPoints < 1}
-                  style={{ marginLeft: '10px' }}
-                >
-                  製造 ({design.cost}資金)
-                </button>
+                {(() => {
+                  const manufactureCheck = canManufacture(design);
+                  return (
+                    <button 
+                      onClick={() => handleManufacture(design.id)}
+                      disabled={!manufactureCheck.canExecute}
+                      style={{ 
+                        marginLeft: '10px',
+                        backgroundColor: manufactureCheck.canExecute ? '#4CAF50' : '#ccc',
+                        color: manufactureCheck.canExecute ? 'white' : '#666',
+                        cursor: manufactureCheck.canExecute ? 'pointer' : 'not-allowed'
+                      }}
+                      title={manufactureCheck.canExecute ? '' : manufactureCheck.reason}
+                    >
+                      製造 ({design.cost}資金) {!manufactureCheck.canExecute ? '[不可]' : ''}
+                    </button>
+                  );
+                })()}
                 {currentPlayer.prestige > -3 && (
                   <>
                     <button 
@@ -674,6 +746,35 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
         minWidth: 0
       }}>
         <h1>マーケット・ディスラプション</h1>
+
+        {/* メッセージ表示エリア */}
+        {errorMessage && (
+          <div style={{
+            marginBottom: '10px',
+            padding: '10px',
+            backgroundColor: '#ffebee',
+            border: '1px solid #f44336',
+            borderRadius: '4px',
+            color: '#c62828',
+            fontSize: '14px'
+          }}>
+            ❌ {errorMessage}
+          </div>
+        )}
+        
+        {successMessage && (
+          <div style={{
+            marginBottom: '10px',
+            padding: '10px',
+            backgroundColor: '#e8f5e8',
+            border: '1px solid #4caf50',
+            borderRadius: '4px',
+            color: '#2e7d32',
+            fontSize: '14px'
+          }}>
+            ✅ {successMessage}
+          </div>
+        )}
       
       <div style={{ 
         marginBottom: '20px',
