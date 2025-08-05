@@ -602,7 +602,7 @@ function executeMarketPhase(G: GameState): void {
       id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       round: G.round,
       phase: G.phase,
-      actor: 'market',
+      actor: 'system',
       action: '需要処理',
       details: `需要値${demandDice}、${purchasedProducts.length}個販売、総売上${totalSales}資金`,
       timestamp: Date.now()
@@ -869,19 +869,68 @@ function design(G: GameState, ctx: Ctx, isOpenSource: boolean = false) {
 function promoteRegulation(G: GameState, ctx: Ctx) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 2) return 'INVALID_MOVE';
+  if (ctx.phase !== 'action') return 'INVALID_MOVE';
   
-  const regulationDice = rollDice() + rollDice();
+  const dice1 = rollDice();
+  const dice2 = rollDice();
+  const regulationDice = dice1 + dice2;
+  
+  console.log(`🎲 規制推進ダイス: ${dice1} + ${dice2} = ${regulationDice}`);
+  
   if (regulationDice >= 9) {
+    console.log(`✅ 規制推進成功: ${regulationDice} >= 9`);
     G.regulationLevel++;
     
     if (G.regulationLevel >= 3) {
+      // 全転売品没収と資金没収
       for (const playerId in G.players) {
         const p = G.players[playerId];
         p.personalMarket = p.personalMarket.filter(product => !product.isResale);
-        p.money -= p.resaleHistory * 2;
+        const penalty = Math.min(p.resaleHistory * 2, p.money);
+        p.money = Math.max(0, p.money - penalty);
       }
       
       G.automata.market = G.automata.market.filter(product => !product.isResale);
+      
+      // ログ記録
+      if (G.playLog) {
+        G.playLog.push({
+          id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          round: G.round,
+          phase: ctx.phase || G.phase,
+          actor: ctx.currentPlayer,
+          action: '規制推進',
+          details: `規制推進成功（ダイス: ${dice1}+${dice2}=${regulationDice}）- 転売規制発動！全転売品没収`,
+          timestamp: Date.now()
+        });
+      }
+    } else {
+      // ログ記録（段階上昇）
+      if (G.playLog) {
+        G.playLog.push({
+          id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          round: G.round,
+          phase: ctx.phase || G.phase,
+          actor: ctx.currentPlayer,
+          action: '規制推進',
+          details: `規制推進成功（ダイス: ${dice1}+${dice2}=${regulationDice}）- 規制レベル${G.regulationLevel}に上昇`,
+          timestamp: Date.now()
+        });
+      }
+    }
+  } else {
+    console.log(`❌ 規制推進失敗: ${regulationDice} < 9`);
+    // ログ記録（失敗）
+    if (G.playLog) {
+      G.playLog.push({
+        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        round: G.round,
+        phase: ctx.phase || G.phase,
+        actor: ctx.currentPlayer,
+        action: '規制推進',
+        details: `規制推進失敗（ダイス: ${dice1}+${dice2}=${regulationDice}、必要: 9以上）`,
+        timestamp: Date.now()
+      });
     }
   }
   
