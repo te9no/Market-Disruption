@@ -530,7 +530,7 @@ function executeResaleAutomata(G: GameState): void {
         }
       }
       
-      G.marketPollution++;
+      G.marketPollution = Math.min(12, G.marketPollution + 1);
       purchaseCount++;
       
       console.log(`🔄 転売購入: ${product.price}資金で購入 → ${resaleProduct.price}資金で転売出品`);
@@ -828,7 +828,7 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
   };
   
   player.personalMarket.push(resaleProduct);
-  G.marketPollution++;
+  G.marketPollution = Math.min(12, G.marketPollution + 1);
   
   console.log(`🔄 転売実行: ${player.name}が${targetName}の商品を${product.price}資金で購入、${resalePrice}資金で転売出品`);
   
@@ -1421,6 +1421,11 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
     case '汚染改善キャンペーン':
       G.marketPollution = Math.max(0, G.marketPollution - 2);
       console.log(`🌱 Market pollution reduced by 2, now: ${G.marketPollution}`);
+      break;
+      
+    case '緑化促進':
+      G.marketPollution = Math.max(0, G.marketPollution - 3);
+      console.log(`🌿 Green promotion: Market pollution reduced by 3, now: ${G.marketPollution}`);
       break;
       
     case 'テレワーク需要':
