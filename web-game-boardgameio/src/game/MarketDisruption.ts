@@ -79,6 +79,12 @@ const MarketDisruption: Game<GameState> = {
       G.round++;
       console.log(`🎮 Starting round ${G.round}`);
       
+      // 規制段階のラウンドカウント更新
+      if (G.regulationStage !== 'none') {
+        G.regulationStageRounds++;
+        console.log(`📊 規制段階: ${G.regulationStage}, ラウンド: ${G.regulationStageRounds}`);
+      }
+      
       // 全プレイヤーのAPをリセット
       for (const playerId in G.players) {
         G.players[playerId].actionPoints = 3;
@@ -138,6 +144,12 @@ const MarketDisruption: Game<GameState> = {
             // 次ラウンドの準備
             G.round++;
             console.log(`🎮 Starting round ${G.round}`);
+            
+            // 規制段階のラウンドカウント更新
+            if (G.regulationStage !== 'none') {
+              G.regulationStageRounds++;
+              console.log(`📊 規制段階: ${G.regulationStage}, ラウンド: ${G.regulationStageRounds}`);
+            }
             
             // 全プレイヤーのAPをリセット
             for (const playerId in G.players) {
@@ -881,6 +893,18 @@ function promoteRegulation(G: GameState, ctx: Ctx) {
     console.log(`✅ 規制推進成功: ${regulationDice} >= 9`);
     G.regulationLevel++;
     
+    // 規制段階の状態を更新
+    if (G.regulationLevel === 1) {
+      G.regulationStage = 'public_comment';
+      G.regulationStageRounds = 1;
+    } else if (G.regulationLevel === 2) {
+      G.regulationStage = 'consideration';
+      G.regulationStageRounds = 1;
+    } else if (G.regulationLevel >= 3) {
+      G.regulationStage = 'enforcement';
+      G.regulationStageRounds = 1;
+    }
+    
     if (G.regulationLevel >= 3) {
       // 全転売品没収と資金没収
       for (const playerId in G.players) {
@@ -913,7 +937,7 @@ function promoteRegulation(G: GameState, ctx: Ctx) {
           phase: ctx.phase || G.phase,
           actor: ctx.currentPlayer,
           action: '規制推進',
-          details: `規制推進成功（ダイス: ${dice1}+${dice2}=${regulationDice}）- 規制レベル${G.regulationLevel}に上昇`,
+          details: `規制推進成功（ダイス: ${dice1}+${dice2}=${regulationDice}）- ${G.regulationStage === 'public_comment' ? 'パブリックコメント段階' : G.regulationStage === 'consideration' ? '検討段階' : '規制発動段階'}に移行`,
           timestamp: Date.now()
         });
       }
