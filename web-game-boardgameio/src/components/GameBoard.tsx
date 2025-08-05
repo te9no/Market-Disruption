@@ -658,17 +658,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
   return (
     <div style={{ 
       display: 'flex', 
-      flexDirection: 'row',
+      flexDirection: isMobile ? 'column' : 'row',
       minHeight: '100vh',
+      width: '100vw',
       maxWidth: '100vw',
       overflow: 'hidden'
     }}>
       {/* メインゲーム画面 */}
       <div style={{ 
-        flex: 1, 
+        flex: '1 1 0',
         padding: isMobile ? '10px' : '20px', 
         fontFamily: 'Arial, sans-serif',
-        overflow: 'auto'
+        overflow: 'auto',
+        minWidth: 0,
+        width: 0 // flexで制御するため初期値を0に
       }}>
         <h1>マーケット・ディスラプション</h1>
       
