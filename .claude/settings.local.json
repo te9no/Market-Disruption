@@ -59,7 +59,11 @@
       "Bash(npx jest:*)",
       "Bash(npx typescript:*)",
       "Bash(npm:*)",
-      "Bash(\"./node_modules/.bin/tsc\" --noEmit)"
+      "Bash(\"./node_modules/.bin/tsc\" --noEmit)",
+      "mcp__serena__insert_before_symbol",
+      "mcp__serena__think_about_task_adherence",
+      "Bash(git checkout:*)",
+      "mcp__serena__think_about_whether_you_are_done"
     ],
     "deny": []
   }

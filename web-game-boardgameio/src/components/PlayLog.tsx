@@ -35,15 +35,14 @@ export const PlayLog: React.FC<PlayLogProps> = ({ playLog }) => {
     <div style={{
       width: isMobile ? '100%' : '350px',
       height: isMobile ? 'auto' : '100vh',
+      flexShrink: 0,
       backgroundColor: '#f5f5f5',
       borderLeft: isMobile ? 'none' : '2px solid #ddd',
       borderTop: isMobile ? '2px solid #ddd' : 'none',
       padding: isMobile ? '5px' : '10px',
       overflowY: isMobile ? 'visible' : 'auto',
       fontSize: isMobile ? '10px' : '12px',
-      position: isMobile ? 'static' : 'fixed',
-      right: isMobile ? 'auto' : 0,
-      top: isMobile ? 'auto' : 0,
+      position: 'static',
       zIndex: isMobile ? 'auto' : 1000,
       maxHeight: isMobile ? '300px' : 'auto'
     }}>

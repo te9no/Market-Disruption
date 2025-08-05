@@ -255,7 +255,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           {/* ヘッダー（価格） */}
           <div style={{ display: 'flex' }}>
             <div style={{ 
-              width: isMobile ? '40px' : '60px', 
+              width: isMobile ? '40px' : '80px', 
               height: '30px', 
               border: '1px solid #ccc', 
               backgroundColor: '#f5f5f5', 
@@ -269,7 +269,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             </div>
             {Array.from({length: 24}, (_, i) => i + 1).map(price => (
               <div key={price} style={{ 
-                width: isMobile ? '30px' : '50px', 
+                width: isMobile ? '30px' : '65px', 
                 height: '30px', 
                 border: '1px solid #ccc', 
                 backgroundColor: '#f5f5f5', 
@@ -289,7 +289,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             <div key={popularityIndex} style={{ display: 'flex' }}>
               {/* 人気度ラベル */}
               <div style={{ 
-                width: isMobile ? '40px' : '60px', 
+                width: isMobile ? '40px' : '80px', 
                 height: isMobile ? '40px' : '60px', 
                 border: '1px solid #ccc', 
                 backgroundColor: '#f5f5f5', 
@@ -306,7 +306,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
               {/* セル */}
               {row.map((cell, priceIndex) => (
                 <div key={priceIndex} style={{ 
-                  width: isMobile ? '30px' : '50px', 
+                  width: isMobile ? '30px' : '65px', 
                   height: isMobile ? '40px' : '60px', 
                   border: '1px solid #ccc', 
                   display: 'flex', 
@@ -314,7 +314,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                   alignItems: 'center', 
                   justifyContent: 'center',
                   backgroundColor: cell && cell.length > 0 ? '#e3f2fd' : 'white',
-                  fontSize: isMobile ? '6px' : '8px',
+                  fontSize: isMobile ? '8px' : '10px',
                   overflow: 'hidden'
                 }}>
                   {cell && cell.map((product: any) => (
@@ -326,7 +326,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                       borderRadius: product.isResale ? '8px' : '2px',
                       fontSize: '6px',
                       textAlign: 'center',
-                      width: isMobile ? '28px' : '46px',
+                      width: isMobile ? '28px' : '60px',
                       position: 'relative'
                     }}>
                       {product.isResale ? (
@@ -361,7 +361,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                                 color: 'white',
                                 border: 'none',
                                 cursor: 'pointer',
-                                width: isMobile ? '20px' : 'auto'
+                                width: isMobile ? '28px' : 'auto'
                               }}
                             >
                               {isMobile ? '購' : '購入'}
@@ -412,7 +412,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                               marginTop: '2px',
                               fontWeight: 'bold',
                               borderRadius: '4px',
-                              width: isMobile ? '25px' : 'auto'
+                              width: isMobile ? '28px' : 'auto'
                             }}
                           >
                             {isMobile ? '転' : '🔴転売🔴'} {isMobile ? '' : (product.price === 0 ? '[未出品]' : !isActive ? '[非ターン]' : player.id === currentPlayer.id ? '[自分商品]' : '')}
@@ -658,15 +658,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
   return (
     <div style={{ 
       display: 'flex', 
-      flexDirection: isMobile ? 'column' : 'row'
+      flexDirection: isMobile ? 'column' : 'row',
+      minHeight: '100vh'
     }}>
       {/* メインゲーム画面 */}
       <div style={{ 
         flex: 1, 
         padding: isMobile ? '10px' : '20px', 
         fontFamily: 'Arial, sans-serif',
-        marginRight: isMobile ? '0' : '350px', // プレイログ分の余白
-        width: isMobile ? '100%' : 'auto'
+        overflow: 'auto'
       }}>
         <h1>マーケット・ディスラプション</h1>
       
