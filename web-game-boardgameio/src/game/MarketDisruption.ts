@@ -752,22 +752,62 @@ function buyBack(G: GameState, ctx: Ctx, productId: string) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   
+  // actionフェーズでのみ実行可能
+  if (ctx.phase !== 'action') return 'INVALID_MOVE';
+  
   const productIndex = player.personalMarket.findIndex(p => p.id === productId);
   if (productIndex === -1) return 'INVALID_MOVE';
   
+  const product = player.personalMarket[productIndex];
+  
   player.personalMarket.splice(productIndex, 1);
   player.actionPoints -= 1;
+  
+  console.log(`🔙 買い戻し実行: ${player.name}が商品(コスト${product.cost})を市場から撤去`);
+  
+  // ログ記録
+  if (G.playLog) {
+    G.playLog.push({
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      round: G.round,
+      phase: ctx.phase || G.phase,
+      actor: ctx.currentPlayer,
+      action: '買い戻し',
+      details: `商品(コスト${product.cost}, 価格${product.price})を市場から撤去`,
+      timestamp: Date.now()
+    });
+  }
 }
 
 function discontinue(G: GameState, ctx: Ctx, designId: string) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
   
+  // actionフェーズでのみ実行可能
+  if (ctx.phase !== 'action') return 'INVALID_MOVE';
+  
   const designIndex = player.designs.findIndex(d => d.id === designId);
   if (designIndex === -1) return 'INVALID_MOVE';
   
+  const design = player.designs[designIndex];
+  
   player.designs.splice(designIndex, 1);
   player.actionPoints -= 1;
+  
+  console.log(`🗑️ 終売実行: ${player.name}が設計(コスト${design.cost})を完全削除`);
+  
+  // ログ記録
+  if (G.playLog) {
+    G.playLog.push({
+      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      round: G.round,
+      phase: ctx.phase || G.phase,
+      actor: ctx.currentPlayer,
+      action: '終売',
+      details: `設計(コスト${design.cost}${design.isOpenSource ? ', オープンソース' : ''})を完全削除`,
+      timestamp: Date.now()
+    });
+  }
 }
 
 function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: string, resalePrice: number) {
@@ -1462,6 +1502,78 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
       console.log(`🌿 Green promotion: Market pollution reduced by 3, now: ${G.marketPollution}`);
       break;
       
+    case '技術革新':
+      // 自身の任意の設計1つのダイス値-1（最新の設計を対象）
+      const techPlayer = G.players[playerId];
+      if (techPlayer && techPlayer.designs.length > 0) {
+        const latestDesign = techPlayer.designs[techPlayer.designs.length - 1];
+        if (latestDesign.cost > 1) {
+          latestDesign.cost -= 1;
+          console.log(`🔧 技術革新: ${techPlayer.name}の最新設計のコストが${latestDesign.cost + 1}→${latestDesign.cost}に改善`);
+        }
+      }
+      break;
+      
+    case 'DIYブーム':
+      // 全てのプレイヤーの最新設計のダイス値-1
+      for (const pid in G.players) {
+        const player = G.players[pid];
+        if (player.designs.length > 0) {
+          const latestDesign = player.designs[player.designs.length - 1];
+          if (latestDesign.cost > 1) {
+            latestDesign.cost -= 1;
+            console.log(`🛠️ DIYブーム: ${player.name}の最新設計のコストが${latestDesign.cost + 1}→${latestDesign.cost}に改善`);
+          }
+        }
+      }
+      break;
+      
+    case 'ギフト需要':
+      // 人気度3以下の全商品の人気度を+1
+      for (const pid in G.players) {
+        for (const product of G.players[pid].personalMarket) {
+          if (product.popularity <= 3) {
+            const oldPopularity = product.popularity;
+            product.popularity = Math.min(6, product.popularity + 1);
+            if (product.popularity !== oldPopularity) {
+              console.log(`🎁 ギフト需要: プレイヤー${pid}の商品${product.id} 人気度${oldPopularity}→${product.popularity}`);
+            }
+          }
+        }
+      }
+      // オートマ商品にも適用
+      for (const product of G.automata.market) {
+        if (product.popularity <= 3) {
+          const oldPopularity = product.popularity;
+          product.popularity = Math.min(6, product.popularity + 1);
+          if (product.popularity !== oldPopularity) {
+            console.log(`🎁 ギフト需要: オートマ商品${product.id} 人気度${oldPopularity}→${product.popularity}`);
+          }
+        }
+      }
+      break;
+      
+    case '市場の寵児':
+      const favoritePlayer = G.players[playerId];
+      if (favoritePlayer) {
+        favoritePlayer.prestige += 5;
+        console.log(`⭐ 市場の寵児: ${favoritePlayer.name}の威厳が+5され、${favoritePlayer.prestige}になりました`);
+      }
+      break;
+      
+    case '風評操作':
+      // 実装は簡易版：自分以外の全プレイヤーの威厳-1（本来は任意の1人を選択）
+      const manipulatorPlayer = G.players[playerId];
+      if (manipulatorPlayer) {
+        for (const pid in G.players) {
+          if (pid !== playerId) {
+            G.players[pid].prestige -= 1;
+            console.log(`💬 風評操作: ${G.players[pid].name}の威厳が-1され、${G.players[pid].prestige}になりました`);
+          }
+        }
+      }
+      break;
+      
     case 'テレワーク需要':
       // 価格10以下の全商品の人気度+1
       for (const pid in G.players) {
@@ -1498,6 +1610,44 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
         }
       }
       console.log('💰 All non-resale products gained +2 price');
+      break;
+      
+    case '市場開放':
+      // 簡易版実装：ランダムなコストで設計・製造・販売を1回ずつ自動実行
+      const marketOpenPlayer = G.players[playerId];
+      if (marketOpenPlayer) {
+        // ランダムなコストで設計作成
+        const newCost = rollDice(); // 1-6のコスト
+        const newDesign = {
+          id: `design-${playerId}-${Date.now()}`,
+          cost: newCost,
+          isOpenSource: false
+        };
+        marketOpenPlayer.designs.push(newDesign);
+        
+        // 即座に製造
+        const newProduct: Product = {
+          id: `product-${playerId}-${Date.now()}`,
+          cost: newCost,
+          price: 0,
+          popularity: 1,
+          playerId: playerId,
+          isResale: false
+        };
+        marketOpenPlayer.personalMarket.push(newProduct);
+        
+        // 即座に販売（威厳による価格上限で価格設定）
+        const maxPrice = getMaxPrice(newCost, marketOpenPlayer.prestige);
+        const salePrice = Math.min(maxPrice, Math.max(1, newCost * 2)); // 基本はコスト×2で販売
+        
+        // 座標競合がない場合のみ販売
+        if (!isMarketPositionOccupied(marketOpenPlayer, salePrice, newProduct.popularity)) {
+          newProduct.price = salePrice;
+          console.log(`🌍 市場開放: ${marketOpenPlayer.name}がコスト${newCost}の商品を設計・製造・${salePrice}資金で販売`);
+        } else {
+          console.log(`🌍 市場開放: ${marketOpenPlayer.name}がコスト${newCost}の商品を設計・製造（販売は座標競合で未実行）`);
+        }
+      }
       break;
       
     case 'サステナビリティ':
