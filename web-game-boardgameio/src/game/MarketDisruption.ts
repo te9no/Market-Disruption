@@ -188,6 +188,7 @@ const MarketDisruption: Game<GameState> = {
 function manufacture(G: GameState, ctx: Ctx, designId: string) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
+  if (player.prestige <= -3) return 'INVALID_MOVE';
   
   // actionフェーズでのみ製造可能
   if (ctx.phase !== 'action') return 'INVALID_MOVE';
@@ -424,6 +425,23 @@ function executeManufacturerAutomata(G: GameState): void {
 }
 
 function executeResaleAutomata(G: GameState): void {
+  // 規制発動時は行動停止
+  if (G.regulationStage === 'enforcement') {
+    console.log('⚖️ 転売ヤー・オートマ: 規制発動により行動停止');
+    if (G.playLog) {
+      G.playLog.push({
+        id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        round: G.round,
+        phase: 'automata',
+        actor: 'resale-automata',
+        action: '行動停止',
+        details: '規制発動により転売活動を停止',
+        timestamp: Date.now()
+      });
+    }
+    return;
+  }
+  
   // 資金を20まで自動補充
   if (G.automata.resaleOrganizationMoney < 20) {
     G.automata.resaleOrganizationMoney = 20;
@@ -467,12 +485,13 @@ function executeResaleAutomata(G: GameState): void {
   let actionName = '';
   
   if (diceSum <= 4) {
-    // 大量買い占め：最安値商品を3個まで
+    // 大量買い占め：最安値商品を通常3個まで、パブリックコメント段階では2個まで
     actionName = '大量買い占め';
+    const maxPurchase = G.regulationStage === 'public_comment' ? 2 : 3;
     targetProducts = allProducts
       .filter(p => G.automata.resaleOrganizationMoney >= p.price)
       .sort((a, b) => a.price - b.price || b.popularity - a.popularity)
-      .slice(0, 3);
+      .slice(0, maxPurchase);
   } else if (diceSum === 5 || diceSum === 9) {
     // 選別購入：人気度最高の商品を1個
     actionName = '選別購入';
@@ -630,6 +649,7 @@ function getPollutionPenalty(pollutionLevel: number): number {
   return 4;
 }
 
+
 function review(G: GameState, ctx: Ctx, targetPlayerId: string, productId: string, isPositive: boolean) {
   const player = G.players[ctx.currentPlayer];
   if (!player || player.actionPoints < 1) return 'INVALID_MOVE';
@@ -769,7 +789,14 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
     if (player.money < product.price) return 'INVALID_MOVE';
     
     const resaleBonus = getResaleBonus(player.resaleHistory);
-    const maxResalePrice = Math.min(24, product.price + resaleBonus);
+    let maxResalePrice = Math.min(24, product.price + resaleBonus);
+    
+    // 規制段階による転売価格制限
+    if (G.regulationStage === 'consideration') {
+      maxResalePrice = Math.min(maxResalePrice, product.price + 3);
+    } else if (G.regulationStage === 'enforcement') {
+      maxResalePrice = Math.min(maxResalePrice, product.price + 1);
+    }
     
     if (resalePrice > maxResalePrice) return 'INVALID_MOVE';
     
@@ -799,7 +826,14 @@ function resale(G: GameState, ctx: Ctx, targetPlayerId: string, productId: strin
     if (player.money < product.price) return 'INVALID_MOVE';
     
     const resaleBonus = getResaleBonus(player.resaleHistory);
-    const maxResalePrice = Math.min(24, product.price + resaleBonus);
+    let maxResalePrice = Math.min(24, product.price + resaleBonus);
+    
+    // 規制段階による転売価格制限
+    if (G.regulationStage === 'consideration') {
+      maxResalePrice = Math.min(maxResalePrice, product.price + 3);
+    } else if (G.regulationStage === 'enforcement') {
+      maxResalePrice = Math.min(maxResalePrice, product.price + 1);
+    }
     
     if (resalePrice > maxResalePrice) return 'INVALID_MOVE';
     
