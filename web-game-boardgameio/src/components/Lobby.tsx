@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 
 interface LobbyProps {
   onJoinGame: (gameID: string, playerID: string, playerName: string, numPlayers?: number) => void;
+  onStartAIDemo?: () => void;
 }
 
-export const Lobby: React.FC<LobbyProps> = ({ onJoinGame }) => {
+export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
   const [gameID, setGameID] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [playerID, setPlayerID] = useState('0');
@@ -17,6 +18,17 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame }) => {
   const createMultiPlayerGame = () => {
     const newGameID = `multi-${Date.now()}`;
     onJoinGame(newGameID, '0', playerName || 'プレイヤー1', 4);
+  };
+
+  const createAIOnlyGame = () => {
+    const newGameID = `ai-demo-${Date.now()}`;
+    onJoinGame(newGameID, '0', 'Observer', 4);
+  };
+
+  const startAIDemo = () => {
+    if (onStartAIDemo) {
+      onStartAIDemo();
+    }
   };
 
   const joinExistingGame = () => {
@@ -95,6 +107,71 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame }) => {
             👥 複数人プレイ<br />
             <small>(最大4人)</small>
           </button>
+        </div>
+      </div>
+
+      {/* AI専用ゲームモード */}
+      <div style={{ 
+        border: '2px solid #9C27B0', 
+        borderRadius: '10px', 
+        padding: '30px',
+        margin: '20px 0',
+        backgroundColor: '#f3e5f5'
+      }}>
+        <h2>🤖 AI専用ゲーム</h2>
+        <p style={{ color: '#666', marginBottom: '20px' }}>
+          AIだけがプレイするゲームを観戦して、API動作を確認できます
+        </p>
+        
+        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button
+            onClick={createAIOnlyGame}
+            style={{
+              padding: '12px 25px',
+              fontSize: '16px',
+              backgroundColor: '#9C27B0',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            🤖 AI観戦ゲーム<br />
+            <small>(4人全員AI)</small>
+          </button>
+          
+          <button
+            onClick={startAIDemo}
+            style={{
+              padding: '12px 25px',
+              fontSize: '16px',
+              backgroundColor: '#FF5722',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            🚀 APIデモ<br />
+            <small>(コンソールログ)</small>
+          </button>
+        </div>
+        
+        <div style={{
+          marginTop: '15px',
+          padding: '10px',
+          backgroundColor: '#fff',
+          borderRadius: '5px',
+          fontSize: '14px',
+          color: '#666'
+        }}>
+          <strong>🔍 API機能テスト:</strong>
+          <ul style={{ textAlign: 'left', margin: '10px 0 0 20px' }}>
+            <li>リアルタイムAI分析表示</li>
+            <li>自動ムーブ生成と実行</li>
+            <li>戦略的判断プロセス確認</li>
+            <li>全アクション対応テスト</li>
+          </ul>
         </div>
       </div>
 

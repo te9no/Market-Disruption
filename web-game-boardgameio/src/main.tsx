@@ -5,6 +5,7 @@ import { SocketIO } from 'boardgame.io/multiplayer';
 import MarketDisruption from './game/MarketDisruption';
 import { GameBoard } from './components/GameBoard';
 import { Lobby } from './components/Lobby';
+import { runAIOnlyGameDemo } from './demo/AIOnlyGameDemo';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<{
@@ -23,8 +24,20 @@ const App: React.FC = () => {
     setGameState(null);
   };
 
+  const handleStartAIDemo = () => {
+    console.log('🚀 AI APIデモを開始します...');
+    console.log('ブラウザのコンソール（F12 > Console）を確認してください');
+    
+    // AIデモを実行
+    try {
+      runAIOnlyGameDemo();
+    } catch (error) {
+      console.error('AIデモの実行中にエラーが発生しました:', error);
+    }
+  };
+
   if (!gameState) {
-    return <Lobby onJoinGame={handleJoinGame} />;
+    return <Lobby onJoinGame={handleJoinGame} onStartAIDemo={handleStartAIDemo} />;
   }
 
   // サーバーURLを環境変数から取得（本番ではRailway URL）
