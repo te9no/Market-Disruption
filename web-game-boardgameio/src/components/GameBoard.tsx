@@ -1,6 +1,8 @@
 import React from 'react';
 import { GameState, Player } from '../game/GameState';
 import { PlayLog } from './PlayLog';
+import { AIPlayer } from './AIPlayer';
+import { AIController } from './AIController';
 
 interface GameBoardProps {
   G: GameState;
@@ -1251,6 +1253,27 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           {Object.values(G.players)
             .filter((_, index) => index < ctx.numPlayers)
             .map(renderPlayer)}
+        </div>
+        
+        {/* AI Game Controller */}
+        <AIController G={G} ctx={ctx} moves={moves} />
+        
+        {/* AI Player Controls */}
+        <div style={{ marginTop: '20px' }}>
+          <h3>🤖 AI Player Controls</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+            {Object.values(G.players).map(player => (
+              <AIPlayer
+                key={`ai-${player.id}`}
+                G={G}
+                ctx={ctx}
+                moves={moves}
+                playerID={player.id}
+                isActive={ctx.currentPlayer === player.id && isActive}
+                autoPlay={false} // デフォルトは手動、必要に応じて自動化
+              />
+            ))}
+          </div>
         </div>
       </div>
 

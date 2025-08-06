@@ -1,5 +1,6 @@
 import { Game, Ctx } from 'boardgame.io';
 import { GameState, initialGameState, createInitialPlayer, Player, Product, Design, ManufacturingOrder } from './GameState';
+import { AIGameAnalyzer, AIMoveGenerator, GameAnalysis, AIMove } from './AIInterface';
 
 const rollDice = (sides: number = 6): number => Math.floor(Math.random() * sides) + 1;
 const rollMultipleDice = (count: number, sides: number = 6): number[] => 
@@ -59,6 +60,20 @@ const MarketDisruption: Game<GameState> = {
     outsourceReview: ({ G, ctx }, targetPlayerId: string, productId: string, isPositive: boolean) => outsourceReview(G, ctx, targetPlayerId, productId, isPositive),
     outsourceManufacturing: ({ G, ctx }, designId: string, quantity: number, targetType: 'automata' | 'player', targetPlayerId?: string) => outsourceManufacturing(G, ctx, designId, quantity, targetType, targetPlayerId),
     respondToManufacturingOrder: ({ G, ctx }, orderId: string, accept: boolean) => respondToManufacturingOrder(G, ctx, orderId, accept),
+    
+    // AI専用の自動プレイ機能
+    executeAIMove: ({ G, ctx }) => executeAIMove(G, ctx),
+    
+    // AI分析用のゲーム状態取得（クライアント側でのみ使用、実際のゲーム状態は変更しない）
+    getAIAnalysis: ({ G, ctx }) => { 
+      // この関数は分析結果をコンソールに出力するのみで、ゲーム状態を変更しない
+      try {
+        const analysis = getAIAnalysis(G, ctx);
+        console.log('AI Analysis:', analysis);
+      } catch (error) {
+        console.error('AI Analysis failed:', error);
+      }
+    },
     
     // 新しい統合アクション: オートマフェーズ + マーケットフェーズ + 次ラウンド
     executeAutomataAndMarket: ({ G }) => {
@@ -1702,5 +1717,120 @@ function executeTrendEffect(G: GameState, effect: any, playerId: string) {
       break;
   }
 }
+
+// AI関連の関数
+
+// AI分析用のゲーム状態取得
+const getAIAnalysis = (G: GameState, ctx: Ctx): GameAnalysis => {
+  const currentPlayerId = ctx.currentPlayer;
+  if (!currentPlayerId || !G.players[currentPlayerId]) {
+    throw new Error(`Invalid player ID: ${currentPlayerId}`);
+  }
+
+  const analyzer = new AIGameAnalyzer(G, currentPlayerId);
+  return analyzer.analyzeGame();
+};
+
+// AI自動プレイ実行
+const executeAIMove = (G: GameState, ctx: Ctx): void => {
+  const currentPlayerId = ctx.currentPlayer;
+  if (!currentPlayerId || !G.players[currentPlayerId]) {
+    console.error(`Invalid player ID for AI move: ${currentPlayerId}`);
+    return;
+  }
+
+  const player = G.players[currentPlayerId];
+  if (player.actionPoints <= 0) {
+    console.log(`AI Player ${currentPlayerId}: No action points remaining`);
+    return;
+  }
+
+  try {
+    const analyzer = new AIGameAnalyzer(G, currentPlayerId);
+    const moveGenerator = new AIMoveGenerator(analyzer);
+    const aiMove = moveGenerator.generateOptimalMove();
+
+    if (!aiMove) {
+      console.log(`AI Player ${currentPlayerId}: No valid moves available`);
+      return;
+    }
+
+    console.log(`🤖 AI Player ${currentPlayerId} executing: ${aiMove.actionName} (confidence: ${aiMove.confidence})`);
+    console.log(`🧠 Reasoning: ${aiMove.reasoning}`);
+
+    // AI moveを実際のgame moveに変換して実行
+    executeAIMoveAction(G, ctx, aiMove);
+    
+  } catch (error) {
+    console.error(`AI Move execution failed for player ${currentPlayerId}:`, error);
+  }
+};
+
+// AI moveを実際のアクションに変換して実行
+const executeAIMoveAction = (G: GameState, ctx: Ctx, aiMove: AIMove): void => {
+  const { actionName, parameters = {} } = aiMove;
+  
+  try {
+    switch (actionName) {
+      case 'manufacture':
+        if (parameters.designId) {
+          manufacture(G, ctx, parameters.designId);
+        }
+        break;
+        
+      case 'sell':
+        if (parameters.productId && parameters.price) {
+          sell(G, ctx, parameters.productId, parameters.price);
+        }
+        break;
+        
+      case 'purchase':
+        if (parameters.targetPlayerId && parameters.productId) {
+          purchase(G, ctx, parameters.targetPlayerId, parameters.productId);
+        }
+        break;
+        
+      case 'resale':
+        if (parameters.targetPlayerId && parameters.productId && parameters.resalePrice) {
+          resale(G, ctx, parameters.targetPlayerId, parameters.productId, parameters.resalePrice);
+        }
+        break;
+        
+      case 'design':
+        design(G, ctx, parameters.isOpenSource || false);
+        break;
+        
+      case 'research':
+        research(G, ctx);
+        break;
+        
+      case 'partTimeWork':
+        partTimeWork(G, ctx);
+        break;
+        
+      case 'dayLabor':
+        dayLabor(G, ctx);
+        break;
+        
+      case 'promoteRegulation':
+        promoteRegulation(G, ctx);
+        break;
+        
+      case 'activateTrend':
+        activateTrend(G, ctx);
+        break;
+        
+      case 'purchasePrestige':
+        purchasePrestige(G, ctx);
+        break;
+        
+      default:
+        console.log(`AI Move: Unknown action ${actionName}`);
+        break;
+    }
+  } catch (error) {
+    console.error(`Failed to execute AI action ${actionName}:`, error);
+  }
+};
 
 export default MarketDisruption;
