@@ -3,6 +3,7 @@ import { GameState, Player } from '../game/GameState';
 import { PlayLog } from './PlayLog';
 import { AIPlayer } from './AIPlayer';
 import { AIController } from './AIController';
+import { AIDebugPanel } from './AIDebugPanel';
 
 interface GameBoardProps {
   G: GameState;
@@ -1254,6 +1255,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             .filter((_, index) => index < ctx.numPlayers)
             .map(renderPlayer)}
         </div>
+        
+        {/* AI Debug Panel */}
+        <AIDebugPanel G={G} ctx={ctx} moves={moves} />
         
         {/* AI Game Controller */}
         <AIController G={G} ctx={ctx} moves={moves} />

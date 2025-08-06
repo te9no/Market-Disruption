@@ -40,43 +40,64 @@ export const AIController: React.FC<AIControllerProps> = ({ G, ctx, moves }) => 
   // 全自動ゲームプレイ（デモ用）
   const startFullAutoGame = () => {
     if (isAutoGameRunning) {
+      console.log('⏹️ フル自動ゲーム停止');
       setIsAutoGameRunning(false);
       return;
     }
 
     setIsAutoGameRunning(true);
     enableAllAI();
+    console.clear();
     console.log('🚀 フル自動ゲーム開始！');
+    console.log(`⚙️ AI実行間隔: ${aiSpeed}ms`);
+    console.log('=====================================');
     
+    let moveCount = 0;
     const autoGameLoop = () => {
       if (G.gameEnded || !isAutoGameRunning) {
         console.log('🏁 自動ゲーム終了');
+        console.log(`📊 総実行回数: ${moveCount}`);
         setIsAutoGameRunning(false);
         return;
       }
 
       const currentPlayer = ctx.currentPlayer;
       if (currentPlayer && G.players[currentPlayer]) {
-        console.log(`🤖 Player ${parseInt(currentPlayer) + 1} のターン (AP: ${G.players[currentPlayer].actionPoints})`);
+        const player = G.players[currentPlayer];
+        console.log(`\n🤖 Player ${parseInt(currentPlayer) + 1} のターン開始`);
+        console.log(`💰 資金: ${player.money} | ⭐ 威厳: ${player.prestige} | ⚡ AP: ${player.actionPoints}`);
         
-        if (G.players[currentPlayer].actionPoints > 0) {
+        if (player.actionPoints > 0) {
           try {
+            moveCount++;
+            console.log(`📋 Move #${moveCount} - AI分析中...`);
             moves.executeAIMove();
+            console.log(`✅ Move #${moveCount} 実行完了`);
           } catch (error) {
-            console.error('AI Move failed:', error);
+            console.error(`❌ Move #${moveCount} 失敗:`, error);
           }
         } else {
           // APが0の場合、次のフェーズに移行
-          console.log('⏭️ APが0のため次のフェーズへ');
-          if (moves.executeAutomataAndMarket) {
-            moves.executeAutomataAndMarket();
+          console.log('⏭️ APが0のため次のフェーズへ移行');
+          try {
+            if (moves.executeAutomataAndMarket) {
+              moves.executeAutomataAndMarket();
+              console.log('🔄 オートマ＆マーケットフェーズ実行完了');
+            }
+          } catch (error) {
+            console.error('❌ フェーズ移行エラー:', error);
           }
         }
+      } else {
+        console.log('⚠️ 現在のプレイヤーが見つかりません');
       }
       
       // 次のAI実行をスケジュール
-      if (isAutoGameRunning) {
+      if (isAutoGameRunning && !G.gameEnded) {
         setTimeout(autoGameLoop, aiSpeed);
+      } else if (G.gameEnded) {
+        console.log('🎉 ゲーム終了検出');
+        setIsAutoGameRunning(false);
       }
     };
 

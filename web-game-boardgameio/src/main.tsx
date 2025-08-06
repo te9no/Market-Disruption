@@ -25,14 +25,18 @@ const App: React.FC = () => {
   };
 
   const handleStartAIDemo = () => {
+    console.clear(); // コンソールをクリア
     console.log('🚀 AI APIデモを開始します...');
     console.log('ブラウザのコンソール（F12 > Console）を確認してください');
+    console.log('=====================================');
     
     // AIデモを実行
     try {
-      runAIOnlyGameDemo();
+      setTimeout(() => {
+        runAIOnlyGameDemo();
+      }, 500);
     } catch (error) {
-      console.error('AIデモの実行中にエラーが発生しました:', error);
+      console.error('❌ AIデモの実行中にエラーが発生しました:', error);
     }
   };
 
