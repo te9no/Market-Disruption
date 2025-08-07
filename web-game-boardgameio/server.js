@@ -814,6 +814,7 @@ const MarketDisruption = {
         startGame: ({ G, ctx, events }) => {
           const joinedPlayers = Object.keys(G.players).length;
           console.log(`🎮 StartGame: ${joinedPlayers}/${ctx.numPlayers} プレイヤー参加済み`);
+          console.log(`📊 Events available:`, Object.keys(events || {}));
           
           if (joinedPlayers === ctx.numPlayers) {
             G.round = 1;
@@ -825,7 +826,16 @@ const MarketDisruption = {
               console.log(`⚡ Player ${parseInt(playerId) + 1} 初期AP設定: 3`);
             }
             
-            events.setPhase('action');
+            // フェーズ移行
+            if (events && events.endPhase) {
+              console.log(`✅ endPhaseを使用してフェーズ移行`);
+              events.endPhase();
+            } else if (events && events.setPhase) {
+              console.log(`✅ setPhaseを使用してフェーズ移行`);
+              events.setPhase('action');
+            } else {
+              console.error(`❌ フェーズ移行イベントが利用できません`, { events: events ? Object.keys(events) : null });
+            }
           }
         },
       },

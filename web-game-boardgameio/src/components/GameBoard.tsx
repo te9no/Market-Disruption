@@ -41,6 +41,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
   
   // ロビー画面
   if (G.phase === 'lobby') {
+    console.log(`🏠 ロビー画面表示`, {
+      phase: G.phase,
+      ctxPhase: ctx.phase,
+      availableMoves: Object.keys(moves),
+      hasJoinGame: !!moves.joinGame,
+      hasStartGame: !!moves.startGame,
+      playersCount: Object.keys(G.players).length,
+      numPlayers: ctx.numPlayers,
+      playerID,
+      currentPlayer: ctx.currentPlayer
+    });
+    
     const currentPlayerCount = Object.keys(G.players).length;
     const isOwner = playerID === '0'; // プレイヤー0をオーナーとする
     const isPlayerJoined = playerID && G.players[playerID];
@@ -105,8 +117,27 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                 <button
                   onClick={() => {
                     const playerName = prompt('プレイヤー名を入力してください:', `Player ${currentPlayerCount + 1}`);
+                    console.log(`👤 参加ボタンをクリック`, {
+                      playerName,
+                      moves: Object.keys(moves),
+                      hasJoinGame: !!moves.joinGame,
+                      currentPlayers: Object.keys(G.players).length,
+                      phase: ctx.phase,
+                      currentPlayer: ctx.currentPlayer,
+                      playerID
+                    });
+                    
                     if (playerName && moves.joinGame) {
+                      console.log(`✅ joinGameを実行中...`);
                       moves.joinGame(playerName);
+                      console.log(`✅ joinGame実行完了`);
+                    } else {
+                      if (!playerName) {
+                        console.warn(`⚠️ プレイヤー名が入力されていません`);
+                      }
+                      if (!moves.joinGame) {
+                        console.error(`❌ moves.joinGameが存在しません`, { availableMoves: Object.keys(moves) });
+                      }
                     }
                   }}
                   style={{
@@ -154,8 +185,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
               {currentPlayerCount === ctx.numPlayers ? (
                 <button
                   onClick={() => {
+                    console.log(`🎮 ゲーム開始ボタンをクリック`, {
+                      moves: Object.keys(moves),
+                      hasStartGame: !!moves.startGame,
+                      currentPlayers: Object.keys(G.players).length,
+                      numPlayers: ctx.numPlayers,
+                      phase: ctx.phase,
+                      currentPlayer: ctx.currentPlayer
+                    });
+                    
                     if (moves.startGame) {
+                      console.log(`✅ startGameを実行中...`);
                       moves.startGame();
+                      console.log(`✅ startGame実行完了`);
+                    } else {
+                      console.error(`❌ moves.startGameが存在しません`, { availableMoves: Object.keys(moves) });
                     }
                   }}
                   style={{
