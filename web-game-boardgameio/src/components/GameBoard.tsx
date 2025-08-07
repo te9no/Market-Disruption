@@ -5,6 +5,7 @@ import { AIPlayer } from './AIPlayer';
 import { AIController } from './AIController';
 import { AIDebugPanel } from './AIDebugPanel';
 import { AIStrategyPanel } from './AIStrategyPanel';
+import { CompactAIPanel } from './CompactAIPanel';
 
 interface GameBoardProps {
   G: GameState;
@@ -18,6 +19,7 @@ interface GameBoardProps {
 export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, playerID, isActive }) => {
   const [errorMessage, setErrorMessage] = React.useState<string>('');
   const [successMessage, setSuccessMessage] = React.useState<string>('');
+  const [showFullAIPanels, setShowFullAIPanels] = React.useState<boolean>(false);
 
   // メッセージを自動で消す
   React.useEffect(() => {
@@ -1257,32 +1259,57 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             .map(renderPlayer)}
         </div>
         
-        {/* AI Strategy Panel */}
-        <AIStrategyPanel G={G} ctx={ctx} moves={moves} />
-        
-        {/* AI Debug Panel */}
-        <AIDebugPanel G={G} ctx={ctx} moves={moves} />
-        
-        {/* AI Game Controller */}
-        <AIController G={G} ctx={ctx} moves={moves} />
-        
-        {/* AI Player Controls */}
-        <div style={{ marginTop: '20px' }}>
-          <h3>🤖 AI Player Controls</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-            {Object.values(G.players).map(player => (
-              <AIPlayer
-                key={`ai-${player.id}`}
-                G={G}
-                ctx={ctx}
-                moves={moves}
-                playerID={player.id}
-                isActive={ctx.currentPlayer === player.id && isActive}
-                autoPlay={false} // デフォルトは手動、必要に応じて自動化
-              />
-            ))}
-          </div>
+        {/* AI Panel Toggle */}
+        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+          <button
+            onClick={() => setShowFullAIPanels(!showFullAIPanels)}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              backgroundColor: showFullAIPanels ? '#f44336' : '#2196F3',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            {showFullAIPanels ? '🔄 コンパクト表示' : '🔧 詳細AI制御'}
+          </button>
         </div>
+
+        {showFullAIPanels && (
+          <div>
+            {/* AI Strategy Panel */}
+            <AIStrategyPanel G={G} ctx={ctx} moves={moves} />
+            
+            {/* AI Debug Panel */}
+            <AIDebugPanel G={G} ctx={ctx} moves={moves} />
+            
+            {/* AI Game Controller */}
+            <AIController G={G} ctx={ctx} moves={moves} />
+            
+            {/* AI Player Controls */}
+            <div style={{ marginTop: '20px' }}>
+              <h3>🤖 AI Player Controls</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                {Object.values(G.players).map(player => (
+                  <AIPlayer
+                    key={`ai-${player.id}`}
+                    G={G}
+                    ctx={ctx}
+                    moves={moves}
+                    playerID={player.id}
+                    isActive={ctx.currentPlayer === player.id && isActive}
+                    autoPlay={false}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Compact AI Panel (固定位置) */}
+        {!showFullAIPanels && <CompactAIPanel G={G} ctx={ctx} moves={moves} />}
       </div>
 
       <div style={{ marginTop: '30px' }}>
