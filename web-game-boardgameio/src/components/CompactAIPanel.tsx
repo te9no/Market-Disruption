@@ -34,7 +34,8 @@ export const CompactAIPanel: React.FC<CompactAIPanelProps> = ({ G, ctx, moves })
       return;
     }
 
-    addLog(`⏭️ ターン終了: Player ${parseInt(ctx.currentPlayer) + 1}`);
+    const currentPlayer = G.players[ctx.currentPlayer];
+    addLog(`⏭️ ターン終了: Player ${parseInt(ctx.currentPlayer) + 1} (AP: ${currentPlayer?.actionPoints})`);
     
     try {
       if (ctx.numPlayers === 1) {
@@ -48,6 +49,8 @@ export const CompactAIPanel: React.FC<CompactAIPanelProps> = ({ G, ctx, moves })
         if (ctx.events && typeof ctx.events.endTurn === 'function') {
           addLog('👥 複数人プレイ：ターン終了実行');
           ctx.events.endTurn();
+          // 次のターンでAPが回復することをログ
+          addLog('⏳ 次のプレイヤーのターン開始時にAPが3に回復します');
         } else {
           addLog(`❌ ctx.events.endTurn が利用できません - events: ${!!ctx.events}, type: ${typeof ctx.events?.endTurn}`);
         }

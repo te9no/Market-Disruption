@@ -166,6 +166,14 @@ const MarketDisruption: Game<GameState> = {
             return (ctx.playOrderPos + 1) % ctx.numPlayers;
           },
         },
+        onBegin: ({ G, ctx }) => {
+          // 各プレイヤーのターン開始時にAPを3に回復
+          const currentPlayerId = ctx.currentPlayer;
+          if (currentPlayerId && G.players[currentPlayerId]) {
+            G.players[currentPlayerId].actionPoints = 3;
+            console.log(`⚡ Player ${parseInt(currentPlayerId) + 1} のAPを3に回復`);
+          }
+        },
         onEnd: ({ G, ctx }) => {
           // マルチプレイで最後のプレイヤーのターン終了時にオートマ＆マーケット実行
           if (ctx.numPlayers > 1 && ctx.playOrderPos === ctx.numPlayers - 1) {
