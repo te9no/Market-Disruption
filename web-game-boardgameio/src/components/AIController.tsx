@@ -34,6 +34,34 @@ export const AIController: React.FC<AIControllerProps> = ({ G, ctx, moves }) => 
     const currentPlayer = ctx.currentPlayer;
     if (currentPlayer && G.players[currentPlayer] && moves.executeAIMove) {
       moves.executeAIMove();
+      
+      // AP使い切り後の自動ターン終了処理
+      setTimeout(() => {
+        const player = G.players[currentPlayer];
+        if (player && player.actionPoints === 0) {
+          console.log(`🔄 Player ${parseInt(currentPlayer) + 1} のAPが0になりました - 自動ターン終了`);
+          handleAutoTurnEnd();
+        }
+      }, 500);
+    }
+  };
+
+  const handleAutoTurnEnd = () => {
+    // ターン終了処理
+    if (ctx.numPlayers === 1) {
+      // 1人プレイの場合：オートマ&マーケット実行
+      if (moves.executeAutomataAndMarket) {
+        console.log('🤖 1人プレイ：オートマ&マーケット実行');
+        moves.executeAutomataAndMarket();
+      }
+    } else {
+      // 複数人プレイの場合：通常のターン終了
+      if (ctx.events && ctx.events.endTurn) {
+        console.log('👥 複数人プレイ：ターン終了');
+        ctx.events.endTurn();
+      } else {
+        console.error('❌ endTurn イベントが見つかりません');
+      }
     }
   };
 
@@ -80,9 +108,20 @@ export const AIController: React.FC<AIControllerProps> = ({ G, ctx, moves }) => 
           // APが0の場合、次のフェーズに移行
           console.log('⏭️ APが0のため次のフェーズへ移行');
           try {
-            if (moves.executeAutomataAndMarket) {
-              moves.executeAutomataAndMarket();
-              console.log('🔄 オートマ＆マーケットフェーズ実行完了');
+            if (ctx.numPlayers === 1) {
+              // 1人プレイ：オートマ&マーケット実行
+              if (moves.executeAutomataAndMarket) {
+                moves.executeAutomataAndMarket();
+                console.log('🔄 オートマ＆マーケットフェーズ実行完了');
+              }
+            } else {
+              // 複数人プレイ：ターン終了
+              if (ctx.events && ctx.events.endTurn) {
+                ctx.events.endTurn();
+                console.log('🔄 ターン終了完了');
+              } else {
+                console.error('❌ endTurn イベントが見つかりません');
+              }
             }
           } catch (error) {
             console.error('❌ フェーズ移行エラー:', error);
@@ -128,6 +167,21 @@ export const AIController: React.FC<AIControllerProps> = ({ G, ctx, moves }) => 
           }}
         >
           🤖 現在プレイヤーでAI実行
+        </button>
+
+        <button
+          onClick={handleAutoTurnEnd}
+          disabled={!ctx.currentPlayer}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#FF5722',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          ⏭️ ターン終了
         </button>
         
         <button

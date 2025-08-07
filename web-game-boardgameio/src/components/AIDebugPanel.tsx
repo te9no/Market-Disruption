@@ -97,6 +97,14 @@ export const AIDebugPanel: React.FC<AIDebugPanelProps> = ({ G, ctx, moves }) => 
       if (moves.executeAIMove) {
         moves.executeAIMove();
         addToLog(`✅ AIムーブ実行完了`);
+        
+        // AP使い切りチェック
+        setTimeout(() => {
+          const updatedPlayer = G.players[currentPlayer];
+          if (updatedPlayer && updatedPlayer.actionPoints === 0) {
+            addToLog(`🔄 APが0になりました - 自動ターン終了を推奨`);
+          }
+        }, 500);
       } else {
         addToLog(`❌ executeAIMove関数が利用できません`);
       }
@@ -104,6 +112,40 @@ export const AIDebugPanel: React.FC<AIDebugPanelProps> = ({ G, ctx, moves }) => 
     } catch (error) {
       addToLog(`❌ AIムーブ実行エラー: ${error}`);
       console.error('AI Move Execution Error:', error);
+    }
+  };
+
+  const executeEndTurn = () => {
+    const currentPlayer = ctx.currentPlayer;
+    if (!currentPlayer) {
+      addToLog('❌ 現在のプレイヤーが見つかりません');
+      return;
+    }
+
+    try {
+      addToLog(`⏭️ ターン終了処理開始 - Player ${parseInt(currentPlayer) + 1}`);
+      
+      if (ctx.numPlayers === 1) {
+        // 1人プレイ：オートマ&マーケット実行
+        if (moves.executeAutomataAndMarket) {
+          moves.executeAutomataAndMarket();
+          addToLog(`🤖 1人プレイ：オートマ&マーケット実行完了`);
+        } else {
+          addToLog(`❌ executeAutomataAndMarket関数が利用できません`);
+        }
+      } else {
+        // 複数人プレイ：ターン終了
+        if (ctx.events && ctx.events.endTurn) {
+          ctx.events.endTurn();
+          addToLog(`👥 複数人プレイ：ターン終了完了`);
+        } else {
+          addToLog(`❌ endTurnイベントが利用できません`);
+        }
+      }
+      
+    } catch (error) {
+      addToLog(`❌ ターン終了エラー: ${error}`);
+      console.error('End Turn Error:', error);
     }
   };
 
@@ -178,6 +220,21 @@ export const AIDebugPanel: React.FC<AIDebugPanelProps> = ({ G, ctx, moves }) => 
           }}
         >
           🚀 AIムーブ実行
+        </button>
+
+        <button
+          onClick={executeEndTurn}
+          disabled={isDebugging || !ctx.currentPlayer}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#E91E63',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: (isDebugging || !ctx.currentPlayer) ? 'not-allowed' : 'pointer'
+          }}
+        >
+          ⏭️ ターン終了
         </button>
         
         <button
