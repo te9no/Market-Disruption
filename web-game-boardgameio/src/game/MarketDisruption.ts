@@ -35,31 +35,6 @@ const MarketDisruption: Game<GameState> = {
   },
 
   moves: {
-    // ロビー関連のmoves
-    joinGame: ({ G, ctx }, playerName: string) => {
-      const playerId = ctx.currentPlayer;
-      if (playerId && !G.players[playerId]) {
-        G.players[playerId] = createInitialPlayer(playerId, playerName);
-        
-        // 初期設計図を割り当て
-        const designDice = rollMultipleDice(2);
-        G.players[playerId].designs = designDice.map((cost, index) => ({
-          id: `design-${playerId}-${index}`,
-          cost,
-          isOpenSource: false
-        }));
-      }
-    },
-
-    startGame: ({ G, ctx }) => {
-      // 全プレイヤーが参加するまでは開始できない
-      const joinedPlayers = Object.keys(G.players).length;
-      if (joinedPlayers === ctx.numPlayers) {
-        G.phase = 'action';
-        G.round = 1;
-      }
-    },
-
     manufacture: ({ G, ctx }, designId: string) => manufacture(G, ctx, designId),
     sell: ({ G, ctx }, productId: string, price: number) => sell(G, ctx, productId, price),
     purchase: ({ G, ctx }, targetPlayerId: string, productId: string) => purchase(G, ctx, targetPlayerId, productId),
@@ -145,10 +120,40 @@ const MarketDisruption: Game<GameState> = {
   minPlayers: 1,
   maxPlayers: 4,
   
-  // シンプルなactionフェーズのみ - オートマは自動処理
+  // ロビーとアクションフェーズ
   phases: {
-    action: {
+    lobby: {
       start: true,
+      moves: {
+        joinGame: {
+          move: ({ G, ctx }, playerName: string) => {
+            const playerId = ctx.currentPlayer;
+            if (playerId && !G.players[playerId]) {
+              console.log(`👤 Player ${playerId} joining as ${playerName}`);
+              G.players[playerId] = createInitialPlayer(playerId, playerName);
+              
+              const designDice = rollMultipleDice(2);
+              G.players[playerId].designs = designDice.map((cost, index) => ({
+                id: `design-${playerId}-${index}`,
+                cost,
+                isOpenSource: false
+              }));
+            }
+          },
+        },
+        startGame: {
+          move: ({ G, ctx, events }) => {
+            const joinedPlayers = Object.keys(G.players).length;
+            if (joinedPlayers === ctx.numPlayers) {
+              G.round = 1;
+              events.setPhase('action');
+            }
+          },
+        },
+      },
+      next: 'action',
+    },
+    action: {
       turn: {
         order: {
           first: () => 0,

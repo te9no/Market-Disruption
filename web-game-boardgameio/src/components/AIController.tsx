@@ -32,9 +32,16 @@ export const AIController: React.FC<AIControllerProps> = ({ G, ctx, moves }) => 
 
   const executeAIForCurrentPlayer = () => {
     const currentPlayer = ctx.currentPlayer;
+    
+    // actionフェーズでのみAI実行を許可
+    if (ctx.phase !== 'action') {
+      console.warn(`❌ AI実行不可: 現在のフェーズ (${ctx.phase}) ではAIが実行できません`);
+      return;
+    }
+    
     if (currentPlayer && G.players[currentPlayer] && moves.executeAIMove) {
+      console.log(`🤖 Player ${parseInt(currentPlayer) + 1} でAI実行中... (フェーズ: ${ctx.phase})`);
       moves.executeAIMove();
-      // 自動ターン終了は削除（手動制御のみ）
     }
   };
 

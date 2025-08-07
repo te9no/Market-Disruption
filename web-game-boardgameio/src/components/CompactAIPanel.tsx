@@ -18,6 +18,11 @@ export const CompactAIPanel: React.FC<CompactAIPanelProps> = ({ G, ctx, moves })
 
   const executeAI = () => {
     if (moves.executeAIMove && ctx.currentPlayer) {
+      // actionフェーズでのみAI実行を許可
+      if (ctx.phase !== 'action') {
+        addLog(`❌ AI実行不可: 現在のフェーズ (${ctx.phase}) ではAIが実行できません`);
+        return;
+      }
       addLog(`🤖 AI実行: Player ${parseInt(ctx.currentPlayer) + 1}`);
       moves.executeAIMove();
     }
