@@ -144,8 +144,18 @@ const MarketDisruption: Game<GameState> = {
         startGame: {
           move: ({ G, ctx, events }) => {
             const joinedPlayers = Object.keys(G.players).length;
+            console.log(`🎮 StartGame: ${joinedPlayers}/${ctx.numPlayers} プレイヤー参加済み`);
+            
             if (joinedPlayers === ctx.numPlayers) {
               G.round = 1;
+              console.log(`🔄 フェーズ移行: lobby → action (ラウンド ${G.round})`);
+              
+              // actionフェーズ開始前に全プレイヤーのAPを3に設定
+              for (const playerId in G.players) {
+                G.players[playerId].actionPoints = 3;
+                console.log(`⚡ Player ${parseInt(playerId) + 1} 初期AP設定: 3`);
+              }
+              
               events.setPhase('action');
             }
           },
@@ -166,15 +176,32 @@ const MarketDisruption: Game<GameState> = {
             return (ctx.playOrderPos + 1) % ctx.numPlayers;
           },
         },
+        endIf: ({ G, ctx }) => {
+          // 現在プレイヤーのAPが0になったらターン終了
+          const currentPlayer = ctx.currentPlayer;
+          if (currentPlayer && G.players[currentPlayer]) {
+            const apLeft = G.players[currentPlayer].actionPoints;
+            console.log(`🔍 Turn endIf check - Player ${parseInt(currentPlayer) + 1} AP: ${apLeft}`);
+            return apLeft <= 0;
+          }
+          return false;
+        },
         onBegin: ({ G, ctx }) => {
           // 各プレイヤーのターン開始時にAPを3に回復
           const currentPlayerId = ctx.currentPlayer;
+          console.log(`🔄 Turn onBegin - Current Player: ${currentPlayerId}, Phase: ${ctx.phase}, Turn: ${ctx.turn}`);
+          
           if (currentPlayerId && G.players[currentPlayerId]) {
+            const oldAP = G.players[currentPlayerId].actionPoints;
             G.players[currentPlayerId].actionPoints = 3;
-            console.log(`⚡ Player ${parseInt(currentPlayerId) + 1} のAPを3に回復`);
+            console.log(`⚡ Player ${parseInt(currentPlayerId) + 1} のAPを ${oldAP} → 3 に回復`);
+          } else {
+            console.error(`❌ onBegin: プレイヤー ${currentPlayerId} が見つかりません`);
           }
         },
         onEnd: ({ G, ctx }) => {
+          console.log(`🔄 Turn onEnd - Current Player: ${ctx.currentPlayer}, Phase: ${ctx.phase}, PlayOrder: ${ctx.playOrderPos}/${ctx.numPlayers - 1}`);
+          
           // マルチプレイで最後のプレイヤーのターン終了時にオートマ＆マーケット実行
           if (ctx.numPlayers > 1 && ctx.playOrderPos === ctx.numPlayers - 1) {
             console.log('🤖 Auto-executing Automata and Market phases for multiplayer...');
