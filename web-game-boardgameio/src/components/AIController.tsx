@@ -34,34 +34,53 @@ export const AIController: React.FC<AIControllerProps> = ({ G, ctx, moves }) => 
     const currentPlayer = ctx.currentPlayer;
     if (currentPlayer && G.players[currentPlayer] && moves.executeAIMove) {
       moves.executeAIMove();
-      
-      // AP使い切り後の自動ターン終了処理
-      setTimeout(() => {
-        const player = G.players[currentPlayer];
-        if (player && player.actionPoints === 0) {
-          console.log(`🔄 Player ${parseInt(currentPlayer) + 1} のAPが0になりました - 自動ターン終了`);
-          handleAutoTurnEnd();
-        }
-      }, 500);
+      // 自動ターン終了は削除（手動制御のみ）
     }
   };
 
   const handleAutoTurnEnd = () => {
-    // ターン終了処理
-    if (ctx.numPlayers === 1) {
-      // 1人プレイの場合：オートマ&マーケット実行
-      if (moves.executeAutomataAndMarket) {
-        console.log('🤖 1人プレイ：オートマ&マーケット実行');
-        moves.executeAutomataAndMarket();
-      }
-    } else {
-      // 複数人プレイの場合：通常のターン終了
-      if (ctx.events && ctx.events.endTurn) {
-        console.log('👥 複数人プレイ：ターン終了');
-        ctx.events.endTurn();
+    const currentPlayer = ctx.currentPlayer;
+    if (!currentPlayer) {
+      console.error('❌ 現在のプレイヤーが存在しません');
+      return;
+    }
+
+    console.log(`⏭️ ターン終了処理開始 - Player ${parseInt(currentPlayer) + 1}`);
+    
+    try {
+      if (ctx.numPlayers === 1) {
+        // 1人プレイの場合：オートマ&マーケット実行
+        if (moves.executeAutomataAndMarket) {
+          console.log('🤖 1人プレイ：オートマ&マーケット実行');
+          moves.executeAutomataAndMarket();
+        } else {
+          console.error('❌ executeAutomataAndMarket が利用できません');
+        }
       } else {
-        console.error('❌ endTurn イベントが見つかりません');
+        // 複数人プレイの場合：通常のターン終了
+        if (ctx.events && typeof ctx.events.endTurn === 'function') {
+          console.log('👥 複数人プレイ：ターン終了実行');
+          // 無限ループ防止：前回のコール時刻をチェック
+          const now = Date.now();
+          const lastCallKey = `endTurn_${currentPlayer}`;
+          const lastCall = (window as any)[lastCallKey] || 0;
+          
+          if (now - lastCall < 1000) {
+            console.warn('⚠️ ターン終了が短時間で連続実行されています。スキップします。');
+            return;
+          }
+          
+          (window as any)[lastCallKey] = now;
+          ctx.events.endTurn();
+        } else {
+          console.error('❌ ctx.events.endTurn が利用できません', { 
+            hasEvents: !!ctx.events,
+            endTurnType: typeof ctx.events?.endTurn
+          });
+        }
       }
+    } catch (error) {
+      console.error('❌ ターン終了処理でエラー:', error);
     }
   };
 
@@ -105,27 +124,9 @@ export const AIController: React.FC<AIControllerProps> = ({ G, ctx, moves }) => 
             console.error(`❌ Move #${moveCount} 失敗:`, error);
           }
         } else {
-          // APが0の場合、次のフェーズに移行
+          // APが0の場合、次のフェーズに移行（自動ゲーム用）
           console.log('⏭️ APが0のため次のフェーズへ移行');
-          try {
-            if (ctx.numPlayers === 1) {
-              // 1人プレイ：オートマ&マーケット実行
-              if (moves.executeAutomataAndMarket) {
-                moves.executeAutomataAndMarket();
-                console.log('🔄 オートマ＆マーケットフェーズ実行完了');
-              }
-            } else {
-              // 複数人プレイ：ターン終了
-              if (ctx.events && ctx.events.endTurn) {
-                ctx.events.endTurn();
-                console.log('🔄 ターン終了完了');
-              } else {
-                console.error('❌ endTurn イベントが見つかりません');
-              }
-            }
-          } catch (error) {
-            console.error('❌ フェーズ移行エラー:', error);
-          }
+          handleAutoTurnEnd();
         }
       } else {
         console.log('⚠️ 現在のプレイヤーが見つかりません');

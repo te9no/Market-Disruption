@@ -24,13 +24,32 @@ export const CompactAIPanel: React.FC<CompactAIPanelProps> = ({ G, ctx, moves })
   };
 
   const endTurn = () => {
-    if (ctx.currentPlayer) {
-      addLog(`⏭️ ターン終了: Player ${parseInt(ctx.currentPlayer) + 1}`);
-      if (ctx.numPlayers === 1 && moves.executeAutomataAndMarket) {
-        moves.executeAutomataAndMarket();
-      } else if (ctx.events?.endTurn) {
-        ctx.events.endTurn();
+    if (!ctx.currentPlayer) {
+      addLog('❌ 現在のプレイヤーが存在しません');
+      return;
+    }
+
+    addLog(`⏭️ ターン終了: Player ${parseInt(ctx.currentPlayer) + 1}`);
+    
+    try {
+      if (ctx.numPlayers === 1) {
+        if (moves.executeAutomataAndMarket) {
+          addLog('🤖 1人プレイ：オートマ&マーケット実行');
+          moves.executeAutomataAndMarket();
+        } else {
+          addLog('❌ executeAutomataAndMarket が利用できません');
+        }
+      } else {
+        if (ctx.events && typeof ctx.events.endTurn === 'function') {
+          addLog('👥 複数人プレイ：ターン終了実行');
+          ctx.events.endTurn();
+        } else {
+          addLog(`❌ ctx.events.endTurn が利用できません - events: ${!!ctx.events}, type: ${typeof ctx.events?.endTurn}`);
+        }
       }
+    } catch (error) {
+      addLog(`❌ ターン終了処理でエラー: ${error}`);
+      console.error('Turn end error:', error);
     }
   };
 
