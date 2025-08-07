@@ -100,22 +100,12 @@ const createInitialPlayer = (id, name) => ({
 // 本格的なゲーム定義
 const MarketDisruption = {
   name: 'MarketDisruption',
-  setup: ({ ctx }) => {
+  setup: () => {
     const G = { ...initialGameState };
     
-    // プレイヤー初期化
-    for (let i = 0; i < ctx.numPlayers; i++) {
-      const playerId = String(i);
-      G.players[playerId] = createInitialPlayer(playerId, `Player ${i + 1}`);
-      
-      // 設計図をランダムに生成（TypeScript版と同じロジック）
-      const designDice = rollMultipleDice(2);
-      G.players[playerId].designs = designDice.map((cost, index) => ({
-        id: `design-${playerId}-${index}`,
-        cost,
-        isOpenSource: false
-      }));
-    }
+    // ロビー段階では空のプレイヤーリストから開始
+    // プレイヤーはjoinGameムーブで個別に参加する
+    G.phase = 'lobby';
     
     return G;
   },
@@ -760,6 +750,43 @@ const MarketDisruption = {
       }
       
       player.actionPoints -= 2;
+    },
+
+    // 1人プレイ用の統合アクション
+    executeAutomataAndMarket: ({ G }) => {
+      console.log('🤖 Starting Automata and Market execution...');
+      
+      // オートマフェーズ実行
+      console.log('🏭 Executing Manufacturer Automata...');
+      executeManufacturerAutomata(G);
+      
+      console.log('🔄 Executing Resale Automata...');
+      executeResaleAutomata(G);
+      
+      // マーケットフェーズ実行
+      console.log('🏪 Executing Market Phase...');
+      executeMarketPhase(G);
+      
+      // 次ラウンドの準備
+      G.round++;
+      console.log(`🎮 Starting round ${G.round}`);
+      
+      // 全プレイヤーのAPをリセット
+      for (const playerId in G.players) {
+        G.players[playerId].actionPoints = 3;
+      }
+      
+      // 勝利条件チェック
+      for (const playerId in G.players) {
+        if (checkVictoryConditions(G.players[playerId])) {
+          G.gameEnded = true;
+          G.winner = playerId;
+          console.log(`🏆 Game ended! Winner: ${G.players[playerId].name}`);
+          break;
+        }
+      }
+      
+      console.log('✅ Automata and Market execution completed');
     }
   },
   
@@ -767,9 +794,44 @@ const MarketDisruption = {
   maxPlayers: 4,
   
   phases: {
-    action: {
+    lobby: {
       start: true,
-      next: 'automata',
+      moves: {
+        joinGame: ({ G, ctx }, playerName) => {
+          const playerId = ctx.currentPlayer;
+          if (playerId && !G.players[playerId]) {
+            console.log(`👤 Player ${playerId} joining as ${playerName}`);
+            G.players[playerId] = createInitialPlayer(playerId, playerName);
+            
+            const designDice = rollMultipleDice(2);
+            G.players[playerId].designs = designDice.map((cost, index) => ({
+              id: `design-${playerId}-${index}`,
+              cost,
+              isOpenSource: false
+            }));
+          }
+        },
+        startGame: ({ G, ctx, events }) => {
+          const joinedPlayers = Object.keys(G.players).length;
+          console.log(`🎮 StartGame: ${joinedPlayers}/${ctx.numPlayers} プレイヤー参加済み`);
+          
+          if (joinedPlayers === ctx.numPlayers) {
+            G.round = 1;
+            console.log(`🔄 フェーズ移行: lobby → action (ラウンド ${G.round})`);
+            
+            // actionフェーズ開始前に全プレイヤーのAPを3に設定
+            for (const playerId in G.players) {
+              G.players[playerId].actionPoints = 3;
+              console.log(`⚡ Player ${parseInt(playerId) + 1} 初期AP設定: 3`);
+            }
+            
+            events.setPhase('action');
+          }
+        },
+      },
+      next: 'action',
+    },
+    action: {
       turn: {
         order: {
           first: () => 0,
@@ -779,16 +841,66 @@ const MarketDisruption = {
             }
             return (ctx.playOrderPos + 1) % ctx.numPlayers;
           },
+        },
+        endIf: ({ G, ctx }) => {
+          // 現在プレイヤーのAPが0になったらターン終了
+          const currentPlayer = ctx.currentPlayer;
+          if (currentPlayer && G.players[currentPlayer]) {
+            const apLeft = G.players[currentPlayer].actionPoints;
+            console.log(`🔍 Turn endIf check - Player ${parseInt(currentPlayer) + 1} AP: ${apLeft}`);
+            return apLeft <= 0;
+          }
+          return false;
+        },
+        onBegin: ({ G, ctx }) => {
+          // 各プレイヤーのターン開始時にAPを3に回復
+          const currentPlayerId = ctx.currentPlayer;
+          console.log(`🔄 Turn onBegin - Current Player: ${currentPlayerId}, Phase: ${ctx.phase}, Turn: ${ctx.turn}`);
+          
+          if (currentPlayerId && G.players[currentPlayerId]) {
+            const oldAP = G.players[currentPlayerId].actionPoints;
+            G.players[currentPlayerId].actionPoints = 3;
+            console.log(`⚡ Player ${parseInt(currentPlayerId) + 1} のAPを ${oldAP} → 3 に回復`);
+          } else {
+            console.error(`❌ onBegin: プレイヤー ${currentPlayerId} が見つかりません`);
+          }
+        },
+        onEnd: ({ G, ctx }) => {
+          console.log(`🔄 Turn onEnd - Current Player: ${ctx.currentPlayer}, Phase: ${ctx.phase}, PlayOrder: ${ctx.playOrderPos}/${ctx.numPlayers - 1}`);
+          
+          // マルチプレイで最後のプレイヤーのターン終了時にオートマ＆マーケット実行
+          if (ctx.numPlayers > 1 && ctx.playOrderPos === ctx.numPlayers - 1) {
+            console.log('🤖 Auto-executing Automata and Market phases for multiplayer...');
+            
+            // オートマフェーズ実行
+            executeManufacturerAutomata(G);
+            executeResaleAutomata(G);
+            
+            // マーケットフェーズ実行
+            executeMarketPhase(G);
+            
+            // 次ラウンドの準備
+            G.round++;
+            console.log(`🎮 Starting round ${G.round}`);
+            
+            // 全プレイヤーのAPをリセット
+            for (const playerId in G.players) {
+              G.players[playerId].actionPoints = 3;
+            }
+            
+            // 勝利条件チェック
+            for (const playerId in G.players) {
+              if (checkVictoryConditions(G.players[playerId])) {
+                G.gameEnded = true;
+                G.winner = playerId;
+                console.log(`🏆 Game ended! Winner: ${G.players[playerId].name}`);
+                break;
+              }
+            }
+          }
         }
       },
-      // フェーズ終了は手動で制御（ボタンクリック時）
-      endIf: () => false,
-      onEnd: ({ G }) => {
-        console.log('Action phase ending - resetting AP for all players');
-        for (const playerId in G.players) {
-          G.players[playerId].actionPoints = 3;
-        }
-      }
+      next: 'automata',
     },
     
     automata: {
