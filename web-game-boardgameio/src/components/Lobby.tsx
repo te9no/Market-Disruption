@@ -9,6 +9,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
   const [gameID, setGameID] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [playerID, setPlayerID] = useState('0');
+  const [selectedPlayerCount, setSelectedPlayerCount] = useState(2);
 
   const createSinglePlayerGame = () => {
     const newGameID = `solo-${Date.now()}`;
@@ -17,7 +18,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
 
   const createMultiPlayerGame = () => {
     const newGameID = `multi-${Date.now()}`;
-    onJoinGame(newGameID, '0', playerName || 'プレイヤー1', 4);
+    onJoinGame(newGameID, '0', playerName || 'プレイヤー1', selectedPlayerCount);
   };
 
   const createAIOnlyGame = () => {
@@ -73,6 +74,32 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
           />
         </div>
         
+        {/* プレイヤー数選択 */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '8px', display: 'block' }}>
+            プレイヤー数選択:
+          </label>
+          <select
+            value={selectedPlayerCount}
+            onChange={(e) => setSelectedPlayerCount(Number(e.target.value))}
+            style={{
+              padding: '10px',
+              fontSize: '16px',
+              border: '1px solid #ccc',
+              borderRadius: '5px',
+              width: '270px',
+              backgroundColor: 'white'
+            }}
+          >
+            <option value={2}>2人プレイ</option>
+            <option value={3}>3人プレイ</option>
+            <option value={4}>4人プレイ</option>
+          </select>
+          <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
+            💡 事前に人数を決めてからゲームを作成します
+          </div>
+        </div>
+        
         <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={createSinglePlayerGame}
@@ -105,7 +132,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
             }}
           >
             👥 複数人プレイ<br />
-            <small>(最大4人)</small>
+            <small>({selectedPlayerCount}人)</small>
           </button>
         </div>
       </div>

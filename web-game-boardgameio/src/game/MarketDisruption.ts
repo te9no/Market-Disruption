@@ -24,25 +24,42 @@ const checkVictoryConditions = (player: Player): boolean => {
 const MarketDisruption: Game<GameState> = {
   name: 'MarketDisruption',
   
-  setup: ({ ctx }) => {
+  setup: () => {
     const G = { ...initialGameState };
     
-    for (let i = 0; i < ctx.numPlayers; i++) {
-      const playerId = String(i);
-      G.players[playerId] = createInitialPlayer(playerId, `Player ${i + 1}`);
-      
-      const designDice = rollMultipleDice(2);
-      G.players[playerId].designs = designDice.map((cost, index) => ({
-        id: `design-${playerId}-${index}`,
-        cost,
-        isOpenSource: false
-      }));
-    }
+    // ロビー段階では空のプレイヤーリストから開始
+    // プレイヤーはjoinGameムーブで個別に参加する
+    G.phase = 'lobby';
     
     return G;
   },
 
   moves: {
+    // ロビー関連のmoves
+    joinGame: ({ G, ctx }, playerName: string) => {
+      const playerId = ctx.currentPlayer;
+      if (playerId && !G.players[playerId]) {
+        G.players[playerId] = createInitialPlayer(playerId, playerName);
+        
+        // 初期設計図を割り当て
+        const designDice = rollMultipleDice(2);
+        G.players[playerId].designs = designDice.map((cost, index) => ({
+          id: `design-${playerId}-${index}`,
+          cost,
+          isOpenSource: false
+        }));
+      }
+    },
+
+    startGame: ({ G, ctx }) => {
+      // 全プレイヤーが参加するまでは開始できない
+      const joinedPlayers = Object.keys(G.players).length;
+      if (joinedPlayers === ctx.numPlayers) {
+        G.phase = 'action';
+        G.round = 1;
+      }
+    },
+
     manufacture: ({ G, ctx }, designId: string) => manufacture(G, ctx, designId),
     sell: ({ G, ctx }, productId: string, price: number) => sell(G, ctx, productId, price),
     purchase: ({ G, ctx }, targetPlayerId: string, productId: string) => purchase(G, ctx, targetPlayerId, productId),

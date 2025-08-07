@@ -75,7 +75,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
             marginBottom: '20px',
             textAlign: 'left'
           }}>
-            <h3 style={{ color: '#333', marginBottom: '15px' }}>👥 参加プレイヤー ({currentPlayerCount}/4)</h3>
+            <h3 style={{ color: '#333', marginBottom: '15px' }}>👥 参加プレイヤー ({currentPlayerCount}/{ctx.numPlayers})</h3>
             <div style={{ fontSize: '16px', lineHeight: '1.8' }}>
               {Object.entries(G.players).map(([id, player]) => (
                 <div key={id} style={{ 
@@ -101,7 +101,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           {/* ゲーム参加ボタン or 待機メッセージ */}
           {!isPlayerJoined ? (
             <div style={{ marginBottom: '20px' }}>
-              {currentPlayerCount < 4 ? (
+              {currentPlayerCount < ctx.numPlayers ? (
                 <button
                   onClick={() => {
                     const playerName = prompt('プレイヤー名を入力してください:', `Player ${currentPlayerCount + 1}`);
@@ -131,7 +131,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
                   borderRadius: '8px',
                   border: '2px solid #fbc02d'
                 }}>
-                  <strong>ゲームが満員です (4/4)</strong>
+                  <strong>ゲームが満員です ({ctx.numPlayers}/{ctx.numPlayers})</strong>
                 </div>
               )}
             </div>
@@ -149,27 +149,45 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
           )}
 
           {/* ゲーム開始ボタン（オーナーのみ） */}
-          {isOwner && currentPlayerCount >= 1 && (
-            <button
-              onClick={() => {
-                if (moves.startGame) {
-                  moves.startGame();
-                }
-              }}
-              style={{
-                fontSize: '24px',
-                padding: '15px 40px',
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
-              }}
-            >
-              🎮 ゲーム開始！
-            </button>
+          {isOwner && (
+            <div style={{ textAlign: 'center' }}>
+              {currentPlayerCount === ctx.numPlayers ? (
+                <button
+                  onClick={() => {
+                    if (moves.startGame) {
+                      moves.startGame();
+                    }
+                  }}
+                  style={{
+                    fontSize: '24px',
+                    padding: '15px 40px',
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  🎮 ゲーム開始！
+                </button>
+              ) : (
+                <div style={{
+                  padding: '15px 40px',
+                  backgroundColor: '#ffeb3b',
+                  border: '2px solid #fbc02d',
+                  borderRadius: '8px',
+                  fontSize: '18px',
+                  fontWeight: 'bold'
+                }}>
+                  ⏳ プレイヤーを待機中... ({currentPlayerCount}/{ctx.numPlayers})
+                  <div style={{ fontSize: '14px', fontWeight: 'normal', marginTop: '5px', color: '#666' }}>
+                    全員揃ったらゲームを開始できます
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* ゲーム情報 */}
