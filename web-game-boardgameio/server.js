@@ -320,9 +320,25 @@ const MarketDisruption = {
         return;
       }
       
+      // 1ラウンド中に1回のみ実行可能チェック
+      if (!G.dayLaborPerRound) {
+        G.dayLaborPerRound = {};
+      }
+      
+      const dayLaborKey = `${G.round}-${ctx.currentPlayer}`;
+      if (G.dayLaborPerRound[dayLaborKey]) {
+        console.error('DayLabor: Already used this round');
+        return 'INVALID_MOVE'; // 既にこのラウンドで日雇い労働済み
+      }
+      
+      // 日雇い労働実行
       player.money += 18;
       player.actionPoints -= 3;
-      console.log(`DayLabor: Player ${ctx.currentPlayer} earned 18 money`);
+      
+      // このラウンドで日雇い労働したことを記録
+      G.dayLaborPerRound[dayLaborKey] = true;
+      
+      console.log(`💪 日雇い労働: ${player.name}が18資金を獲得 (資金: ${player.money - 18} → ${player.money})`);
       
       addToPlayLog(G, ctx, ctx.currentPlayer, '日雇い労働', '18資金を獲得');
     },
