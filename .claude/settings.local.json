@@ -64,7 +64,8 @@
       "mcp__serena__think_about_task_adherence",
       "Bash(git checkout:*)",
       "mcp__serena__think_about_whether_you_are_done",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(railway --version)"
     ],
     "deny": []
   }
