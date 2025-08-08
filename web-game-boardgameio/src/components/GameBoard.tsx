@@ -39,215 +39,59 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
   const showError = (message: string) => setErrorMessage(message);
   const showSuccess = (message: string) => setSuccessMessage(message);
   
-  // ロビー画面
-  if (ctx.phase === 'lobby') {
-    console.log(`🏠 ロビー画面表示`, {
-      phase: G.phase,
-      ctxPhase: ctx.phase,
-      availableMoves: Object.keys(moves),
-      hasJoinGame: !!moves.joinGame,
-      hasStartGame: !!moves.startGame,
-      playersCount: Object.keys(G.players).length,
-      numPlayers: ctx.numPlayers,
-      playerID,
-      currentPlayer: ctx.currentPlayer
-    });
-    
-    const currentPlayerCount = Object.keys(G.players).length;
-    const isOwner = playerID === '0'; // プレイヤー0をオーナーとする
-    const isPlayerJoined = playerID && G.players[playerID];
-    
+  // プレイヤーが存在しない場合の待機画面
+  if (!G.players || Object.keys(G.players).length === 0) {
     return (
       <div style={{ 
         padding: '20px', 
-        fontFamily: 'Arial, sans-serif',
         textAlign: 'center',
-        maxWidth: '800px',
-        margin: '0 auto'
+        fontFamily: 'Arial, sans-serif'
       }}>
-        <div style={{ 
-          backgroundColor: '#f5f5f5', 
-          padding: '30px', 
-          borderRadius: '12px',
-          border: '2px solid #333',
-          marginBottom: '20px'
+        <div style={{
+          backgroundColor: '#e3f2fd',
+          border: '2px solid #2196F3',
+          borderRadius: '8px',
+          padding: '30px',
+          maxWidth: '600px',
+          margin: '0 auto'
         }}>
-          <h1 style={{ fontSize: '36px', color: '#FF5722', marginBottom: '10px' }}>
-            🏪 マーケット・ディスラプション
-          </h1>
-          <h2 style={{ fontSize: '18px', color: '#666', marginBottom: '30px' }}>
-            転売ヤーをテーマにしたボードゲーム
-          </h2>
-          
-          {/* 参加プレイヤー一覧 */}
-          <div style={{
-            backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            marginBottom: '20px',
-            textAlign: 'left'
-          }}>
-            <h3 style={{ color: '#333', marginBottom: '15px' }}>👥 参加プレイヤー ({currentPlayerCount}/{ctx.numPlayers})</h3>
-            <div style={{ fontSize: '16px', lineHeight: '1.8' }}>
-              {Object.entries(G.players).map(([id, player]) => (
-                <div key={id} style={{ 
-                  padding: '8px 12px', 
-                  backgroundColor: id === '0' ? '#e8f5e8' : '#f9f9f9',
-                  border: `2px solid ${id === '0' ? '#4CAF50' : '#ddd'}`,
-                  borderRadius: '6px',
-                  marginBottom: '8px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
-                  <span>
-                    <strong>{player.name}</strong> 
-                    {id === '0' && <span style={{ color: '#4CAF50', marginLeft: '8px' }}>👑 オーナー</span>}
-                  </span>
-                  <span style={{ color: '#666' }}>プレイヤー{parseInt(id) + 1}</span>
-                </div>
-              ))}
-            </div>
+          <h2 style={{ color: '#1976d2', marginBottom: '20px' }}>🎮 ゲーム準備中...</h2>
+          <p style={{ fontSize: '18px', marginBottom: '20px' }}>
+            プレイヤーの参加を待っています
+          </p>
+          <div style={{ fontSize: '14px', color: '#666' }}>
+            <p>他のプレイヤーは同じゲームIDで参加してください</p>
           </div>
+        </div>
+      </div>
+    );
+  }
 
-          {/* ゲーム参加ボタン or 待機メッセージ */}
-          {!isPlayerJoined ? (
-            <div style={{ marginBottom: '20px' }}>
-              {currentPlayerCount < ctx.numPlayers ? (
-                <button
-                  onClick={() => {
-                    const playerName = prompt('プレイヤー名を入力してください:', `Player ${currentPlayerCount + 1}`);
-                    console.log(`👤 参加ボタンをクリック`, {
-                      playerName,
-                      moves: Object.keys(moves),
-                      hasJoinGame: !!moves.joinGame,
-                      currentPlayers: Object.keys(G.players).length,
-                      phase: ctx.phase,
-                      currentPlayer: ctx.currentPlayer,
-                      playerID
-                    });
-                    
-                    if (playerName && moves.joinGame) {
-                      console.log(`✅ joinGameを実行中...`);
-                      moves.joinGame(playerName);
-                      console.log(`✅ joinGame実行完了`);
-                    } else {
-                      if (!playerName) {
-                        console.warn(`⚠️ プレイヤー名が入力されていません`);
-                      }
-                      if (!moves.joinGame) {
-                        console.error(`❌ moves.joinGameが存在しません`, { availableMoves: Object.keys(moves) });
-                      }
-                    }
-                  }}
-                  style={{
-                    fontSize: '20px',
-                    padding: '12px 30px',
-                    backgroundColor: '#2196F3',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                    marginRight: '10px'
-                  }}
-                >
-                  🎮 ゲームに参加
-                </button>
-              ) : (
-                <div style={{ 
-                  padding: '15px', 
-                  backgroundColor: '#ffeb3b', 
-                  borderRadius: '8px',
-                  border: '2px solid #fbc02d'
-                }}>
-                  <strong>ゲームが満員です ({ctx.numPlayers}/{ctx.numPlayers})</strong>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div style={{ 
-              padding: '15px', 
-              backgroundColor: '#e8f5e8', 
-              borderRadius: '8px',
-              border: '2px solid #4CAF50',
-              marginBottom: '20px'
-            }}>
-              <strong>✅ ゲームに参加済み</strong>
-              {isOwner && <div style={{ marginTop: '8px', color: '#2E7D32' }}>オーナーとしてゲームを開始できます</div>}
-            </div>
-          )}
-
-          {/* ゲーム開始ボタン（オーナーのみ） */}
-          {isOwner && (
-            <div style={{ textAlign: 'center' }}>
-              {currentPlayerCount === ctx.numPlayers ? (
-                <button
-                  onClick={() => {
-                    console.log(`🎮 ゲーム開始ボタンをクリック`, {
-                      moves: Object.keys(moves),
-                      hasStartGame: !!moves.startGame,
-                      currentPlayers: Object.keys(G.players).length,
-                      numPlayers: ctx.numPlayers,
-                      phase: ctx.phase,
-                      currentPlayer: ctx.currentPlayer
-                    });
-                    
-                    if (moves.startGame) {
-                      console.log(`✅ startGameを実行中...`);
-                      moves.startGame();
-                      console.log(`✅ startGame実行完了`);
-                    } else {
-                      console.error(`❌ moves.startGameが存在しません`, { availableMoves: Object.keys(moves) });
-                    }
-                  }}
-                  style={{
-                    fontSize: '24px',
-                    padding: '15px 40px',
-                    backgroundColor: '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
-                  }}
-                >
-                  🎮 ゲーム開始！
-                </button>
-              ) : (
-                <div style={{
-                  padding: '15px 40px',
-                  backgroundColor: '#ffeb3b',
-                  border: '2px solid #fbc02d',
-                  borderRadius: '8px',
-                  fontSize: '18px',
-                  fontWeight: 'bold'
-                }}>
-                  ⏳ プレイヤーを待機中... ({currentPlayerCount}/{ctx.numPlayers})
-                  <div style={{ fontSize: '14px', fontWeight: 'normal', marginTop: '5px', color: '#666' }}>
-                    全員揃ったらゲームを開始できます
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ゲーム情報 */}
-          <div style={{ 
-            backgroundColor: '#e3f2fd', 
-            padding: '20px', 
-            borderRadius: '8px',
-            marginTop: '20px',
-            textAlign: 'left'
-          }}>
-            <h3 style={{ color: '#1976d2', marginBottom: '15px' }}>📋 ゲーム情報</h3>
-            <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
-              <div><strong>プレイ時間:</strong> 30-45分</div>
-              <div><strong>勝利条件:</strong> 威厳17ポイント + 資金75以上 または 資金150以上</div>
-              <div><strong>戦略:</strong> 正規ルート vs 転売ルートの選択</div>
-            </div>
+  // 現在のプレイヤーが存在しない場合の待機画面
+  if (!currentPlayer) {
+    return (
+      <div style={{ 
+        padding: '20px', 
+        textAlign: 'center',
+        fontFamily: 'Arial, sans-serif'
+      }}>
+        <div style={{
+          backgroundColor: '#fff3cd',
+          border: '2px solid #ffc107',
+          borderRadius: '8px',
+          padding: '30px',
+          maxWidth: '600px',
+          margin: '0 auto'
+        }}>
+          <h2 style={{ color: '#856404', marginBottom: '20px' }}>⏳ 参加待機中...</h2>
+          <p style={{ fontSize: '18px', marginBottom: '15px' }}>
+            あなたのプレイヤーIDは: <strong>{playerID}</strong>
+          </p>
+          <p style={{ fontSize: '16px', color: '#666' }}>
+            他のプレイヤーの参加を待っています
+          </p>
+          <div style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
+            <p>参加済みプレイヤー: {Object.keys(G.players).length}/{ctx.numPlayers}</p>
           </div>
         </div>
       </div>

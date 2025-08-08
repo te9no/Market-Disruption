@@ -8,7 +8,7 @@ interface LobbyProps {
 export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
   const [gameID, setGameID] = useState('');
   const [playerName, setPlayerName] = useState('');
-  const [playerID, setPlayerID] = useState('0');
+  const [playerID, setPlayerID] = useState('1');
   const [selectedPlayerCount, setSelectedPlayerCount] = useState(2);
 
   const createSinglePlayerGame = () => {
@@ -18,6 +18,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
 
   const createMultiPlayerGame = () => {
     const newGameID = `multi-${Date.now()}`;
+    // ホストプレイヤーとして参加（PlayerID: '0'）
     onJoinGame(newGameID, '0', playerName || 'プレイヤー1', selectedPlayerCount);
   };
 
@@ -34,7 +35,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
 
   const joinExistingGame = () => {
     if (gameID && playerName) {
-      onJoinGame(gameID, playerID, playerName);
+      onJoinGame(gameID, playerID, playerName, 4); // 選択されたplayerIDを使用
     }
   };
 
@@ -119,7 +120,14 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
           </button>
           
           <button
-            onClick={createMultiPlayerGame}
+            onClick={() => {
+              createMultiPlayerGame();
+              // ゲームID表示のアラート
+              const gameID = `multi-${Date.now()}`;
+              setTimeout(() => {
+                alert(`🎮 ゲーム作成完了！\n\nゲームID: ${gameID.slice(-8)}\n\n他のプレイヤーは「既存のゲームに参加」で\n上記のIDを使用して参加してください。\n\n※最後の8桁のみで参加可能です`);
+              }, 1000);
+            }}
             disabled={!playerName}
             style={{
               padding: '12px 25px',
@@ -131,7 +139,7 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
               cursor: playerName ? 'pointer' : 'not-allowed'
             }}
           >
-            👥 複数人プレイ<br />
+            👥 マルチプレイ作成<br />
             <small>({selectedPlayerCount}人)</small>
           </button>
         </div>
@@ -208,7 +216,10 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
         padding: '30px',
         backgroundColor: '#f0f8ff'
       }}>
-        <h2>既存のゲームに参加</h2>
+        <h2>マルチプレイゲームに参加</h2>
+        <div style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
+          💡 他のプレイヤーが作成したゲームに参加できます
+        </div>
         <div style={{ marginBottom: '15px' }}>
           <input
             type="text"
@@ -242,6 +253,9 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
           />
         </div>
         <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+            参加したいプレイヤー番号:
+          </label>
           <select
             value={playerID}
             onChange={(e) => setPlayerID(e.target.value)}
@@ -253,11 +267,13 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoinGame, onStartAIDemo }) => {
               width: '270px'
             }}
           >
-            <option value="0">プレイヤー 1</option>
-            <option value="1">プレイヤー 2</option>
-            <option value="2">プレイヤー 3</option>
-            <option value="3">プレイヤー 4</option>
+            <option value="1">プレイヤー 2 として参加</option>
+            <option value="2">プレイヤー 3 として参加</option>
+            <option value="3">プレイヤー 4 として参加</option>
           </select>
+          <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+            💡 ホスト（作成者）は自動的にプレイヤー1になります
+          </div>
         </div>
         <button
           onClick={joinExistingGame}

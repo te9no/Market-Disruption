@@ -100,13 +100,37 @@ const createInitialPlayer = (id, name) => ({
 // 本格的なゲーム定義
 const MarketDisruption = {
   name: 'MarketDisruption',
-  setup: () => {
+  setup: ({ ctx }) => {
     const G = { ...initialGameState };
     
-    // ロビー段階では空のプレイヤーリストから開始
-    // プレイヤーはjoinGameムーブで個別に参加する
-    G.phase = 'lobby';
+    console.log(`🎮 Game setup: ${ctx.numPlayers} players`);
     
+    // 全プレイヤーを自動初期化
+    for (let i = 0; i < ctx.numPlayers; i++) {
+      const playerId = String(i);
+      const playerName = `Player ${i + 1}`;
+      
+      console.log(`👤 Initializing player ${playerId} as ${playerName}`);
+      G.players[playerId] = createInitialPlayer(playerId, playerName);
+      
+      // 初期設計図を2枚配布
+      const designDice = rollMultipleDice(2);
+      G.players[playerId].designs = designDice.map((cost, index) => ({
+        id: `design-${playerId}-${index}`,
+        cost,
+        isOpenSource: false
+      }));
+    }
+    
+    G.round = 1;
+    
+    // 全プレイヤーのAPを初期化
+    for (const playerId in G.players) {
+      G.players[playerId].actionPoints = 3;
+      console.log(`⚡ Player ${parseInt(playerId) + 1} 初期AP設定: 3`);
+    }
+    
+    console.log(`✅ Game initialized with ${Object.keys(G.players).length} players`);
     return G;
   },
   
@@ -794,89 +818,8 @@ const MarketDisruption = {
   maxPlayers: 4,
   
   phases: {
-    lobby: {
-      start: true,
-      // Enable moves for all players in lobby
-      turn: {
-        order: {
-          first: () => 0,
-          next: ({ ctx }) => (ctx.playOrderPos + 1) % ctx.numPlayers,
-        },
-        endIf: () => false, // Never end turns in lobby
-      },
-      moves: {
-        joinGame: {
-          move: ({ G, ctx }, playerName) => {
-            console.log(`🎮 joinGame called`, { 
-              playerName, 
-              currentPlayer: ctx.currentPlayer, 
-              existingPlayers: Object.keys(G.players),
-              numPlayers: ctx.numPlayers,
-              phase: ctx.phase 
-            });
-            
-            // Find next available player slot instead of relying on ctx.currentPlayer
-            let playerId = null;
-            for (let i = 0; i < ctx.numPlayers; i++) {
-              const candidateId = String(i);
-              if (!G.players[candidateId]) {
-                playerId = candidateId;
-                break;
-              }
-            }
-            
-            if (playerId !== null) {
-              console.log(`👤 Player ${playerId} joining as ${playerName}`);
-              G.players[playerId] = createInitialPlayer(playerId, playerName);
-              
-              const designDice = rollMultipleDice(2);
-              G.players[playerId].designs = designDice.map((cost, index) => ({
-                id: `design-${playerId}-${index}`,
-                cost,
-                isOpenSource: false
-              }));
-              
-              console.log(`✅ Player ${playerId} successfully joined. Total players: ${Object.keys(G.players).length}/${ctx.numPlayers}`);
-            } else {
-              console.error(`❌ No available player slots. Current players: ${Object.keys(G.players).length}/${ctx.numPlayers}`);
-            }
-          },
-          client: false, // Allow any player to call this move
-        },
-        startGame: {
-          move: ({ G, ctx, events }) => {
-          const joinedPlayers = Object.keys(G.players).length;
-          console.log(`🎮 StartGame: ${joinedPlayers}/${ctx.numPlayers} プレイヤー参加済み`);
-          console.log(`📊 Events available:`, Object.keys(events || {}));
-          
-          if (joinedPlayers === ctx.numPlayers) {
-            G.round = 1;
-            console.log(`🔄 フェーズ移行: lobby → action (ラウンド ${G.round})`);
-            
-            // actionフェーズ開始前に全プレイヤーのAPを3に設定
-            for (const playerId in G.players) {
-              G.players[playerId].actionPoints = 3;
-              console.log(`⚡ Player ${parseInt(playerId) + 1} 初期AP設定: 3`);
-            }
-            
-            // フェーズ移行
-            if (events && events.endPhase) {
-              console.log(`✅ endPhaseを使用してフェーズ移行`);
-              events.endPhase();
-            } else if (events && events.setPhase) {
-              console.log(`✅ setPhaseを使用してフェーズ移行`);
-              events.setPhase('action');
-            } else {
-              console.error(`❌ フェーズ移行イベントが利用できません`, { events: events ? Object.keys(events) : null });
-            }
-          }
-          },
-          client: false, // Allow any player to call this move
-        },
-      },
-      next: 'action',
-    },
     action: {
+      start: true,
       turn: {
         order: {
           first: () => 0,
