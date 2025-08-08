@@ -40,7 +40,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
   const showSuccess = (message: string) => setSuccessMessage(message);
   
   // ロビー画面
-  if (G.phase === 'lobby') {
+  if (ctx.phase === 'lobby') {
     console.log(`🏠 ロビー画面表示`, {
       phase: G.phase,
       ctxPhase: ctx.phase,
