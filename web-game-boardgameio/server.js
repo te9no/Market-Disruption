@@ -796,22 +796,55 @@ const MarketDisruption = {
   phases: {
     lobby: {
       start: true,
-      moves: {
-        joinGame: ({ G, ctx }, playerName) => {
-          const playerId = ctx.currentPlayer;
-          if (playerId && !G.players[playerId]) {
-            console.log(`👤 Player ${playerId} joining as ${playerName}`);
-            G.players[playerId] = createInitialPlayer(playerId, playerName);
-            
-            const designDice = rollMultipleDice(2);
-            G.players[playerId].designs = designDice.map((cost, index) => ({
-              id: `design-${playerId}-${index}`,
-              cost,
-              isOpenSource: false
-            }));
-          }
+      // Enable moves for all players in lobby
+      turn: {
+        order: {
+          first: () => 0,
+          next: ({ ctx }) => (ctx.playOrderPos + 1) % ctx.numPlayers,
         },
-        startGame: ({ G, ctx, events }) => {
+        endIf: () => false, // Never end turns in lobby
+      },
+      moves: {
+        joinGame: {
+          move: ({ G, ctx }, playerName) => {
+            console.log(`🎮 joinGame called`, { 
+              playerName, 
+              currentPlayer: ctx.currentPlayer, 
+              existingPlayers: Object.keys(G.players),
+              numPlayers: ctx.numPlayers,
+              phase: ctx.phase 
+            });
+            
+            // Find next available player slot instead of relying on ctx.currentPlayer
+            let playerId = null;
+            for (let i = 0; i < ctx.numPlayers; i++) {
+              const candidateId = String(i);
+              if (!G.players[candidateId]) {
+                playerId = candidateId;
+                break;
+              }
+            }
+            
+            if (playerId !== null) {
+              console.log(`👤 Player ${playerId} joining as ${playerName}`);
+              G.players[playerId] = createInitialPlayer(playerId, playerName);
+              
+              const designDice = rollMultipleDice(2);
+              G.players[playerId].designs = designDice.map((cost, index) => ({
+                id: `design-${playerId}-${index}`,
+                cost,
+                isOpenSource: false
+              }));
+              
+              console.log(`✅ Player ${playerId} successfully joined. Total players: ${Object.keys(G.players).length}/${ctx.numPlayers}`);
+            } else {
+              console.error(`❌ No available player slots. Current players: ${Object.keys(G.players).length}/${ctx.numPlayers}`);
+            }
+          },
+          client: false, // Allow any player to call this move
+        },
+        startGame: {
+          move: ({ G, ctx, events }) => {
           const joinedPlayers = Object.keys(G.players).length;
           console.log(`🎮 StartGame: ${joinedPlayers}/${ctx.numPlayers} プレイヤー参加済み`);
           console.log(`📊 Events available:`, Object.keys(events || {}));
@@ -837,6 +870,8 @@ const MarketDisruption = {
               console.error(`❌ フェーズ移行イベントが利用できません`, { events: events ? Object.keys(events) : null });
             }
           }
+          },
+          client: false, // Allow any player to call this move
         },
       },
       next: 'action',
