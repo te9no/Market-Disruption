@@ -39,6 +39,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
   const showError = (message: string) => setErrorMessage(message);
   const showSuccess = (message: string) => setSuccessMessage(message);
   
+  // currentPlayerを早期に定義
+  const currentPlayer = G.players && playerID ? G.players[playerID] : null;
+  
   // プレイヤーが存在しない場合の待機画面
   if (!G.players || Object.keys(G.players).length === 0) {
     return (
@@ -120,8 +123,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ G, ctx, moves, events, pla
       </div>
     );
   }
-  
-  const currentPlayer = G.players[playerID];
   
   if (!currentPlayer) {
     return <div>プレイヤーが見つかりません</div>;
