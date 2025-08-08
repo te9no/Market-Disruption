@@ -1675,7 +1675,7 @@ const port = process.env.PORT || 8000;
 console.log('Starting Market Disruption server with configuration:');
 console.log('PORT:', port);
 console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('Server version: 2025-07-30-v3-api (Debug API enabled)');
+console.log('Server version: 2025-08-08-lobby-fix (joinGame/startGame client:false fix enabled)');
 
 // boardgame.ioサーバー起動
 server.run(port, () => {
