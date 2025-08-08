@@ -776,6 +776,106 @@ const MarketDisruption = {
       player.actionPoints -= 2;
     },
 
+    // AIプレイヤー用の自動行動実行
+    executeAIMove: ({ G, ctx }) => {
+      const currentPlayerId = ctx.currentPlayer;
+      const player = G.players[currentPlayerId];
+      
+      if (!player) {
+        console.error(`ExecuteAIMove: Player ${currentPlayerId} not found`);
+        return;
+      }
+      
+      if (player.actionPoints <= 0) {
+        console.log(`🤖 AI Player ${parseInt(currentPlayerId) + 1}: No action points remaining`);
+        return;
+      }
+      
+      console.log(`🤖 AI Player ${parseInt(currentPlayerId) + 1} making decision... (AP: ${player.actionPoints})`);
+      
+      // シンプルなAI判断ロジック
+      try {
+        // 基本戦略: 資金が少ない場合はアルバイト、十分な場合は設計→製造
+        if (player.money < 15) {
+          // 資金が少ない場合はアルバイト
+          if (player.actionPoints >= 2) {
+            console.log(`🤖 AI Player ${parseInt(currentPlayerId) + 1}: Doing part-time work (low money: ${player.money})`);
+            player.money += 5;
+            player.actionPoints -= 2;
+            addToPlayLog(G, ctx, currentPlayerId, 'アルバイト', '5資金を獲得');
+            return;
+          }
+        } else if (player.money >= 15 && player.designs.length < 3) {
+          // 設計が少ない場合は設計を作成
+          if (player.actionPoints >= 1) {
+            console.log(`🤖 AI Player ${parseInt(currentPlayerId) + 1}: Creating design`);
+            const diceRoll = rollDice();
+            const selectedCost = Math.min(Math.max(diceRoll, 1), 6);
+            const openSource = Math.random() < 0.3; // 30%の確率でオープンソース
+            
+            const design = {
+              id: `design-${currentPlayerId}-${Date.now()}`,
+              cost: selectedCost,
+              playerId: currentPlayerId,
+              isOpenSource: openSource
+            };
+            
+            player.designs.push(design);
+            player.actionPoints -= 1;
+            
+            if (openSource) {
+              player.prestige += 2;
+              console.log(`🤖 AI Player ${parseInt(currentPlayerId) + 1}: Created open-source design (cost: ${selectedCost}, prestige +2)`);
+              addToPlayLog(G, ctx, currentPlayerId, '設計', `オープンソース設計(コスト${selectedCost})を作成、威厳+2`);
+            } else {
+              console.log(`🤖 AI Player ${parseInt(currentPlayerId) + 1}: Created proprietary design (cost: ${selectedCost})`);
+              addToPlayLog(G, ctx, currentPlayerId, '設計', `コスト${selectedCost}の設計を作成`);
+            }
+            return;
+          }
+        } else if (player.designs.length > 0) {
+          // 設計がある場合は製造
+          const design = player.designs[0];
+          const manufacturingCost = design.cost * 2;
+          
+          if (player.money >= manufacturingCost && player.actionPoints >= 1) {
+            console.log(`🤖 AI Player ${parseInt(currentPlayerId) + 1}: Manufacturing product (cost: ${design.cost})`);
+            
+            player.money -= manufacturingCost;
+            player.actionPoints -= 1;
+            
+            const price = design.cost * 3;
+            const product = {
+              id: `product-${currentPlayerId}-${Date.now()}`,
+              cost: design.cost,
+              price: price,
+              popularity: 1,
+              playerId: currentPlayerId,
+              isResale: false
+            };
+            
+            player.personalMarket.push(product);
+            addToPlayLog(G, ctx, currentPlayerId, '製造', `コスト${design.cost}、価格${price}の商品を製造`);
+            return;
+          }
+        }
+        
+        // それ以外の場合はアルバイトで資金を稼ぐ
+        if (player.actionPoints >= 2) {
+          console.log(`🤖 AI Player ${parseInt(currentPlayerId) + 1}: Doing part-time work (fallback)`);
+          player.money += 5;
+          player.actionPoints -= 2;
+          addToPlayLog(G, ctx, currentPlayerId, 'アルバイト', '5資金を獲得');
+        } else if (player.actionPoints >= 1) {
+          // APが1しかない場合は何もできないのでログだけ
+          console.log(`🤖 AI Player ${parseInt(currentPlayerId) + 1}: Only 1 AP remaining, ending turn`);
+        }
+        
+      } catch (error) {
+        console.error(`🤖 AI Player ${parseInt(currentPlayerId) + 1} decision error:`, error);
+      }
+    },
+
     // 1人プレイ用の統合アクション
     executeAutomataAndMarket: ({ G }) => {
       console.log('🤖 Starting Automata and Market execution...');
