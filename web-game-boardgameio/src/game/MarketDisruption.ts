@@ -1129,8 +1129,25 @@ function dayLabor(G: GameState, ctx: Ctx) {
   // actionフェーズでのみ実行可能
   if (ctx.phase !== 'action') return 'INVALID_MOVE';
   
+  // 1ラウンド中に1回のみ実行可能チェック
+  if (!G.dayLaborPerRound) {
+    G.dayLaborPerRound = {};
+  }
+  
+  const dayLaborKey = `${G.round}-${ctx.currentPlayer}`;
+  if (G.dayLaborPerRound[dayLaborKey]) {
+    console.error('DayLabor: Already used this round');
+    return 'INVALID_MOVE'; // 既にこのラウンドで日雇い労働済み
+  }
+  
+  // 日雇い労働実行
   player.money += 18;
   player.actionPoints -= 3;
+  
+  // このラウンドで日雇い労働したことを記録
+  G.dayLaborPerRound[dayLaborKey] = true;
+  
+  console.log(`💪 日雇い労働: ${player.name}が18資金を獲得 (資金: ${player.money - 18} → ${player.money})`);
 }
 
 function activateTrend(G: GameState, ctx: Ctx) {

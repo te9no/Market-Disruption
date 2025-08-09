@@ -46,6 +46,7 @@ export interface GameState {
   shortVideoBonus: boolean; // ショート動画ブーム効果フラグ
   availableTrends?: { [playerId: string]: AvailableTrend };
   prestigePurchasePerRound?: { [key: string]: boolean };
+  dayLaborPerRound?: { [key: string]: boolean };
   pendingManufacturingOrders?: ManufacturingOrder[];
   playLog: PlayLogEntry[];
   gameEnded: boolean;
